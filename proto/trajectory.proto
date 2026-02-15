@@ -1,0 +1,96 @@
+syntax = "proto3";
+
+package tars;
+
+// --------------------------------------------------------------------------
+// Core vector types
+// --------------------------------------------------------------------------
+
+message Vec3 {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+}
+
+message StateVector {
+  Vec3 position = 1;  // km or scene units
+  Vec3 velocity = 2;  // km/s
+  double epoch_jd = 3;  // Julian Date
+}
+
+// --------------------------------------------------------------------------
+// Trajectory data
+// --------------------------------------------------------------------------
+
+enum SegmentType {
+  SEGMENT_CRUISE = 0;
+  SEGMENT_DEPARTURE = 1;
+  SEGMENT_ARRIVAL = 2;
+  SEGMENT_GRAVITY_ASSIST = 3;
+}
+
+message TrajectoryPoint {
+  Vec3 position = 1;  // scene units
+  double epoch_jd = 2;
+}
+
+message TrajectorySegment {
+  SegmentType type = 1;
+  repeated TrajectoryPoint points = 2;
+  int32 origin_body_id = 3;
+  int32 target_body_id = 4;
+}
+
+message Trajectory {
+  repeated TrajectorySegment segments = 1;
+  double total_dv = 2;  // km/s
+  double departure_epoch_jd = 3;
+  double arrival_epoch_jd = 4;
+  double tof_days = 5;
+}
+
+// --------------------------------------------------------------------------
+// Planetary state (for animation)
+// --------------------------------------------------------------------------
+
+message PlanetaryState {
+  int32 body_id = 1;
+  string name = 2;
+  Vec3 position = 3;  // scene units
+  double epoch_jd = 4;
+}
+
+message PlanetarySnapshot {
+  double epoch_jd = 1;
+  repeated PlanetaryState bodies = 2;
+}
+
+// --------------------------------------------------------------------------
+// Optimization progress (streamed via WebSocket)
+// --------------------------------------------------------------------------
+
+message OptimizationUpdate {
+  string job_id = 1;
+  string status = 2;  // "running", "complete", "failed"
+  int32 iteration = 3;
+  int32 max_iterations = 4;
+  double best_dv_total = 5;
+  double best_departure_jd = 6;
+  double best_tof_days = 7;
+  double best_dv_departure = 8;
+  double best_dv_arrival = 9;
+  bool converged = 10;
+  Trajectory best_trajectory = 11;
+}
+
+// --------------------------------------------------------------------------
+// Pork chop plot
+// --------------------------------------------------------------------------
+
+message PorkChopData {
+  repeated double departure_jds = 1;
+  repeated double tof_days = 2;
+  repeated double dv_values = 3;  // flattened (M*N) row-major grid
+  int32 dep_steps = 4;
+  int32 tof_steps = 5;
+}

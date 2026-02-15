@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TARS — Interplanetary Trajectory Designer</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- 3D viewport -->
+  <div id="viewport"></div>
+
+  <!-- Top bar -->
+  <header id="topbar">
+    <div class="logo">TARS</div>
+    <div class="status">
+      <span id="status-dot" class="dot"></span>
+      <span id="status-text">Connecting...</span>
+    </div>
+    <div class="sim-controls">
+      <label>Speed
+        <input type="range" id="sim-speed" min="0" max="100" value="10" />
+        <span id="sim-speed-val">10</span> d/s
+      </label>
+      <button id="btn-pause" title="Pause / Resume">&#9654;</button>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <aside id="sidebar">
+    <!-- Lambert Transfer -->
+    <section class="panel" id="panel-lambert">
+      <h2>Lambert Transfer</h2>
+      <div class="field">
+        <label>Origin</label>
+        <select id="lambert-origin"></select>
+      </div>
+      <div class="field">
+        <label>Target</label>
+        <select id="lambert-target"></select>
+      </div>
+      <div class="field">
+        <label>Departure</label>
+        <input type="date" id="lambert-dep" value="2026-11-15" min="2025-01-01" max="2059-12-31" />
+      </div>
+      <div class="field">
+        <label>TOF (days)</label>
+        <input type="number" id="lambert-tof" value="250" min="10" max="20000" />
+      </div>
+      <button id="btn-lambert" class="primary">Compute Transfer</button>
+      <div id="lambert-result" class="result-box hidden"></div>
+    </section>
+
+    <!-- Pork-chop Plot -->
+    <section class="panel" id="panel-porkchop">
+      <h2>Pork-Chop Plot</h2>
+      <div class="field">
+        <label>Origin</label>
+        <select id="pc-origin"></select>
+      </div>
+      <div class="field">
+        <label>Target</label>
+        <select id="pc-target"></select>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Dep Start</label>
+          <input type="date" id="pc-dep-start" value="2026-09-01" min="2025-01-01" max="2059-12-31" />
+        </div>
+        <div class="field">
+          <label>Dep End</label>
+          <input type="date" id="pc-dep-end" value="2027-03-01" min="2025-01-01" max="2059-12-31" />
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>TOF Min</label>
+          <input type="number" id="pc-tof-min" value="100" min="10" />
+        </div>
+        <div class="field">
+          <label>TOF Max</label>
+          <input type="number" id="pc-tof-max" value="400" min="20" max="20000" />
+        </div>
+      </div>
+      <button id="btn-porkchop" class="primary">Generate</button>
+    </section>
+
+    <!-- Optimizer -->
+    <section class="panel" id="panel-optimizer">
+      <h2>Optimize Trajectory</h2>
+      <div class="field">
+        <label>Origin</label>
+        <select id="opt-origin"></select>
+      </div>
+      <div class="field">
+        <label>Target</label>
+        <select id="opt-target"></select>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Dep Start</label>
+          <input type="date" id="opt-dep-start" value="2026-09-01" min="2025-01-01" max="2059-12-31" />
+        </div>
+        <div class="field">
+          <label>Dep End</label>
+          <input type="date" id="opt-dep-end" value="2027-03-01" min="2025-01-01" max="2059-12-31" />
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Iterations</label>
+          <input type="number" id="opt-iters" value="100" min="10" max="2000" />
+        </div>
+        <div class="field">
+          <label>Population</label>
+          <input type="number" id="opt-pop" value="30" min="5" max="200" />
+        </div>
+      </div>
+      <button id="btn-optimize" class="primary">Run Optimizer</button>
+      <div id="opt-progress" class="result-box hidden"></div>
+    </section>
+
+    <!-- Multi-Leg Trajectory -->
+    <section class="panel" id="panel-multileg">
+      <h2>Multi-Leg Trajectory</h2>
+      <p class="hint">Plan gravity-assist trajectories (e.g., VEGA, Cassini)</p>
+      <div id="multileg-legs">
+        <!-- Leg rows added dynamically -->
+      </div>
+      <div class="field">
+        <label>Departure</label>
+        <input type="date" id="ml-departure" value="2028-06-01" min="2025-01-01" max="2059-12-31" />
+      </div>
+      <div class="btn-row">
+        <button id="btn-ml-add" class="secondary" title="Add body to sequence">+ Add Leg</button>
+        <button id="btn-ml-preset" class="secondary" title="Load preset trajectory">Presets</button>
+      </div>
+      <button id="btn-multileg" class="primary">Compute Trajectory</button>
+      <button id="btn-ml-optimize" class="primary" style="margin-top:4px; background:linear-gradient(135deg,var(--warn),var(--accent2));">Optimize Multi-Leg</button>
+      <div id="ml-result" class="result-box hidden"></div>
+      <div id="ml-opt-progress" class="result-box hidden"></div>
+    </section>
+  </aside>
+
+  <!-- Pork-chop overlay -->
+  <div id="porkchop-overlay" class="overlay hidden">
+    <div class="overlay-content">
+      <div class="overlay-header">
+        <h2>Pork-Chop Plot</h2>
+        <button id="btn-close-pc" class="close-btn">&times;</button>
+      </div>
+      <div id="porkchop-container">
+        <canvas id="porkchop-canvas"></canvas>
+        <div id="porkchop-tooltip" class="tooltip hidden"></div>
+      </div>
+      <div id="porkchop-legend"></div>
+    </div>
+  </div>
+
+  <!-- Info tooltip for hovering bodies -->
+  <div id="body-tooltip" class="tooltip hidden"></div>
+
+  <!-- Multi-leg preset menu -->
+  <div id="ml-preset-menu" class="preset-menu hidden">
+    <div class="preset-item" data-preset="vega">
+      <strong>VEGA</strong> — Earth &rarr; Venus &rarr; Earth &rarr; Jupiter
+    </div>
+    <div class="preset-item" data-preset="cassini">
+      <strong>Cassini</strong> — Earth &rarr; Venus &rarr; Venus &rarr; Earth &rarr; Jupiter &rarr; Saturn
+    </div>
+    <div class="preset-item" data-preset="messenger">
+      <strong>MESSENGER</strong> — Earth &rarr; Venus &rarr; Venus &rarr; Mercury
+    </div>
+    <div class="preset-item" data-preset="earth-mars">
+      <strong>Direct</strong> — Earth &rarr; Mars
+    </div>
+    <div class="preset-item" data-preset="grand-tour">
+      <strong>Grand Tour</strong> — Earth &rarr; Jupiter &rarr; Saturn &rarr; Uranus &rarr; Neptune
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
