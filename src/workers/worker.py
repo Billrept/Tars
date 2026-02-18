@@ -64,6 +64,7 @@ async def run_optimization(ctx: dict, job_id: str, request_data: dict) -> dict:
         population_size=request_data.get("population_size", 30),
         max_iterations=request_data.get("max_iterations", 200),
         prograde=request_data.get("prograde", True),
+        mode=request_data.get("mode", "pareto"),
     )
 
     logger.info("Starting optimization job %s: %s -> %s",
@@ -128,6 +129,7 @@ async def run_multileg_optimization(ctx: dict, job_id: str, request_data: dict) 
         population_size=request_data.get("population_size", 40),
         max_iterations=request_data.get("max_iterations", 300),
         max_c3=request_data.get("max_c3"),
+        mode=request_data.get("mode", "pareto"),
     )
 
     logger.info("Starting multi-leg optimization job %s: %s",

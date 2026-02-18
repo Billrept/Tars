@@ -73,6 +73,7 @@ async def submit_optimization(
         "population_size": request.population_size,
         "max_iterations": request.max_iterations,
         "prograde": request.prograde,
+        "mode": request.mode,
     }
 
     # Store job metadata
@@ -201,6 +202,8 @@ def _progress_to_dict(p: OptimizationProgress) -> dict:
             v if v != float("inf") else None for v in p.population_best_dvs
         ],
         "population_positions": p.population_positions,
+        "pareto_front": p.pareto_front,
+        "mode": p.mode,
     }
 
 
@@ -228,6 +231,7 @@ async def submit_multileg_optimization(
         "population_size": request.population_size,
         "max_iterations": request.max_iterations,
         "max_c3": request.max_c3,
+        "mode": request.mode,
     }
 
     # Store job metadata
@@ -302,4 +306,6 @@ def _multileg_progress_to_dict(p: MultiLegOptimizationProgress) -> dict:
             for v in p.population_best_dvs
         ],
         "population_positions": p.population_positions,
+        "pareto_front": p.pareto_front,
+        "mode": p.mode,
     }

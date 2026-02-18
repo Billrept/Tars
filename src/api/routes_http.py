@@ -99,11 +99,19 @@ class OptimizeRequest(BaseModel):
     tof_max_days: float = Field(default=400, ge=1)
     population_size: int = Field(default=30, ge=5, le=200)
     max_iterations: int = Field(default=200, ge=10, le=2000)
+    mode: str = Field(default="pareto", description="Optimization mode: 'min_dv', 'min_tof', or 'pareto'")
 
     @field_validator("dep_start", "dep_end")
     @classmethod
     def check_iso_date(cls, v: str) -> str:
         return _validate_iso_date(v)
+
+    @field_validator("mode")
+    @classmethod
+    def check_mode(cls, v: str) -> str:
+        if v not in ("min_dv", "min_tof", "pareto"):
+            raise ValueError(f"mode must be 'min_dv', 'min_tof', or 'pareto', got '{v}'")
+        return v
 
 
 class LambertRequest(BaseModel):
@@ -166,6 +174,7 @@ class MultiLegOptimizeRequest(BaseModel):
     population_size: int = Field(default=40, ge=5, le=200)
     max_iterations: int = Field(default=300, ge=10, le=2000)
     max_c3: float | None = Field(default=None, description="Max departure C3 (km^2/s^2)")
+    mode: str = Field(default="pareto", description="Optimization mode: 'min_dv', 'min_tof', or 'pareto'")
 
     @field_validator("dep_start", "dep_end")
     @classmethod
@@ -180,6 +189,13 @@ class MultiLegOptimizeRequest(BaseModel):
                 raise ValueError(f"leg_tof_bounds[{i}] must have exactly 2 elements [min, max], got {len(bounds)}")
             if bounds[0] >= bounds[1]:
                 raise ValueError(f"leg_tof_bounds[{i}]: min ({bounds[0]}) must be < max ({bounds[1]})")
+        return v
+
+    @field_validator("mode")
+    @classmethod
+    def check_mode(cls, v: str) -> str:
+        if v not in ("min_dv", "min_tof", "pareto"):
+            raise ValueError(f"mode must be 'min_dv', 'min_tof', or 'pareto', got '{v}'")
         return v
 
 
@@ -394,6 +410,104 @@ async def lambert_transfer(req: LambertRequest, request: Request):
     }
 
 
+class AssessRequest(BaseModel):
+    origin: str
+    target: str
+    departure_date: str
+    tof_days: float = Field(ge=1)
+
+    @field_validator("departure_date")
+    @classmethod
+    def check_iso_date(cls, v: str) -> str:
+        return _validate_iso_date(v)
+
+
+@router.post("/assess")
+async def assess_launch_window(req: AssessRequest, request: Request):
+    """Assess whether a specific departure date is good for launch.
+
+    Returns trajectory details plus a 'rating' field indicating quality:
+    - 'excellent': dv_total < 4 km/s
+    - 'good': dv_total < 6 km/s
+    - 'moderate': dv_total < 8 km/s
+    - 'poor': dv_total < 12 km/s
+    - 'bad': dv_total >= 12 km/s
+
+    Also returns 'suggestion' with a nearby better departure date if available.
+    """
+    origin = _resolve_body(req.origin)
+    target = _resolve_body(req.target)
+    cache = _get_cache(request)
+
+    for body in [origin, target]:
+        if body.naif_id not in cache:
+            raise HTTPException(status_code=503, detail=f"Ephemeris not loaded for {body.name}")
+
+    dep_jd = _safe_iso_to_jd(req.departure_date)
+    arr_jd = dep_jd + req.tof_days
+
+    try:
+        cache.validate_epoch(origin.naif_id, dep_jd)
+        cache.validate_epoch(target.naif_id, arr_jd)
+    except EphemerisRangeError as e:
+        raise HTTPException(status_code=422, detail=f"Date outside ephemeris range: {e}")
+
+    result = delta_v_objective(
+        dep_jd, req.tof_days,
+        origin.naif_id, target.naif_id, cache,
+    )
+
+    dv_total = result["dv_total"]
+
+    if dv_total < 4:
+        rating = "excellent"
+    elif dv_total < 6:
+        rating = "good"
+    elif dv_total < 8:
+        rating = "moderate"
+    elif dv_total < 12:
+        rating = "poor"
+    else:
+        rating = "bad"
+
+    suggestion = None
+    if rating in ("poor", "bad", "moderate"):
+        best_dv = dv_total
+        best_jd = dep_jd
+        for delta in [-30, -15, -7, 7, 15, 30]:
+            test_jd = dep_jd + delta
+            try:
+                cache.validate_epoch(origin.naif_id, test_jd)
+                cache.validate_epoch(target.naif_id, test_jd + req.tof_days)
+            except EphemerisRangeError:
+                continue
+            test_result = delta_v_objective(test_jd, req.tof_days, origin.naif_id, target.naif_id, cache)
+            if test_result["dv_total"] < best_dv - 0.5:
+                best_dv = test_result["dv_total"]
+                best_jd = test_jd
+        if best_jd != dep_jd:
+            suggestion = {
+                "departure_date": jd_to_iso(best_jd)[:10],
+                "improvement_km_s": round(dv_total - best_dv, 2),
+            }
+
+    return {
+        "origin": origin.name,
+        "target": target.name,
+        "departure_date": req.departure_date,
+        "departure_jd": dep_jd,
+        "arrival_date": jd_to_iso(arr_jd)[:10],
+        "arrival_jd": arr_jd,
+        "tof_days": req.tof_days,
+        "dv_total_km_s": result["dv_total"],
+        "dv_departure_km_s": result["dv_departure"],
+        "dv_arrival_km_s": result["dv_arrival"],
+        "converged": result["converged"],
+        "rating": rating,
+        "suggestion": suggestion,
+    }
+
+
 @router.post("/optimize")
 async def start_optimization(req: OptimizeRequest, request: Request):
     """Submit an optimization job. Returns a job_id for tracking."""
@@ -435,6 +549,7 @@ async def start_optimization(req: OptimizeRequest, request: Request):
         tof_max_days=req.tof_max_days,
         population_size=req.population_size,
         max_iterations=req.max_iterations,
+        mode=req.mode,
     )
 
     job_id = await submit_optimization(opt_req)
@@ -615,6 +730,7 @@ async def start_multileg_optimization(req: MultiLegOptimizeRequest, request: Req
         population_size=req.population_size,
         max_iterations=req.max_iterations,
         max_c3=req.max_c3,
+        mode=req.mode,
     )
 
     job_id = await submit_multileg_optimization(opt_req)

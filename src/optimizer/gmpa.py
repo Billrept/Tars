@@ -40,6 +40,8 @@ class OptimizationProgress:
     converged: bool
     population_best_dvs: list[float] = field(default_factory=list)  # top-3
     population_positions: list[list[float]] = field(default_factory=list)  # [[dep_jd, tof], ...]
+    pareto_front: list[dict] = field(default_factory=list)  # [{dv, tof, dep_jd, ...}]
+    mode: str = "min_dv"
 
 
 @dataclass
@@ -54,6 +56,50 @@ class OptimizationRequest:
     population_size: int = 30
     max_iterations: int = 200
     prograde: bool = True
+    mode: str = "pareto"  # "min_dv", "min_tof", "pareto"
+
+
+class ParetoArchive:
+    """Maintains a set of non-dominated solutions (Pareto front)."""
+
+    def __init__(self, max_size: int = 50):
+        self.solutions: list[dict] = []
+        self.max_size = max_size
+
+    def add(self, sol: dict) -> bool:
+        dv = sol.get("dv_total", float("inf"))
+        tof = sol.get("tof_days", sol.get("total_tof_days", 0))
+        if dv == float("inf") or tof <= 0:
+            return False
+
+        to_remove = []
+        for existing in self.solutions:
+            e_dv = existing.get("dv_total", float("inf"))
+            e_tof = existing.get("tof_days", existing.get("total_tof_days", 0))
+            if e_dv <= dv and e_tof <= tof and (e_dv < dv or e_tof < tof):
+                return False
+            if dv <= e_dv and tof <= e_tof and (dv < e_dv or tof < e_tof):
+                to_remove.append(existing)
+
+        for r in to_remove:
+            self.solutions.remove(r)
+
+        self.solutions.append(sol)
+        self.solutions.sort(key=lambda x: x.get("dv_total", float("inf")))
+
+        if len(self.solutions) > self.max_size:
+            self.solutions = self.solutions[::2]
+        return True
+
+    def to_list(self) -> list[dict]:
+        return [
+            {
+                "dv_total": s.get("dv_total"),
+                "tof_days": s.get("tof_days", s.get("total_tof_days")),
+                "departure_jd": s.get("departure_jd"),
+            }
+            for s in self.solutions
+        ]
 
 
 class GreyWolfOptimizer:
@@ -77,19 +123,23 @@ class GreyWolfOptimizer:
         req = self.req
         n_wolves = req.population_size
         max_iter = req.max_iterations
+        mode = req.mode
 
-        # Search space bounds
         lb = np.array([req.dep_start_jd, req.tof_min_days])
         ub = np.array([req.dep_end_jd, req.tof_max_days])
 
-        # Initialize wolf positions randomly
         rng = np.random.default_rng()
         positions = rng.uniform(lb, ub, size=(n_wolves, 2))
 
-        # Evaluate fitness for all wolves
-        fitness = np.array([self._evaluate(pos) for pos in positions])
+        pareto_archive = ParetoArchive() if mode == "pareto" else None
 
-        # Sort and identify alpha, beta, delta (top 3)
+        results_full = [self._evaluate_full(pos) for pos in positions]
+        fitness = np.array([self._get_fitness(r) for r in results_full])
+
+        if mode == "pareto":
+            for r in results_full:
+                pareto_archive.add(r)
+
         sorted_idx = np.argsort(fitness)
         alpha_pos = positions[sorted_idx[0]].copy()
         alpha_fit = fitness[sorted_idx[0]]
@@ -98,19 +148,21 @@ class GreyWolfOptimizer:
         delta_pos = positions[sorted_idx[2]].copy()
         delta_fit = fitness[sorted_idx[2]]
 
-        best_dv = alpha_fit
-        best_result = self._evaluate_full(alpha_pos)
+        best_fit = alpha_fit
+        best_result = results_full[sorted_idx[0]]
 
-        # Yield initial state
-        yield self._make_progress(0, max_iter, best_result, [float(alpha_fit), float(beta_fit), float(delta_fit)],
-                                  positions.tolist())
+        yield self._make_progress(
+            0, max_iter, best_result,
+            [float(alpha_fit), float(beta_fit), float(delta_fit)],
+            positions.tolist(),
+            pareto_archive.to_list() if pareto_archive else [],
+            mode,
+        )
 
         for iteration in range(1, max_iter + 1):
-            # Linearly decrease a from 2 to 0
             a = 2.0 * (1.0 - iteration / max_iter)
 
             for i in range(n_wolves):
-                # Update position based on alpha, beta, delta
                 for dim in range(2):
                     r1, r2 = rng.random(), rng.random()
                     A1 = 2.0 * a * r1 - a
@@ -132,13 +184,15 @@ class GreyWolfOptimizer:
 
                     positions[i, dim] = (X1 + X2 + X3) / 3.0
 
-                # Clamp to bounds
                 positions[i] = np.clip(positions[i], lb, ub)
 
-            # Re-evaluate fitness
-            fitness = np.array([self._evaluate(pos) for pos in positions])
+            results_full = [self._evaluate_full(pos) for pos in positions]
+            fitness = np.array([self._get_fitness(r) for r in results_full])
 
-            # Update alpha, beta, delta
+            if mode == "pareto":
+                for r in results_full:
+                    pareto_archive.add(r)
+
             sorted_idx = np.argsort(fitness)
             if fitness[sorted_idx[0]] < alpha_fit:
                 alpha_pos = positions[sorted_idx[0]].copy()
@@ -150,39 +204,38 @@ class GreyWolfOptimizer:
                 delta_pos = positions[sorted_idx[2]].copy()
                 delta_fit = fitness[sorted_idx[2]]
 
-            # Yield progress if alpha improved
-            if alpha_fit < best_dv:
-                best_dv = alpha_fit
-                best_result = self._evaluate_full(alpha_pos)
+            if alpha_fit < best_fit:
+                best_fit = alpha_fit
+                best_result = results_full[sorted_idx[0]]
                 yield self._make_progress(
                     iteration, max_iter, best_result,
                     [float(alpha_fit), float(beta_fit), float(delta_fit)],
                     positions.tolist(),
+                    pareto_archive.to_list() if pareto_archive else [],
+                    mode,
                 )
-
-            # Always yield every 10 iterations for liveness
             elif iteration % 10 == 0:
-                best_result = self._evaluate_full(alpha_pos)
                 yield self._make_progress(
-                    iteration, max_iter, best_result,
+                    iteration, max_iter, results_full[sorted_idx[0]],
                     [float(alpha_fit), float(beta_fit), float(delta_fit)],
                     positions.tolist(),
+                    pareto_archive.to_list() if pareto_archive else [],
+                    mode,
                 )
 
-        # Final yield
         best_result = self._evaluate_full(alpha_pos)
-        yield self._make_progress(max_iter, max_iter, best_result,
-                                  [float(alpha_fit), float(beta_fit), float(delta_fit)],
-                                  positions.tolist())
-
-    def _evaluate(self, pos: np.ndarray) -> float:
-        """Evaluate fitness (total delta-v) for a wolf position."""
-        dep_jd, tof_days = pos[0], pos[1]
-        result = delta_v_objective(
-            dep_jd, tof_days,
-            self.req.origin_id, self.req.target_id,
-            self.cache, prograde=self.req.prograde,
+        yield self._make_progress(
+            max_iter, max_iter, best_result,
+            [float(alpha_fit), float(beta_fit), float(delta_fit)],
+            positions.tolist(),
+            pareto_archive.to_list() if pareto_archive else [],
+            mode,
         )
+
+    def _get_fitness(self, result: dict) -> float:
+        """Get fitness value based on optimization mode."""
+        if self.req.mode == "min_tof":
+            return result["tof_days"] if result["tof_days"] > 0 else 1e12
         return result["dv_total"]
 
     def _evaluate_full(self, pos: np.ndarray) -> dict:
@@ -201,6 +254,8 @@ class GreyWolfOptimizer:
         result: dict,
         top3: list[float],
         population_positions: list[list[float]] | None = None,
+        pareto_front: list[dict] | None = None,
+        mode: str = "min_dv",
     ) -> OptimizationProgress:
         return OptimizationProgress(
             iteration=iteration,
@@ -213,6 +268,8 @@ class GreyWolfOptimizer:
             converged=result["converged"],
             population_best_dvs=top3,
             population_positions=population_positions or [],
+            pareto_front=pareto_front or [],
+            mode=mode,
         )
 
 
@@ -230,14 +287,15 @@ class MultiLegOptimizationProgress:
     best_departure_jd: float
     best_leg_tof_days: list[float]
     best_total_tof_days: float
-    # Per-component delta-v
     best_dv_departure: float
     best_dv_arrival: float
     best_dv_flyby: float
     converged: bool
     body_sequence: list[str]
-    population_best_dvs: list[float] = field(default_factory=list)  # top-3
-    population_positions: list[list[float]] = field(default_factory=list)  # [[dep_jd, tof0, ...], ...]
+    population_best_dvs: list[float] = field(default_factory=list)
+    population_positions: list[list[float]] = field(default_factory=list)
+    pareto_front: list[dict] = field(default_factory=list)
+    mode: str = "min_dv"
 
 
 @dataclass
@@ -247,35 +305,22 @@ class MultiLegOptimizationRequest:
     The search space is (N+1)-dimensional:
         x[0] = departure Julian Date
         x[1..N] = TOF in days for each of the N legs
-
-    ---------------------------------------------------------------------------
-    YOUR FRIEND: Same interface contract as OptimizationRequest. The multi-leg
-    optimizer is a drop-in replacement — same `run()` generator pattern.
-    ---------------------------------------------------------------------------
     """
-    body_names: list[str]               # e.g. ["earth", "venus", "earth", "jupiter"]
+    body_names: list[str]
     dep_start_jd: float
     dep_end_jd: float
-    leg_tof_bounds: list[tuple[float, float]]  # [(min, max)] per leg
+    leg_tof_bounds: list[tuple[float, float]]
     population_size: int = 40
     max_iterations: int = 300
-    max_c3: float | None = None         # optional launch C3 constraint (km²/s²)
+    max_c3: float | None = None
+    mode: str = "pareto"  # "min_dv", "min_tof", "pareto"
 
 
 class MultiLegGreyWolfOptimizer:
     """Grey Wolf Optimizer for multi-leg trajectory search.
 
     Searches over [departure_jd, tof_0, tof_1, ..., tof_{N-1}] to minimize
-    total delta-v (departure + powered flybys + arrival).
-
-    Yields MultiLegOptimizationProgress so the frontend can show live updates.
-
-    ---------------------------------------------------------------------------
-    YOUR FRIEND: To replace this, implement a class that:
-    1. Accepts MultiLegOptimizationRequest + EphemerisCache
-    2. Has a `run()` method yielding MultiLegOptimizationProgress
-    3. Update the import in dispatcher.py / worker.py
-    ---------------------------------------------------------------------------
+    total delta-v (departure + powered flybys + arrival) or other objectives.
     """
 
     def __init__(
@@ -286,15 +331,15 @@ class MultiLegGreyWolfOptimizer:
         self.req = request
         self.cache = cache
         self.n_legs = len(request.body_names) - 1
-        self.n_dims = 1 + self.n_legs  # departure_jd + tof per leg
+        self.n_dims = 1 + self.n_legs
 
     def run(self) -> Generator[MultiLegOptimizationProgress, None, None]:
         """Run the GWO optimization for multi-leg trajectories."""
         req = self.req
         n_wolves = req.population_size
         max_iter = req.max_iterations
+        mode = req.mode
 
-        # Build search bounds: [dep_jd, tof_0, tof_1, ...]
         lb = np.zeros(self.n_dims)
         ub = np.zeros(self.n_dims)
         lb[0] = req.dep_start_jd
@@ -303,14 +348,18 @@ class MultiLegGreyWolfOptimizer:
             lb[1 + i] = tmin
             ub[1 + i] = tmax
 
-        # Initialize wolf positions randomly
         rng = np.random.default_rng()
         positions = rng.uniform(lb, ub, size=(n_wolves, self.n_dims))
 
-        # Evaluate fitness for all wolves
-        fitness = np.array([self._evaluate(pos) for pos in positions])
+        pareto_archive = ParetoArchive() if mode == "pareto" else None
 
-        # Sort and identify alpha, beta, delta (top 3)
+        results_full = [self._evaluate_full(pos) for pos in positions]
+        fitness = np.array([self._get_fitness(r) for r in results_full])
+
+        if mode == "pareto":
+            for r in results_full:
+                pareto_archive.add(r)
+
         sorted_idx = np.argsort(fitness)
         alpha_pos = positions[sorted_idx[0]].copy()
         alpha_fit = fitness[sorted_idx[0]]
@@ -319,16 +368,18 @@ class MultiLegGreyWolfOptimizer:
         delta_pos = positions[sorted_idx[2]].copy()
         delta_fit = fitness[sorted_idx[2]]
 
-        best_dv = alpha_fit
-        best_progress = self._make_progress(0, max_iter, alpha_pos, alpha_fit,
-                                            [float(alpha_fit), float(beta_fit), float(delta_fit)],
-                                            positions.tolist())
+        best_fit = alpha_fit
+        best_result = results_full[sorted_idx[0]]
 
-        # Yield initial state
-        yield best_progress
+        yield self._make_progress(
+            0, max_iter, alpha_pos, best_result.get("dv_total", float("inf")),
+            [float(alpha_fit), float(beta_fit), float(delta_fit)],
+            positions.tolist(),
+            pareto_archive.to_list() if pareto_archive else [],
+            mode,
+        )
 
         for iteration in range(1, max_iter + 1):
-            # Linearly decrease a from 2 to 0
             a = 2.0 * (1.0 - iteration / max_iter)
 
             for i in range(n_wolves):
@@ -353,13 +404,15 @@ class MultiLegGreyWolfOptimizer:
 
                     positions[i, dim] = (X1 + X2 + X3) / 3.0
 
-                # Clamp to bounds
                 positions[i] = np.clip(positions[i], lb, ub)
 
-            # Re-evaluate fitness
-            fitness = np.array([self._evaluate(pos) for pos in positions])
+            results_full = [self._evaluate_full(pos) for pos in positions]
+            fitness = np.array([self._get_fitness(r) for r in results_full])
 
-            # Update alpha, beta, delta
+            if mode == "pareto":
+                for r in results_full:
+                    pareto_archive.add(r)
+
             sorted_idx = np.argsort(fitness)
             if fitness[sorted_idx[0]] < alpha_fit:
                 alpha_pos = positions[sorted_idx[0]].copy()
@@ -371,36 +424,55 @@ class MultiLegGreyWolfOptimizer:
                 delta_pos = positions[sorted_idx[2]].copy()
                 delta_fit = fitness[sorted_idx[2]]
 
-            # Yield progress if alpha improved
-            if alpha_fit < best_dv:
-                best_dv = alpha_fit
-                best_progress = self._make_progress(
-                    iteration, max_iter, alpha_pos, alpha_fit,
+            if alpha_fit < best_fit:
+                best_fit = alpha_fit
+                best_result = results_full[sorted_idx[0]]
+                yield self._make_progress(
+                    iteration, max_iter, alpha_pos, best_result.get("dv_total", float("inf")),
                     [float(alpha_fit), float(beta_fit), float(delta_fit)],
                     positions.tolist(),
+                    pareto_archive.to_list() if pareto_archive else [],
+                    mode,
                 )
-                yield best_progress
-
-            # Always yield every 10 iterations for liveness
             elif iteration % 10 == 0:
                 yield self._make_progress(
-                    iteration, max_iter, alpha_pos, alpha_fit,
+                    iteration, max_iter, alpha_pos, results_full[sorted_idx[0]].get("dv_total", float("inf")),
                     [float(alpha_fit), float(beta_fit), float(delta_fit)],
                     positions.tolist(),
+                    pareto_archive.to_list() if pareto_archive else [],
+                    mode,
                 )
 
-        # Final yield
+        best_result = self._evaluate_full(alpha_pos)
         yield self._make_progress(
-            max_iter, max_iter, alpha_pos, alpha_fit,
+            max_iter, max_iter, alpha_pos, best_result.get("dv_total", float("inf")),
             [float(alpha_fit), float(beta_fit), float(delta_fit)],
             positions.tolist(),
+            pareto_archive.to_list() if pareto_archive else [],
+            mode,
         )
 
-    def _evaluate(self, pos: np.ndarray) -> float:
-        """Evaluate fitness (total delta-v) for a wolf position."""
-        return multileg_objective(
-            pos, self.req.body_names, self.cache, self.req.max_c3,
-        )
+    def _get_fitness(self, result: dict) -> float:
+        """Get fitness value based on optimization mode."""
+        if self.req.mode == "min_tof":
+            return result.get("total_tof_days", 1e12)
+        return result.get("dv_total", 1e12)
+
+    def _evaluate_full(self, pos: np.ndarray) -> dict:
+        """Get full result dict for a wolf position."""
+        result = multileg_objective_full(pos, self.req.body_names, self.cache, n_traj_points=0)
+        if result is None:
+            return {"dv_total": float("inf"), "total_tof_days": 1e12, "departure_jd": float(pos[0])}
+        return {
+            "dv_total": result.total_dv_km_s,
+            "total_tof_days": result.total_tof_days,
+            "departure_jd": result.departure_jd,
+            "departure_dv_km_s": result.departure_dv_km_s,
+            "arrival_dv_km_s": result.arrival_dv_km_s,
+            "flyby_dv_km_s": result.flyby_dv_km_s,
+            "legs": result.legs,
+            "flybys": result.flybys,
+        }
 
     def _make_progress(
         self,
@@ -410,16 +482,14 @@ class MultiLegGreyWolfOptimizer:
         dv_total: float,
         top3: list[float],
         population_positions: list[list[float]] | None = None,
+        pareto_front: list[dict] | None = None,
+        mode: str = "min_dv",
     ) -> MultiLegOptimizationProgress:
-        """Build progress from the current best position."""
         dep_jd = float(pos[0])
         leg_tofs = [float(pos[1 + i]) for i in range(self.n_legs)]
         total_tof = sum(leg_tofs)
 
-        # Get detailed result for the best position
-        result = multileg_objective_full(
-            pos, self.req.body_names, self.cache, n_traj_points=0,
-        )
+        result = multileg_objective_full(pos, self.req.body_names, self.cache, n_traj_points=0)
 
         if result is not None:
             dv_departure = result.departure_dv_km_s
@@ -446,4 +516,6 @@ class MultiLegGreyWolfOptimizer:
             body_sequence=self.req.body_names,
             population_best_dvs=top3,
             population_positions=population_positions or [],
+            pareto_front=pareto_front or [],
+            mode=mode,
         )
