@@ -5,6 +5,8 @@
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { jdToIso, pointToUnixMs, findClosestIndexByTime } from './utils/dateUtils.js';
+
 
 const API = 'http://localhost:8000';
 const WS  = 'ws://localhost:8000';
@@ -39,6 +41,10 @@ let ephemerisWs = null;             // WebSocket for streaming
 let simPaused = false;
 let simSpeed = 10;
 let epochRange = { start: '2025-01-01', end: '2059-12-31' }; // updated from backend
+let stepDays = 3;
+let currentDate = new Date(epochRange.start);
+let orbitPoints = {};
+let orbitRedrawTimer = null;
 
 // Planet display radii (scene units) — exaggerated for visibility
 const DISPLAY_RADIUS = {
@@ -60,7 +66,9 @@ async function init() {
   await fetchBodies();
   await fetchEpochRange();
   populateSelects();
-  fetchOrbits();
+  await fetchOrbits();
+  drawOrbits();              // draw once immediately
+  startOrbitRedrawLoop(1000); // redraw every 1 second (change as you like)
   connectEphemeris();
   bindEvents();
   animate();
@@ -77,7 +85,8 @@ function initScene() {
   camera.lookAt(0, 0, 0);
 
   // Renderer
-  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true});
+  // renderer.autoClearColor = false;
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -193,47 +202,148 @@ function populateSelects() {
 }
 
 async function fetchOrbits() {
-  // Fetch orbit paths for planets over the full ephemeris range
   const planets = bodies.filter(b => b.parent_id === null);
   for (const body of planets) {
     try {
       const res = await fetch(
-        `${API}/bodies/${body.name.toLowerCase()}/ephemeris?start=${epochRange.start}&end=${epochRange.end}&step_days=10&scene_units=true`
+        `${API}/bodies/${body.name.toLowerCase()}/ephemeris?start=${epochRange.start}&end=${epochRange.end}&step_days=${stepDays}&scene_units=true`
       );
       const data = await res.json();
-      drawOrbit(body, data.points);
+
+      orbitPoints[data.body] = data.points;
     } catch (e) {
       console.warn(`Failed to fetch orbit for ${body.name}:`, e);
     }
   }
 }
 
-function drawOrbit(body, points) {
+function drawOrbits() {
+  const planets = bodies.filter(b => b.parent_id === null);
+
+  for (const body of planets) {
+    const points = orbitPoints[body.name]; // because you store orbitPoints[data.body]
+    if (!points) continue;
+
+    drawOrbit(body, points, {
+      windowDays: 120,     // 1 month
+      smooth: true,
+      sampleCount: 120,
+      keepEvery: 1
+    });
+  }
+}
+
+function drawOrbit(body, points, opts = {}) {
+  const {
+    windowDays = 120,       // draw 1 month by default
+    smooth = true,         // make it curvy
+    sampleCount = 120,     // how many points to render along the curve
+    keepEvery = 1          // use fewer raw points before smoothing (bigger => fewer)
+  } = opts;
+
+  if (!points || points.length < 2) return;
+
+  // 1) Delete previous line if there is one
+  removeOrbitLine(body.naif_id);
+
+  const isSun = body.naif_id === 10;
+  if (isSun) return; // you were hiding it anyway; just skip creating it
+
+  // 2) Find segment from currentDate to currentDate + 1 month
+  const startMs = (currentDate instanceof Date) ? currentDate.getTime() : Date.parse(currentDate);
+  const endMs = startMs + windowDays * 86400 * 1000;
+
+  const startIndex = findClosestIndexByTime(points, startMs);
+  // Walk forward until we pass endMs (assumes points are time-ordered)
+  let endIndex = startIndex;
+  while (endIndex < points.length) {
+    const t = pointToUnixMs(points[endIndex]);
+    if (Number.isFinite(t) && t > endMs) break;
+    endIndex++;
+  }
+
+  let segment = points.slice(startIndex, Math.max(endIndex, startIndex + 2));
+  console.log(body.name);
+  // console.log(Math.max(endIndex, startIndex + 2));
+  // console.log(endIndex);
+  // console.log(segment.length);
+  if (segment.length < 2) return;
+
+  // 3) Optionally smooth using CatmullRomCurve3 (curvy look with few points)
+  // Convert to THREE.Vector3 in your axis convention: (x, z, -y)
+  let drawPoints;
+
+  if (smooth && segment.length >= 4) {
+    // console.log("Smoothing");
+    // Use fewer points first (keepEvery) then generate a smooth curve
+    const sparse = [];
+    for (let i = 0; i < segment.length; i += keepEvery) {
+      const p = segment[i];
+      sparse.push(new THREE.Vector3(p.x, p.z, -p.y));
+    }
+    // Ensure the last point is included
+    const last = segment[segment.length - 1];
+    sparse.push(new THREE.Vector3(last.x, last.z, -last.y));
+
+    const curve = new THREE.CatmullRomCurve3(sparse, false, "centripetal");
+    drawPoints = curve.getPoints(sampleCount); // sampled smooth points
+  } else {
+    // No smoothing: just use the segment points
+    drawPoints = segment.map(p => new THREE.Vector3(p.x, p.z, -p.y));
+  }
+
   const positions = [];
   const colors = [];
   const base = new THREE.Color(body.color);
-  const n = points.length;
-  const isSun = body.naif_id === 10;
+  const n = drawPoints.length;
+
+  console.log(n);
 
   for (let i = 0; i < n; i++) {
-    positions.push(points[i].x, points[i].z, -points[i].y);
-    // Trail fading: dim at start (old positions), bright at end (recent)
+    const v = drawPoints[i];
+    positions.push(v.x, v.y, v.z);
+
+    // fading trail
     const t = n > 1 ? i / (n - 1) : 1;
     const brightness = 0.12 + 0.78 * t;
     colors.push(base.r * brightness, base.g * brightness, base.b * brightness);
   }
 
   const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-  geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+
   const mat = new THREE.LineBasicMaterial({
     vertexColors: true,
     transparent: true,
-    opacity: isSun ? 0 : 0.55,
+    opacity: 0.55
   });
+
   const line = new THREE.Line(geo, mat);
   scene.add(line);
   orbitLines[body.naif_id] = line;
+}
+
+function startOrbitRedrawLoop(intervalMs = 1000) {
+  if (orbitRedrawTimer) clearInterval(orbitRedrawTimer);
+  orbitRedrawTimer = setInterval(() => {
+    drawOrbits();
+  }, intervalMs);
+}
+
+function stopOrbitRedrawLoop() {
+  if (orbitRedrawTimer) clearInterval(orbitRedrawTimer);
+  orbitRedrawTimer = null;
+}
+
+function removeOrbitLine(bodyNaifId) {
+  const prev = orbitLines[bodyNaifId];
+  if (!prev) return;
+  scene.remove(prev);
+  prev.geometry?.dispose?.();
+  prev.material?.dispose?.();
+  orbitLines[bodyNaifId] = null;
+
 }
 
 // ── Create Body Meshes ─────────────────────────────────────────────────────
@@ -340,6 +450,8 @@ function connectEphemeris() {
 
   ephemerisWs.onmessage = (event) => {
     const snap = JSON.parse(event.data);
+    currentDate = snap.epoch_iso ? snap.epoch_iso.split('T')[0] : '';
+
     updatePlanetPositions(snap);
   };
 
@@ -1114,10 +1226,6 @@ function formatMultiLegResult(data) {
 }
 
 // ── Multi-leg Optimizer ───────────────────────────────────────────────────
-function jdToIso(jd) {
-  const ms = (jd - 2440587.5) * 86400000;
-  return new Date(ms).toISOString().split('T')[0];
-}
 
 async function runMultiLegOptimizer() {
   const btn = document.getElementById('btn-ml-optimize');
@@ -1242,6 +1350,12 @@ async function fetchAndDrawOptimizedMultiLeg(bodies, depJd, legTofs) {
     }
   } catch (_) {}
 }
+
+// setInterval(() => {
+//   for (const body of getPlanets()) {
+//     drawOrbit(body, orbitPoints[body.name]);
+//   }
+// }, 1000);
 
 // ── Render Loop ────────────────────────────────────────────────────────────
 function animate() {
