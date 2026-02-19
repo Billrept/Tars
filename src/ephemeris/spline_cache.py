@@ -19,7 +19,7 @@ import numpy as np
 from scipy.interpolate import CubicSpline
 
 from config import settings
-from ephemeris.bodies import ALL_BODIES, PLANETS, CelestialBody, BODY_BY_ID
+from ephemeris.bodies import ALL_BODIES, CelestialBody
 from ephemeris.horizons_client import fetch_state_vectors
 
 logger = logging.getLogger("tars.ephemeris")

@@ -101,21 +101,15 @@ def porkchop_grid(
     tofs = np.linspace(tof_min_days, tof_max_days, tof_steps)
 
     dv_grid = np.full((dep_steps, tof_steps), np.inf)
-    dv_dep_grid = np.full((dep_steps, tof_steps), np.inf)
-    dv_arr_grid = np.full((dep_steps, tof_steps), np.inf)
 
     for i, dep_jd in enumerate(dep_jds):
         for j, tof in enumerate(tofs):
             res = delta_v_objective(dep_jd, tof, origin_id, target_id, cache, mu)
             if res["converged"]:
                 dv_grid[i, j] = res["dv_total"]
-                dv_dep_grid[i, j] = res["dv_departure"]
-                dv_arr_grid[i, j] = res["dv_arrival"]
 
     return {
         "departure_jds": dep_jds,
         "tof_days": tofs,
         "dv_grid": dv_grid,
-        "dv_dep_grid": dv_dep_grid,
-        "dv_arr_grid": dv_arr_grid,
     }

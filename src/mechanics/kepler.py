@@ -213,7 +213,7 @@ def propagate_kepler(r0: np.ndarray, v0: np.ndarray, dt: float, mu: float) -> tu
     argp = a_e_i_raan_argp_nu[4]
     nu0 = a_e_i_raan_argp_nu[5]
 
-    if ecc < 1.0:
+    if ecc < 1.0 - 1e-10:
         # Elliptic
         n = math.sqrt(mu / abs(a)**3)  # mean motion
 
@@ -233,7 +233,7 @@ def propagate_kepler(r0: np.ndarray, v0: np.ndarray, dt: float, mu: float) -> tu
             math.sqrt(1.0 + ecc) * math.sin(E / 2.0),
             math.sqrt(1.0 - ecc) * math.cos(E / 2.0),
         )
-    else:
+    elif ecc > 1.0 + 1e-10:
         # Hyperbolic
         n = math.sqrt(mu / abs(a)**3)
 
@@ -250,5 +250,35 @@ def propagate_kepler(r0: np.ndarray, v0: np.ndarray, dt: float, mu: float) -> tu
             math.sqrt(ecc + 1.0) * math.sinh(H / 2.0),
             math.sqrt(ecc - 1.0) * math.cosh(H / 2.0),
         )
+    else:
+        # Near-parabolic: use a small-eccentricity offset to avoid singularity
+        # Treat as slightly elliptic or slightly hyperbolic
+        ecc_eff = 1.0 - 1e-8 if ecc <= 1.0 else 1.0 + 1e-8
+        a_eff = -mu / (2.0 * energy) if abs(energy) > 1e-15 else 1e12
+        n = math.sqrt(mu / abs(a_eff)**3)
+
+        if ecc_eff < 1.0:
+            E0 = 2.0 * math.atan2(
+                math.sqrt(1.0 - ecc_eff) * math.sin(nu0 / 2.0),
+                math.sqrt(1.0 + ecc_eff) * math.cos(nu0 / 2.0),
+            )
+            M0 = E0 - ecc_eff * math.sin(E0)
+            M = M0 + n * dt
+            E = _solve_kepler_elliptic(M, ecc_eff)
+            nu = 2.0 * math.atan2(
+                math.sqrt(1.0 + ecc_eff) * math.sin(E / 2.0),
+                math.sqrt(1.0 - ecc_eff) * math.cos(E / 2.0),
+            )
+        else:
+            H0 = 2.0 * math.atanh(
+                math.sqrt((ecc_eff - 1.0) / (ecc_eff + 1.0)) * math.tan(nu0 / 2.0)
+            )
+            M0 = ecc_eff * math.sinh(H0) - H0
+            M = M0 + n * dt
+            H = _solve_kepler_hyperbolic(M, ecc_eff)
+            nu = 2.0 * math.atan2(
+                math.sqrt(ecc_eff + 1.0) * math.sinh(H / 2.0),
+                math.sqrt(ecc_eff - 1.0) * math.cosh(H / 2.0),
+            )
 
     return elements_to_state(a, ecc, inc, raan, argp, nu, mu)

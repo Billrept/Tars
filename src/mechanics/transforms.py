@@ -29,19 +29,9 @@ def km_to_scene(pos_km: np.ndarray) -> np.ndarray:
     return pos_km * (SCENE_SCALE / AU_KM)
 
 
-def scene_to_km(pos_scene: np.ndarray) -> np.ndarray:
-    """Convert position from scene units back to km."""
-    return pos_scene * (AU_KM / SCENE_SCALE)
-
-
 def km_to_au(pos_km: np.ndarray) -> np.ndarray:
     """Convert position from km to AU."""
     return pos_km / AU_KM
-
-
-def au_to_km(pos_au: np.ndarray) -> np.ndarray:
-    """Convert position from AU to km."""
-    return pos_au * AU_KM
 
 
 # --------------------------------------------------------------------------- #
@@ -93,25 +83,15 @@ _R_ECL_TO_EQ = np.array([
 _R_EQ_TO_ECL = _R_ECL_TO_EQ.T
 
 
-def ecliptic_to_equatorial(vec: np.ndarray) -> np.ndarray:
-    """Rotate a vector from ecliptic J2000 to equatorial J2000."""
-    return _R_ECL_TO_EQ @ vec
-
-
-def equatorial_to_ecliptic(vec: np.ndarray) -> np.ndarray:
-    """Rotate a vector from equatorial J2000 to ecliptic J2000."""
-    return _R_EQ_TO_ECL @ vec
-
-
 # --------------------------------------------------------------------------- #
 #  Adaptive trajectory sampling
 # --------------------------------------------------------------------------- #
 def sample_trajectory_adaptive(
     positions: np.ndarray,
     epochs: np.ndarray,
-    angle_threshold_deg: float = 2.0,
-    min_points: int = 20,
-    max_points: int = 500,
+    angle_threshold_deg: float = 0.05,
+    min_points: int = 50,
+    max_points: int = 1000,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Adaptively sample a trajectory, keeping points where curvature is high.
 

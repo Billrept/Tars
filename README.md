@@ -35,7 +35,7 @@ Requirements: Docker + Docker Compose. Nothing else.
                       +-----v-----+
                       | API Server|  FastAPI (uvicorn :8000)
                       |           |
-                      | - Routes  |  7 HTTP + 2 WebSocket endpoints
+                      | - Routes  |  11 HTTP + 2 WebSocket endpoints
                       | - Ephem   |  Spline-interpolated planetary data in RAM
                       +-----+-----+
                             |
@@ -299,6 +299,44 @@ Get position data for a body over a date range. `identifier` can be a name (`"ea
 
 ---
 
+### POST /assess
+
+Assess whether a specific departure date is a good launch window. Returns a quality rating and an optional suggestion for a better nearby date.
+
+**Request body:**
+```json
+{
+  "origin": "earth",
+  "target": "mars",
+  "departure_date": "2026-09-01",
+  "tof_days": 200
+}
+```
+
+**Response:**
+```json
+{
+  "origin": "Earth",
+  "target": "Mars",
+  "departure_date": "2026-09-01",
+  "departure_jd": 2461327.5,
+  "arrival_date": "2027-03-20",
+  "arrival_jd": 2461527.5,
+  "tof_days": 200.0,
+  "dv_total_km_s": 5.83,
+  "dv_departure_km_s": 3.12,
+  "dv_arrival_km_s": 2.71,
+  "converged": true,
+  "rating": "good",
+  "suggestion": null
+}
+```
+
+Rating thresholds: `excellent` (<4), `good` (<6), `moderate` (<8), `poor` (<12), `bad` (>=12 km/s).
+When rating is `moderate`, `poor`, or `bad`, nearby dates (+/-7,15,30 days) are tested and a `suggestion` is returned if a better date is found.
+
+---
+
 ### POST /lambert
 
 Compute a single Lambert transfer between two bodies.
@@ -441,6 +479,8 @@ Set `binary: true` to get protobuf encoding instead.
 
 Submit a single-leg optimization job. Returns immediately with a `job_id`.
 
+**Mode options:** `"min_dv"` (minimize delta-v), `"min_tof"` (minimize time of flight), `"pareto"` (build Pareto front of dv vs tof). Default: `"pareto"`.
+
 **Request body:**
 ```json
 {
@@ -451,7 +491,8 @@ Submit a single-leg optimization job. Returns immediately with a `job_id`.
   "tof_min_days": 150,
   "tof_max_days": 350,
   "population_size": 30,
-  "max_iterations": 200
+  "max_iterations": 200,
+  "mode": "pareto"
 }
 ```
 
@@ -472,6 +513,8 @@ Submit a single-leg optimization job. Returns immediately with a `job_id`.
 
 Submit a multi-leg optimization job.
 
+**Mode options:** `"min_dv"` (minimize delta-v), `"min_tof"` (minimize time of flight), `"pareto"` (build Pareto front). Default: `"pareto"`.
+
 **Request body:**
 ```json
 {
@@ -481,7 +524,8 @@ Submit a multi-leg optimization job.
   "leg_tof_bounds": [[100, 200], [250, 450], [400, 700]],
   "population_size": 40,
   "max_iterations": 300,
-  "max_c3": null
+  "max_c3": null,
+  "mode": "pareto"
 }
 ```
 
@@ -628,7 +672,7 @@ All fields optional. Defaults: all planets, 2026-01-01, 1 day/sec, 30 FPS, scene
 | 502 | Europa | Moon (Jupiter) |
 | 503 | Ganymede | Moon (Jupiter) |
 | 504 | Callisto | Moon (Jupiter) |
-| 601 | Titan | Moon (Saturn) |
+| 606 | Titan | Moon (Saturn) |
 | 602 | Enceladus | Moon (Saturn) |
 | 801 | Triton | Moon (Neptune) |
 | 901 | Charon | Moon (Pluto) |

@@ -464,3 +464,110 @@ button.secondary:hover { border-color: var(--accent); }
 }
 .flyby-card .fb-feasible { color: var(--success); }
 .flyby-card .fb-powered { color: var(--warn); }
+
+/* ── Planner Panel & Cards ──────────────────────────────── */
+.toggle-row {
+  display: flex;
+  background: var(--surface2);
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  padding: 2px;
+}
+.toggle-row input[type="radio"] { display: none; }
+.toggle-row label {
+  flex: 1;
+  text-align: center;
+  padding: 6px;
+  font-size: 10px;
+  cursor: pointer;
+  border-radius: 3px;
+  margin: 0;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+.toggle-row input[type="radio"]:checked + label {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+#plan-results {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.route-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.1s;
+}
+.route-card:hover {
+  border-color: var(--accent);
+  background: var(--surface2);
+}
+.route-card.active {
+  border-color: var(--success);
+  background: rgba(52, 211, 153, 0.05);
+}
+
+.rc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.rc-title {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 11px;
+}
+.rc-rating { font-size: 10px; color: var(--warn); }
+.rc-rating.excellent { color: var(--success); }
+.rc-rating.good { color: var(--accent); }
+.rc-rating.bad { color: var(--danger); }
+
+.rc-stats {
+  display: flex;
+  gap: 12px;
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+.rc-val { color: var(--text); font-weight: 600; }
+
+.rc-dates {
+  font-size: 9px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.rc-actions {
+  display: flex;
+  gap: 6px;
+}
+.rc-btn {
+  flex: 1;
+  padding: 4px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  border-radius: 3px;
+  font-size: 9px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.rc-btn:hover { border-color: var(--accent); color: var(--text); }
+.rc-btn.optimize {
+  background: rgba(123, 47, 247, 0.1);
+  border-color: var(--accent2);
+  color: var(--accent2);
+}
+.rc-btn.optimize:hover {
+  background: var(--accent2);
+  color: #fff;
+}

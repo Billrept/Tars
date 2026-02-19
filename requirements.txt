@@ -18,4 +18,4 @@ redis>=5.0
 
 # Protobuf
 protobuf>=5.27
-grpcio-tools>=1.60
+# grpcio-tools is only needed at build time (proto compilation); see Dockerfile

@@ -150,11 +150,11 @@ def compute_multileg_trajectory(
         else:
             try:
                 naif_id = int(name)
-                if naif_id in BODY_BY_ID:
-                    resolved_bodies.append(BODY_BY_ID[naif_id])
-                else:
-                    raise ValueError(f"Unknown body: {name}")
-            except ValueError:
+            except (ValueError, TypeError):
+                raise ValueError(f"Unknown body: {name}")
+            if naif_id in BODY_BY_ID:
+                resolved_bodies.append(BODY_BY_ID[naif_id])
+            else:
                 raise ValueError(f"Unknown body: {name}")
 
     # Compute each leg

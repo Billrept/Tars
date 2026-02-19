@@ -1,0 +1,118 @@
+Protobuf modules not found -- using manual binary encoding. Run `python -m grpc_tools.protoc -Iproto --python_out=src/serialization/proto --pyi_out=src/serialization/proto proto/trajectory.proto` to compile, or build with Docker. The fallback binary format is NOT compatible with protobuf.
+INFO:     Started server process [44182]
+INFO:     Waiting for application startup.
+2026-02-18 22:39:07,579 [tars] INFO: Warming ephemeris cache ...
+2026-02-18 22:39:07,579 [tars.horizons] INFO: Fetching ephemeris for 10  [2025-01-01 → 2060-01-01]
+2026-02-18 22:39:09,475 [httpx] INFO: HTTP Request: GET https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND=%2710%27&OBJ_DATA=NO&MAKE_EPHEM=YES&EPHEM_TYPE=VECTORS&CENTER=%27500%4010%27&REF_PLANE=ECLIPTIC&REF_SYSTEM=J2000&VEC_TABLE=2&VEC_LABELS=NO&OUT_UNITS=%27KM-S%27&CSV_FORMAT=YES&START_TIME=%272025-01-01%27&STOP_TIME=%272060-01-01%27&STEP_SIZE=%271d%27 "HTTP/1.1 200 OK"
+2026-02-18 22:39:10,966 [tars.horizons] INFO: Parsed 12784 ephemeris records
+2026-02-18 22:39:10,975 [tars.ephemeris] INFO: Fetched & cached ephemeris for Sun (12784 points)
+2026-02-18 22:39:10,975 [tars.horizons] INFO: Fetching ephemeris for 199  [2025-01-01 → 2060-01-01]
+2026-02-18 22:39:12,681 [httpx] INFO: HTTP Request: GET https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND=%27199%27&OBJ_DATA=NO&MAKE_EPHEM=YES&EPHEM_TYPE=VECTORS&CENTER=%27500%4010%27&REF_PLANE=ECLIPTIC&REF_SYSTEM=J2000&VEC_TABLE=2&VEC_LABELS=NO&OUT_UNITS=%27KM-S%27&CSV_FORMAT=YES&START_TIME=%272025-01-01%27&STOP_TIME=%272060-01-01%27&STEP_SIZE=%271d%27 "HTTP/1.1 200 OK"
+2026-02-18 22:39:13,965 [tars.horizons] INFO: Parsed 12784 ephemeris records
+2026-02-18 22:39:13,974 [tars.ephemeris] INFO: Fetched & cached ephemeris for Mercury (12784 points)
+2026-02-18 22:39:13,974 [tars.horizons] INFO: Fetching ephemeris for 299  [2025-01-01 → 2060-01-01]
+2026-02-18 22:39:15,926 [httpx] INFO: HTTP Request: GET https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND=%27299%27&OBJ_DATA=NO&MAKE_EPHEM=YES&EPHEM_TYPE=VECTORS&CENTER=%27500%4010%27&REF_PLANE=ECLIPTIC&REF_SYSTEM=J2000&VEC_TABLE=2&VEC_LABELS=NO&OUT_UNITS=%27KM-S%27&CSV_FORMAT=YES&START_TIME=%272025-01-01%27&STOP_TIME=%272060-01-01%27&STEP_SIZE=%271d%27 "HTTP/1.1 200 OK"
+2026-02-18 22:39:17,283 [tars.horizons] INFO: Parsed 12784 ephemeris records
+2026-02-18 22:39:17,292 [tars.ephemeris] INFO: Fetched & cached ephemeris for Venus (12784 points)
+2026-02-18 22:39:17,292 [tars.horizons] INFO: Fetching ephemeris for 399  [2025-01-01 → 2060-01-01]
+2026-02-18 22:39:19,203 [httpx] INFO: HTTP Request: GET https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND=%27399%27&OBJ_DATA=NO&MAKE_EPHEM=YES&EPHEM_TYPE=VECTORS&CENTER=%27500%4010%27&REF_PLANE=ECLIPTIC&REF_SYSTEM=J2000&VEC_TABLE=2&VEC_LABELS=NO&OUT_UNITS=%27KM-S%27&CSV_FORMAT=YES&START_TIME=%272025-01-01%27&STOP_TIME=%272060-01-01%27&STEP_SIZE=%271d%27 "HTTP/1.1 200 OK"
+2026-02-18 22:39:21,750 [tars.horizons] INFO: Parsed 12784 ephemeris records
+2026-02-18 22:39:21,757 [tars.ephemeris] INFO: Fetched & cached ephemeris for Earth (12784 points)
+2026-02-18 22:39:21,757 [tars.horizons] INFO: Fetching ephemeris for 499  [2025-01-01 → 2060-01-01]
+2026-02-18 22:39:23,625 [httpx] INFO: HTTP Request: GET https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND=%27499%27&OBJ_DATA=NO&MAKE_EPHEM=YES&EPHEM_TYPE=VECTORS&CENTER=%27500%4010%27&REF_PLANE=ECLIPTIC&REF_SYSTEM=J2000&VEC_TABLE=2&VEC_LABELS=NO&OUT_UNITS=%27KM-S%27&CSV_FORMAT=YES&START_TIME=%272025-01-01%27&STOP_TIME=%272060-01-01%27&STEP_SIZE=%271d%27 "HTTP/1.1 200 OK"
+2026-02-18 22:39:26,336 [tars.horizons] INFO: Parsed 12784 ephemeris records
+2026-02-18 22:39:26,344 [tars.ephemeris] INFO: Fetched & cached ephemeris for Mars (12784 points)
+2026-02-18 22:39:26,344 [tars.horizons] INFO: Fetching ephemeris for 599  [2025-01-01 → 2060-01-01]
+2026-02-18 22:39:28,202 [httpx] INFO: HTTP Request: GET https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND=%27599%27&OBJ_DATA=NO&MAKE_EPHEM=YES&EPHEM_TYPE=VECTORS&CENTER=%27500%4010%27&REF_PLANE=ECLIPTIC&REF_SYSTEM=J2000&VEC_TABLE=2&VEC_LABELS=NO&OUT_UNITS=%27KM-S%27&CSV_FORMAT=YES&START_TIME=%272025-01-01%27&STOP_TIME=%272060-01-01%27&STEP_SIZE=%271d%27 "HTTP/1.1 200 OK"
+2026-02-18 22:39:30,561 [tars.horizons] INFO: Parsed 12784 ephemeris records
+2026-02-18 22:39:30,569 [tars.ephemeris] INFO: Fetched & cached ephemeris for Jupiter (12784 points)
+2026-02-18 22:39:30,569 [tars.horizons] INFO: Fetching ephemeris for 699  [2025-01-01 → 2060-01-01]
+2026-02-18 22:39:32,515 [httpx] INFO: HTTP Request: GET https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND=%27699%27&OBJ_DATA=NO&MAKE_EPHEM=YES&EPHEM_TYPE=VECTORS&CENTER=%27500%4010%27&REF_PLANE=ECLIPTIC&REF_SYSTEM=J2000&VEC_TABLE=2&VEC_LABELS=NO&OUT_UNITS=%27KM-S%27&CSV_FORMAT=YES&START_TIME=%272025-01-01%27&STOP_TIME=%272060-01-01%27&STEP_SIZE=%271d%27 "HTTP/1.1 200 OK"
+2026-02-18 22:39:35,925 [tars.horizons] INFO: Parsed 12784 ephemeris records
+2026-02-18 22:39:35,932 [tars.ephemeris] INFO: Fetched & cached ephemeris for Saturn (12784 points)
+2026-02-18 22:39:35,932 [tars.horizons] INFO: Fetching ephemeris for 799  [2025-01-01 → 2060-01-01]
+2026-02-18 22:39:37,733 [httpx] INFO: HTTP Request: GET https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND=%27799%27&OBJ_DATA=NO&MAKE_EPHEM=YES&EPHEM_TYPE=VECTORS&CENTER=%27500%4010%27&REF_PLANE=ECLIPTIC&REF_SYSTEM=J2000&VEC_TABLE=2&VEC_LABELS=NO&OUT_UNITS=%27KM-S%27&CSV_FORMAT=YES&START_TIME=%272025-01-01%27&STOP_TIME=%272060-01-01%27&STEP_SIZE=%271d%27 "HTTP/1.1 200 OK"
+2026-02-18 22:39:40,850 [tars.horizons] INFO: Parsed 12784 ephemeris records
+2026-02-18 22:39:40,858 [tars.ephemeris] INFO: Fetched & cached ephemeris for Uranus (12784 points)
+2026-02-18 22:39:40,858 [tars.horizons] INFO: Fetching ephemeris for 899  [2025-01-01 → 2060-01-01]
+2026-02-18 22:39:42,602 [httpx] INFO: HTTP Request: GET https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND=%27899%27&OBJ_DATA=NO&MAKE_EPHEM=YES&EPHEM_TYPE=VECTORS&CENTER=%27500%4010%27&REF_PLANE=ECLIPTIC&REF_SYSTEM=J2000&VEC_TABLE=2&VEC_LABELS=NO&OUT_UNITS=%27KM-S%27&CSV_FORMAT=YES&START_TIME=%272025-01-01%27&STOP_TIME=%272060-01-01%27&STEP_SIZE=%271d%27 "HTTP/1.1 200 OK"
+2026-02-18 22:39:45,713 [tars.horizons] INFO: Parsed 12784 ephemeris records
+2026-02-18 22:39:45,722 [tars.ephemeris] INFO: Fetched & cached ephemeris for Neptune (12784 points)
+2026-02-18 22:39:45,722 [tars.horizons] INFO: Fetching ephemeris for 999  [2025-01-01 → 2060-01-01]
+2026-02-18 22:39:47,670 [httpx] INFO: HTTP Request: GET https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND=%27999%27&OBJ_DATA=NO&MAKE_EPHEM=YES&EPHEM_TYPE=VECTORS&CENTER=%27500%4010%27&REF_PLANE=ECLIPTIC&REF_SYSTEM=J2000&VEC_TABLE=2&VEC_LABELS=NO&OUT_UNITS=%27KM-S%27&CSV_FORMAT=YES&START_TIME=%272025-01-01%27&STOP_TIME=%272060-01-01%27&STEP_SIZE=%271d%27 "HTTP/1.1 200 OK"
+2026-02-18 22:39:54,616 [tars.horizons] INFO: Parsed 12784 ephemeris records
+2026-02-18 22:39:54,623 [tars.ephemeris] INFO: Fetched & cached ephemeris for Pluto (12784 points)
+2026-02-18 22:39:54,623 [tars.horizons] INFO: Fetching ephemeris for Ceres  [2025-01-01 → 2060-01-01]
+2026-02-18 22:39:56,683 [httpx] INFO: HTTP Request: GET https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND=%27Ceres%27&OBJ_DATA=NO&MAKE_EPHEM=YES&EPHEM_TYPE=VECTORS&CENTER=%27500%4010%27&REF_PLANE=ECLIPTIC&REF_SYSTEM=J2000&VEC_TABLE=2&VEC_LABELS=NO&OUT_UNITS=%27KM-S%27&CSV_FORMAT=YES&START_TIME=%272025-01-01%27&STOP_TIME=%272060-01-01%27&STEP_SIZE=%271d%27 "HTTP/1.1 200 OK"
+2026-02-18 22:40:00,340 [tars.horizons] INFO: Parsed 12784 ephemeris records
+2026-02-18 22:40:00,348 [tars.ephemeris] INFO: Fetched & cached ephemeris for Ceres (12784 points)
+2026-02-18 22:40:00,348 [tars.horizons] INFO: Fetching ephemeris for 301  [2025-01-01 → 2060-01-01]
+2026-02-18 22:40:02,315 [httpx] INFO: HTTP Request: GET https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND=%27301%27&OBJ_DATA=NO&MAKE_EPHEM=YES&EPHEM_TYPE=VECTORS&CENTER=%27500%40399%27&REF_PLANE=ECLIPTIC&REF_SYSTEM=J2000&VEC_TABLE=2&VEC_LABELS=NO&OUT_UNITS=%27KM-S%27&CSV_FORMAT=YES&START_TIME=%272025-01-01%27&STOP_TIME=%272060-01-01%27&STEP_SIZE=%271d%27 "HTTP/1.1 200 OK"
+2026-02-18 22:40:05,883 [tars.horizons] INFO: Parsed 12784 ephemeris records
+2026-02-18 22:40:05,889 [tars.ephemeris] INFO: Converted Moon from parent-relative to heliocentric
+2026-02-18 22:40:05,891 [tars.ephemeris] INFO: Fetched & cached ephemeris for Moon (12784 points)
+2026-02-18 22:40:05,891 [tars.horizons] INFO: Fetching ephemeris for 401  [2025-01-01 → 2060-01-01]
+2026-02-18 22:40:07,948 [httpx] INFO: HTTP Request: GET https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND=%27401%27&OBJ_DATA=NO&MAKE_EPHEM=YES&EPHEM_TYPE=VECTORS&CENTER=%27500%40499%27&REF_PLANE=ECLIPTIC&REF_SYSTEM=J2000&VEC_TABLE=2&VEC_LABELS=NO&OUT_UNITS=%27KM-S%27&CSV_FORMAT=YES&START_TIME=%272025-01-01%27&STOP_TIME=%272060-01-01%27&STEP_SIZE=%271d%27 "HTTP/1.1 200 OK"
+2026-02-18 22:40:11,385 [tars.horizons] INFO: Parsed 12784 ephemeris records
+2026-02-18 22:40:11,392 [tars.ephemeris] INFO: Converted Phobos from parent-relative to heliocentric
+2026-02-18 22:40:11,395 [tars.ephemeris] INFO: Fetched & cached ephemeris for Phobos (12784 points)
+2026-02-18 22:40:11,395 [tars.horizons] INFO: Fetching ephemeris for 402  [2025-01-01 → 2060-01-01]
+2026-02-18 22:40:13,226 [httpx] INFO: HTTP Request: GET https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND=%27402%27&OBJ_DATA=NO&MAKE_EPHEM=YES&EPHEM_TYPE=VECTORS&CENTER=%27500%40499%27&REF_PLANE=ECLIPTIC&REF_SYSTEM=J2000&VEC_TABLE=2&VEC_LABELS=NO&OUT_UNITS=%27KM-S%27&CSV_FORMAT=YES&START_TIME=%272025-01-01%27&STOP_TIME=%272060-01-01%27&STEP_SIZE=%271d%27 "HTTP/1.1 200 OK"
+2026-02-18 22:40:16,561 [tars.horizons] INFO: Parsed 12784 ephemeris records
+2026-02-18 22:40:16,567 [tars.ephemeris] INFO: Converted Deimos from parent-relative to heliocentric
+2026-02-18 22:40:16,569 [tars.ephemeris] INFO: Fetched & cached ephemeris for Deimos (12784 points)
+2026-02-18 22:40:16,569 [tars.horizons] INFO: Fetching ephemeris for 501  [2025-01-01 → 2060-01-01]
+2026-02-18 22:40:18,394 [httpx] INFO: HTTP Request: GET https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND=%27501%27&OBJ_DATA=NO&MAKE_EPHEM=YES&EPHEM_TYPE=VECTORS&CENTER=%27500%40599%27&REF_PLANE=ECLIPTIC&REF_SYSTEM=J2000&VEC_TABLE=2&VEC_LABELS=NO&OUT_UNITS=%27KM-S%27&CSV_FORMAT=YES&START_TIME=%272025-01-01%27&STOP_TIME=%272060-01-01%27&STEP_SIZE=%271d%27 "HTTP/1.1 200 OK"
+2026-02-18 22:40:21,744 [tars.horizons] INFO: Parsed 12784 ephemeris records
+2026-02-18 22:40:21,751 [tars.ephemeris] INFO: Converted Io from parent-relative to heliocentric
+2026-02-18 22:40:21,753 [tars.ephemeris] INFO: Fetched & cached ephemeris for Io (12784 points)
+2026-02-18 22:40:21,753 [tars.horizons] INFO: Fetching ephemeris for 502  [2025-01-01 → 2060-01-01]
+2026-02-18 22:40:23,631 [httpx] INFO: HTTP Request: GET https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND=%27502%27&OBJ_DATA=NO&MAKE_EPHEM=YES&EPHEM_TYPE=VECTORS&CENTER=%27500%40599%27&REF_PLANE=ECLIPTIC&REF_SYSTEM=J2000&VEC_TABLE=2&VEC_LABELS=NO&OUT_UNITS=%27KM-S%27&CSV_FORMAT=YES&START_TIME=%272025-01-01%27&STOP_TIME=%272060-01-01%27&STEP_SIZE=%271d%27 "HTTP/1.1 200 OK"
+2026-02-18 22:40:28,150 [tars.horizons] INFO: Parsed 12784 ephemeris records
+2026-02-18 22:40:28,156 [tars.ephemeris] INFO: Converted Europa from parent-relative to heliocentric
+2026-02-18 22:40:28,159 [tars.ephemeris] INFO: Fetched & cached ephemeris for Europa (12784 points)
+2026-02-18 22:40:28,159 [tars.horizons] INFO: Fetching ephemeris for 503  [2025-01-01 → 2060-01-01]
+2026-02-18 22:40:29,908 [httpx] INFO: HTTP Request: GET https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND=%27503%27&OBJ_DATA=NO&MAKE_EPHEM=YES&EPHEM_TYPE=VECTORS&CENTER=%27500%40599%27&REF_PLANE=ECLIPTIC&REF_SYSTEM=J2000&VEC_TABLE=2&VEC_LABELS=NO&OUT_UNITS=%27KM-S%27&CSV_FORMAT=YES&START_TIME=%272025-01-01%27&STOP_TIME=%272060-01-01%27&STEP_SIZE=%271d%27 "HTTP/1.1 200 OK"
+2026-02-18 22:40:33,318 [tars.horizons] INFO: Parsed 12784 ephemeris records
+2026-02-18 22:40:33,324 [tars.ephemeris] INFO: Converted Ganymede from parent-relative to heliocentric
+2026-02-18 22:40:33,327 [tars.ephemeris] INFO: Fetched & cached ephemeris for Ganymede (12784 points)
+2026-02-18 22:40:33,327 [tars.horizons] INFO: Fetching ephemeris for 504  [2025-01-01 → 2060-01-01]
+2026-02-18 22:40:35,176 [httpx] INFO: HTTP Request: GET https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND=%27504%27&OBJ_DATA=NO&MAKE_EPHEM=YES&EPHEM_TYPE=VECTORS&CENTER=%27500%40599%27&REF_PLANE=ECLIPTIC&REF_SYSTEM=J2000&VEC_TABLE=2&VEC_LABELS=NO&OUT_UNITS=%27KM-S%27&CSV_FORMAT=YES&START_TIME=%272025-01-01%27&STOP_TIME=%272060-01-01%27&STEP_SIZE=%271d%27 "HTTP/1.1 200 OK"
+2026-02-18 22:40:39,373 [tars.horizons] INFO: Parsed 12784 ephemeris records
+2026-02-18 22:40:39,379 [tars.ephemeris] INFO: Converted Callisto from parent-relative to heliocentric
+2026-02-18 22:40:39,381 [tars.ephemeris] INFO: Fetched & cached ephemeris for Callisto (12784 points)
+2026-02-18 22:40:39,381 [tars.horizons] INFO: Fetching ephemeris for 606  [2025-01-01 → 2060-01-01]
+2026-02-18 22:40:41,123 [httpx] INFO: HTTP Request: GET https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND=%27606%27&OBJ_DATA=NO&MAKE_EPHEM=YES&EPHEM_TYPE=VECTORS&CENTER=%27500%40699%27&REF_PLANE=ECLIPTIC&REF_SYSTEM=J2000&VEC_TABLE=2&VEC_LABELS=NO&OUT_UNITS=%27KM-S%27&CSV_FORMAT=YES&START_TIME=%272025-01-01%27&STOP_TIME=%272060-01-01%27&STEP_SIZE=%271d%27 "HTTP/1.1 200 OK"
+2026-02-18 22:40:44,666 [tars.horizons] INFO: Parsed 12784 ephemeris records
+2026-02-18 22:40:44,672 [tars.ephemeris] INFO: Converted Titan from parent-relative to heliocentric
+2026-02-18 22:40:44,676 [tars.ephemeris] INFO: Fetched & cached ephemeris for Titan (12784 points)
+2026-02-18 22:40:44,676 [tars.horizons] INFO: Fetching ephemeris for 602  [2025-01-01 → 2060-01-01]
+2026-02-18 22:40:46,447 [httpx] INFO: HTTP Request: GET https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND=%27602%27&OBJ_DATA=NO&MAKE_EPHEM=YES&EPHEM_TYPE=VECTORS&CENTER=%27500%40699%27&REF_PLANE=ECLIPTIC&REF_SYSTEM=J2000&VEC_TABLE=2&VEC_LABELS=NO&OUT_UNITS=%27KM-S%27&CSV_FORMAT=YES&START_TIME=%272025-01-01%27&STOP_TIME=%272060-01-01%27&STEP_SIZE=%271d%27 "HTTP/1.1 200 OK"
+2026-02-18 22:40:49,997 [tars.horizons] INFO: Parsed 12784 ephemeris records
+2026-02-18 22:40:50,003 [tars.ephemeris] INFO: Converted Enceladus from parent-relative to heliocentric
+2026-02-18 22:40:50,006 [tars.ephemeris] INFO: Fetched & cached ephemeris for Enceladus (12784 points)
+2026-02-18 22:40:50,006 [tars.horizons] INFO: Fetching ephemeris for 801  [2025-01-01 → 2060-01-01]
+2026-02-18 22:40:51,808 [httpx] INFO: HTTP Request: GET https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND=%27801%27&OBJ_DATA=NO&MAKE_EPHEM=YES&EPHEM_TYPE=VECTORS&CENTER=%27500%40899%27&REF_PLANE=ECLIPTIC&REF_SYSTEM=J2000&VEC_TABLE=2&VEC_LABELS=NO&OUT_UNITS=%27KM-S%27&CSV_FORMAT=YES&START_TIME=%272025-01-01%27&STOP_TIME=%272060-01-01%27&STEP_SIZE=%271d%27 "HTTP/1.1 200 OK"
+2026-02-18 22:40:55,190 [tars.horizons] INFO: Parsed 12784 ephemeris records
+2026-02-18 22:40:55,196 [tars.ephemeris] INFO: Converted Triton from parent-relative to heliocentric
+2026-02-18 22:40:55,198 [tars.ephemeris] INFO: Fetched & cached ephemeris for Triton (12784 points)
+2026-02-18 22:40:55,198 [tars.horizons] INFO: Fetching ephemeris for 901  [2025-01-01 → 2060-01-01]
+2026-02-18 22:40:57,200 [httpx] INFO: HTTP Request: GET https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND=%27901%27&OBJ_DATA=NO&MAKE_EPHEM=YES&EPHEM_TYPE=VECTORS&CENTER=%27500%40999%27&REF_PLANE=ECLIPTIC&REF_SYSTEM=J2000&VEC_TABLE=2&VEC_LABELS=NO&OUT_UNITS=%27KM-S%27&CSV_FORMAT=YES&START_TIME=%272025-01-01%27&STOP_TIME=%272060-01-01%27&STEP_SIZE=%271d%27 "HTTP/1.1 200 OK"
+2026-02-18 22:41:01,384 [tars.horizons] INFO: Parsed 12784 ephemeris records
+2026-02-18 22:41:01,391 [tars.ephemeris] INFO: Converted Charon from parent-relative to heliocentric
+2026-02-18 22:41:01,395 [tars.ephemeris] INFO: Fetched & cached ephemeris for Charon (12784 points)
+2026-02-18 22:41:01,395 [tars] INFO: Ephemeris cache ready — 22 bodies loaded
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:49824 - "WebSocket /ws/ephemeris/stream" [accepted]
+2026-02-19 00:34:14,827 [tars.ws] INFO: Ephemeris stream WebSocket connected
+INFO:     connection open
+2026-02-19 00:57:55,910 [tars.ws] ERROR: Ephemeris stream error: Epoch JD 2473459.50 is outside the valid ephemeris range [2460676.50, 2473459.50] for body 10
+INFO:     connection closed
+INFO:     127.0.0.1:54300 - "WebSocket /ws/ephemeris/stream" [accepted]
+2026-02-19 10:06:43,163 [tars.ws] INFO: Ephemeris stream WebSocket connected
+INFO:     connection open
+INFO:     127.0.0.1:54349 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54349 - "GET /openapi.json HTTP/1.1" 200 OK
+2026-02-19 10:16:04,840 [tars.ws] INFO: Ephemeris stream WebSocket disconnected
+INFO:     connection closed

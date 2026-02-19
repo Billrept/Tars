@@ -50,7 +50,7 @@ async def main(start: str, end: str, step_days: int, planets_only: bool) -> None
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Pre-warm ephemeris cache")
     parser.add_argument("--start", default="2025-01-01", help="Start date (ISO)")
-    parser.add_argument("--end", default="2035-01-01", help="End date (ISO)")
+    parser.add_argument("--end", default="2060-01-01", help="End date (ISO)")
     parser.add_argument("--step", type=int, default=1, help="Step size in days")
     parser.add_argument("--planets-only", action="store_true",
                         help="Only fetch planets (skip moons/dwarf planets)")

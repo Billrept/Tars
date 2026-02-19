@@ -21,7 +21,7 @@ import numpy as np
 from fastapi import APIRouter, HTTPException, Query, Request, Response
 from pydantic import BaseModel, Field, field_validator
 
-from ephemeris.bodies import ALL_BODIES, BODY_BY_ID, BODY_BY_NAME, AU_KM, CelestialBody
+from ephemeris.bodies import ALL_BODIES, BODY_BY_ID, BODY_BY_NAME, CelestialBody
 from ephemeris.spline_cache import EphemerisCache, EphemerisRangeError
 from mechanics.lambert import compute_transfer_dv, solve_lambert
 from mechanics.multileg import compute_multileg_trajectory, multileg_result_to_dict
@@ -35,11 +35,13 @@ from mechanics.transforms import (
 from optimizer.dispatcher import get_job_status, submit_optimization, submit_multileg_optimization
 from optimizer.gmpa import OptimizationRequest, MultiLegOptimizationRequest
 from optimizer.objective import delta_v_objective, porkchop_grid
-from serialization.encoder import encode_porkchop, encode_trajectory
+from serialization.encoder import encode_porkchop
 
 logger = logging.getLogger("tars.api")
 router = APIRouter()
 
+
+from planner.engine import plan_routes
 
 # --------------------------------------------------------------------------- #
 #  Shared validators
@@ -199,6 +201,21 @@ class MultiLegOptimizeRequest(BaseModel):
         return v
 
 
+class PlanRequest(BaseModel):
+    origin: str
+    target: str
+    mode: str = Field(default="min_dv", description="'min_dv' or 'min_tof'")
+    dep_start: str | None = None
+    dep_end: str | None = None
+
+    @field_validator("dep_start", "dep_end")
+    @classmethod
+    def check_iso_date(cls, v: str | None) -> str | None:
+        if v:
+            return _validate_iso_date(v)
+        return v
+
+
 # --------------------------------------------------------------------------- #
 #  Helper to resolve body name/id
 # --------------------------------------------------------------------------- #
@@ -230,6 +247,34 @@ def _get_cache(request: Request) -> EphemerisCache:
 # --------------------------------------------------------------------------- #
 #  Endpoints
 # --------------------------------------------------------------------------- #
+
+@router.post("/plan")
+async def plan_mission(req: PlanRequest, request: Request):
+    """Find top route options for a mission."""
+    cache = _get_cache(request)
+    
+    # Ensure bodies exist
+    origin = _resolve_body(req.origin)
+    target = _resolve_body(req.target)
+    
+    if origin.naif_id not in cache or target.naif_id not in cache:
+        raise HTTPException(status_code=503, detail="Ephemeris not loaded")
+
+    # Run planner engine
+    results = plan_routes(
+        req.origin, req.target, req.mode,
+        req.dep_start, req.dep_end,
+        cache
+    )
+    
+    return {
+        "origin": origin.name,
+        "target": target.name,
+        "mode": req.mode,
+        "count": len(results),
+        "routes": results,
+    }
+
 
 @router.get("/health")
 async def health():
@@ -491,6 +536,10 @@ async def assess_launch_window(req: AssessRequest, request: Request):
                 "improvement_km_s": round(dv_total - best_dv, 2),
             }
 
+    # Sanitize inf/nan for JSON serialization (Lambert may not converge)
+    def _safe_float(v: float) -> float | None:
+        return v if np.isfinite(v) else None
+
     return {
         "origin": origin.name,
         "target": target.name,
@@ -499,9 +548,9 @@ async def assess_launch_window(req: AssessRequest, request: Request):
         "arrival_date": jd_to_iso(arr_jd)[:10],
         "arrival_jd": arr_jd,
         "tof_days": req.tof_days,
-        "dv_total_km_s": result["dv_total"],
-        "dv_departure_km_s": result["dv_departure"],
-        "dv_arrival_km_s": result["dv_arrival"],
+        "dv_total_km_s": _safe_float(result["dv_total"]),
+        "dv_departure_km_s": _safe_float(result["dv_departure"]),
+        "dv_arrival_km_s": _safe_float(result["dv_arrival"]),
         "converged": result["converged"],
         "rating": rating,
         "suggestion": suggestion,

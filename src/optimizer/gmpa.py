@@ -377,6 +377,7 @@ class MultiLegGreyWolfOptimizer:
             positions.tolist(),
             pareto_archive.to_list() if pareto_archive else [],
             mode,
+            eval_result=best_result,
         )
 
         for iteration in range(1, max_iter + 1):
@@ -433,6 +434,7 @@ class MultiLegGreyWolfOptimizer:
                     positions.tolist(),
                     pareto_archive.to_list() if pareto_archive else [],
                     mode,
+                    eval_result=best_result,
                 )
             elif iteration % 10 == 0:
                 yield self._make_progress(
@@ -441,6 +443,7 @@ class MultiLegGreyWolfOptimizer:
                     positions.tolist(),
                     pareto_archive.to_list() if pareto_archive else [],
                     mode,
+                    eval_result=results_full[sorted_idx[0]],
                 )
 
         best_result = self._evaluate_full(alpha_pos)
@@ -450,6 +453,7 @@ class MultiLegGreyWolfOptimizer:
             positions.tolist(),
             pareto_archive.to_list() if pareto_archive else [],
             mode,
+            eval_result=best_result,
         )
 
     def _get_fitness(self, result: dict) -> float:
@@ -484,17 +488,17 @@ class MultiLegGreyWolfOptimizer:
         population_positions: list[list[float]] | None = None,
         pareto_front: list[dict] | None = None,
         mode: str = "min_dv",
+        eval_result: dict | None = None,
     ) -> MultiLegOptimizationProgress:
         dep_jd = float(pos[0])
         leg_tofs = [float(pos[1 + i]) for i in range(self.n_legs)]
         total_tof = sum(leg_tofs)
 
-        result = multileg_objective_full(pos, self.req.body_names, self.cache, n_traj_points=0)
-
-        if result is not None:
-            dv_departure = result.departure_dv_km_s
-            dv_arrival = result.arrival_dv_km_s
-            dv_flyby = result.flyby_dv_km_s
+        # Use the already-evaluated result dict if available, avoiding re-evaluation
+        if eval_result is not None and eval_result.get("dv_total", float("inf")) < 1e11:
+            dv_departure = eval_result.get("departure_dv_km_s", float("inf"))
+            dv_arrival = eval_result.get("arrival_dv_km_s", float("inf"))
+            dv_flyby = eval_result.get("flyby_dv_km_s", 0.0)
             converged = True
         else:
             dv_departure = float("inf")

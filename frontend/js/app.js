@@ -7,20 +7,20 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 const API = 'http://localhost:8000';
-const WS  = 'ws://localhost:8000';
+const WS = 'ws://localhost:8000';
 
 // ── Viridis colormap (reversed: low=yellow/bright, high=purple/dark) ──────
 const VIRIDIS = [
-  [0.993,0.906,0.144],[0.741,0.873,0.150],[0.478,0.821,0.318],
-  [0.267,0.749,0.441],[0.135,0.659,0.518],[0.128,0.567,0.551],
-  [0.164,0.471,0.558],[0.207,0.372,0.553],[0.253,0.265,0.530],
-  [0.282,0.141,0.458],[0.267,0.004,0.329],
+  [0.993, 0.906, 0.144], [0.741, 0.873, 0.150], [0.478, 0.821, 0.318],
+  [0.267, 0.749, 0.441], [0.135, 0.659, 0.518], [0.128, 0.567, 0.551],
+  [0.164, 0.471, 0.558], [0.207, 0.372, 0.553], [0.253, 0.265, 0.530],
+  [0.282, 0.141, 0.458], [0.267, 0.004, 0.329],
 ];
 
 // ── Mass modeling defaults ────────────────────────────────────────────────
-const MASS_M0  = 2000;           // wet mass, kg
+const MASS_M0 = 2000;           // wet mass, kg
 const MASS_ISP = 320;            // bipropellant Isp, seconds
-const G0_KMS   = 9.80665e-3;     // gravitational accel, km/s²
+const G0_KMS = 9.80665e-3;     // gravitational accel, km/s²
 
 function massEstimate(dvKms, m0 = MASS_M0, isp = MASS_ISP) {
   const ve = isp * G0_KMS;
@@ -38,7 +38,7 @@ let scene, camera, renderer, controls;
 let ephemerisWs = null;             // WebSocket for streaming
 let simPaused = false;
 let simSpeed = 10;
-let epochRange = { start: '2025-01-01', end: '2059-12-31' }; // updated from backend
+let epochRange = { start: '2025-01-01', end: '2059-12-31', start_jd: null, end_jd: null }; // updated from backend
 
 // Planet display radii (scene units) — exaggerated for visibility
 const DISPLAY_RADIUS = {
@@ -124,7 +124,7 @@ function createStarfield() {
     const r = 15000 + Math.random() * 30000;
     const theta = Math.random() * Math.PI * 2;
     const phi = Math.acos(2 * Math.random() - 1);
-    positions[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
+    positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
     positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
     positions[i * 3 + 2] = r * Math.cos(phi);
     const b = 0.5 + Math.random() * 0.5;
@@ -146,8 +146,10 @@ async function fetchEpochRange() {
       const data = await res.json();
       epochRange.start = data.start_iso;
       epochRange.end = data.end_iso;
+      epochRange.start_jd = data.start_jd;
+      epochRange.end_jd = data.end_jd;
     }
-  } catch (_) {}
+  } catch (_) { }
 }
 
 async function fetchBodies() {
@@ -169,12 +171,12 @@ function getPlanets() {
 function populateSelects() {
   const planets = getPlanets();
   const selectors = [
-    'lambert-origin', 'lambert-target',
     'pc-origin', 'pc-target',
-    'opt-origin', 'opt-target',
+    'plan-origin', 'plan-target',
   ];
   for (const id of selectors) {
     const sel = document.getElementById(id);
+    if (!sel) continue;
     sel.innerHTML = '';
     for (const p of planets) {
       const opt = document.createElement('option');
@@ -184,12 +186,8 @@ function populateSelects() {
     }
   }
   // Defaults
-  document.getElementById('lambert-origin').value = 'earth';
-  document.getElementById('lambert-target').value = 'mars';
-  document.getElementById('pc-origin').value = 'earth';
-  document.getElementById('pc-target').value = 'mars';
-  document.getElementById('opt-origin').value = 'earth';
-  document.getElementById('opt-target').value = 'mars';
+  document.getElementById('plan-origin').value = 'earth';
+  document.getElementById('plan-target').value = 'mars';
 }
 
 async function fetchOrbits() {
@@ -320,7 +318,7 @@ function createTextSprite(text, color) {
 // ── WebSocket Ephemeris Streaming ──────────────────────────────────────────
 function connectEphemeris() {
   if (ephemerisWs) {
-    try { ephemerisWs.close(); } catch (_) {}
+    try { ephemerisWs.close(); } catch (_) { }
   }
 
   ephemerisWs = new WebSocket(`${WS}/ws/ephemeris/stream`);
@@ -329,9 +327,11 @@ function connectEphemeris() {
     setStatus('ok', 'Streaming');
     // Send config — only planets (no moons for now to keep it clean)
     const planetIds = bodies.filter(b => b.parent_id === null).map(b => b.naif_id);
+    // Use the epoch range fetched from the backend
+    const startJd = epochRange.start_jd || 2460676.5;
     ephemerisWs.send(JSON.stringify({
       body_ids: planetIds,
-      start_jd: 2460676.5,   // ~2025-01-01
+      start_jd: startJd,
       speed: simSpeed,
       fps: 30,
       scene_units: true,
@@ -372,57 +372,30 @@ function updatePlanetPositions(snapshot) {
 }
 
 // ── Lambert Transfer ───────────────────────────────────────────────────────
-async function computeLambert() {
-  const btn = document.getElementById('btn-lambert');
-  const resultBox = document.getElementById('lambert-result');
-  btn.classList.add('loading');
-  btn.disabled = true;
-  resultBox.classList.add('hidden');
-
-  const payload = {
-    origin: document.getElementById('lambert-origin').value,
-    target: document.getElementById('lambert-target').value,
-    departure_date: document.getElementById('lambert-dep').value,
-    tof_days: parseFloat(document.getElementById('lambert-tof').value),
+// (Manual UI removed, helper used by optimizer)
+async function drawOptimalTransfer(origin, target, depJd, tofDays) {
+  // Convert JD to ISO date
+  const jdToDate = (jd) => {
+    const ms = (jd - 2440587.5) * 86400000;
+    return new Date(ms).toISOString().split('T')[0];
   };
-
   try {
     const res = await fetch(`${API}/lambert`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        origin,
+        target,
+        departure_date: jdToDate(depJd),
+        tof_days: tofDays,
+      }),
     });
-
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || res.statusText);
+    if (res.ok) {
+      const data = await res.json();
+      clearMarkers();
+      drawTransferArc(data.trajectory_points);
     }
-
-    const data = await res.json();
-
-    // Show result
-    resultBox.innerHTML = `
-<span class="label">Departure:</span> ${data.departure_iso.split('T')[0]}
-<span class="label">Arrival:</span>   ${data.arrival_iso.split('T')[0]}
-<span class="label">TOF:</span>       ${data.tof_days} days
-<span class="label">dV depart:</span> <span class="dv">${data.dv_departure_km_s.toFixed(3)} km/s</span>
-<span class="label">dV arrive:</span> <span class="dv">${data.dv_arrival_km_s.toFixed(3)} km/s</span>
-<span class="label">dV total:</span>  <span class="dv">${data.dv_total_km_s.toFixed(3)} km/s</span>
-<span class="label">C3 dep:</span>    ${(data.dv_departure_km_s ** 2).toFixed(2)} km\u00B2/s\u00B2
-<span class="label">C3 arr:</span>    ${(data.dv_arrival_km_s ** 2).toFixed(2)} km\u00B2/s\u00B2
-<span class="label">Mass est</span> <span class="label">(${MASS_M0}kg, Isp=${MASS_ISP}s):</span>
-  prop: ${massEstimate(data.dv_total_km_s).propellant.toFixed(0)} kg  final: ${massEstimate(data.dv_total_km_s).final.toFixed(0)} kg`;
-    resultBox.classList.remove('hidden');
-
-    // Draw trajectory arc in 3D
-    drawTransferArc(data.trajectory_points);
-  } catch (e) {
-    resultBox.innerHTML = `<span style="color:var(--danger)">${e.message}</span>`;
-    resultBox.classList.remove('hidden');
-  } finally {
-    btn.classList.remove('loading');
-    btn.disabled = false;
-  }
+  } catch (_) { }
 }
 
 function drawTransferArc(points) {
@@ -476,19 +449,72 @@ function clearMarkers() {
   markers.length = 0;
 }
 
-// ── Pork-Chop Plot ─────────────────────────────────────────────────────────
-async function generatePorkchop() {
-  const btn = document.getElementById('btn-porkchop');
-  btn.classList.add('loading');
-  btn.disabled = true;
 
+
+// ── Multi-Leg Visualization ────────────────────────────────────────────────
+
+function clearMultiLegArcs() {
+  for (const line of multiLegLines) {
+    scene.remove(line);
+    line.geometry.dispose();
+    line.material.dispose();
+  }
+  multiLegLines = [];
+}
+
+function drawMultiLegArcs(legs) {
+  clearMultiLegArcs();
+  clearMarkers();
+
+  if (!legs || legs.length === 0) return;
+
+  // Draw each leg
+  legs.forEach((leg, index) => {
+    const points = leg.trajectory_points;
+    if (!points || points.length === 0) return;
+
+    const positions = [];
+    for (const p of points) {
+      positions.push(p.x, p.z, -p.y);
+    }
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+
+    // Color cycle for legs to distinguish them
+    const colors = [0x4ea8de, 0x6930c3, 0x48bfe3, 0x64dfdf];
+    const color = colors[index % colors.length];
+
+    const mat = new THREE.LineBasicMaterial({
+      color: color,
+      linewidth: 2,
+    });
+
+    const line = new THREE.Line(geo, mat);
+    scene.add(line);
+    multiLegLines.push(line);
+
+    // Markers
+    if (index === 0) {
+      addMarker(points[0], 0x34d399, 2); // Start (Green)
+    }
+    // End of current leg (which is start of next or final destination)
+    // If it's the last leg, make it red. If intermediate (flyby), make it yellow/orange.
+    const isLast = index === legs.length - 1;
+    const markerColor = isLast ? 0xef4444 : 0xfbbf24;
+    addMarker(points[points.length - 1], markerColor, 2);
+  });
+}
+
+// ── Pork-Chop Plot ─────────────────────────────────────────────────────────
+async function generatePorkchop(config) {
   const payload = {
-    origin: document.getElementById('pc-origin').value,
-    target: document.getElementById('pc-target').value,
-    dep_start: document.getElementById('pc-dep-start').value,
-    dep_end: document.getElementById('pc-dep-end').value,
-    tof_min_days: parseFloat(document.getElementById('pc-tof-min').value),
-    tof_max_days: parseFloat(document.getElementById('pc-tof-max').value),
+    origin: config.origin,
+    target: config.target,
+    dep_start: config.dep_start,
+    dep_end: config.dep_end,
+    tof_min_days: config.tof_min_days || 100,
+    tof_max_days: config.tof_max_days || 400,
     dep_steps: 60,
     tof_steps: 60,
   };
@@ -506,9 +532,6 @@ async function generatePorkchop() {
     renderPorkchop(data);
   } catch (e) {
     alert('Pork-chop error: ' + e.message);
-  } finally {
-    btn.classList.remove('loading');
-    btn.disabled = false;
   }
 }
 
@@ -621,26 +644,18 @@ function dvColor(t) {
   return `rgb(${r},${g},${bl})`;
 }
 
-function lerp(a, b, t) { return a + (b - a) * t; }
-
 // ── Optimizer ──────────────────────────────────────────────────────────────
-async function runOptimizer() {
-  const btn = document.getElementById('btn-optimize');
-  const box = document.getElementById('opt-progress');
-  btn.classList.add('loading');
-  btn.disabled = true;
-  box.classList.remove('hidden');
-  box.innerHTML = '<span class="label">Submitting...</span>';
-
+async function runOptimizer(config, onProgress, onComplete) {
   const payload = {
-    origin: document.getElementById('opt-origin').value,
-    target: document.getElementById('opt-target').value,
-    dep_start: document.getElementById('opt-dep-start').value,
-    dep_end: document.getElementById('opt-dep-end').value,
-    tof_min_days: 100,
-    tof_max_days: 400,
-    population_size: parseInt(document.getElementById('opt-pop').value),
-    max_iterations: parseInt(document.getElementById('opt-iters').value),
+    origin: config.origin,
+    target: config.target,
+    dep_start: config.dep_start,
+    dep_end: config.dep_end,
+    tof_min_days: config.tof_min_days || 100,
+    tof_max_days: config.tof_max_days || 400,
+    population_size: config.population_size || 30,
+    max_iterations: config.max_iterations || 100,
+    mode: config.mode || 'pareto',
   };
 
   try {
@@ -652,103 +667,81 @@ async function runOptimizer() {
     if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
 
     const { job_id } = await res.json();
-    box.innerHTML = `<span class="label">Job:</span> ${job_id.slice(0, 8)}...\n<div class="progress-bar"><div class="fill" id="opt-fill" style="width:0%"></div></div>`;
+    if (onProgress) onProgress({ status: 'starting', job_id, progress: 0 });
 
-    // Connect WebSocket for progress
     const ws = new WebSocket(`${WS}/ws/trajectory/${job_id}`);
 
     ws.onmessage = (event) => {
       const msg = JSON.parse(event.data);
-      const pct = msg.max_iterations > 0
-        ? Math.round((msg.iteration / msg.max_iterations) * 100)
-        : 0;
-      const fill = document.getElementById('opt-fill');
-      if (fill) fill.style.width = pct + '%';
-
-      const dvStr = msg.best_dv_total != null ? msg.best_dv_total.toFixed(3) : '...';
-      box.innerHTML = `
-<span class="label">Job:</span> ${job_id.slice(0, 8)}...  <span class="label">Status:</span> ${msg.status}
-<div class="progress-bar"><div class="fill" id="opt-fill" style="width:${pct}%"></div></div>
-<span class="label">Iteration:</span> ${msg.iteration} / ${msg.max_iterations}
-<span class="label">Best ΔV:</span>  <span class="dv">${dvStr} km/s</span>
-<span class="label">Dep JD:</span>   ${msg.best_departure_jd ? msg.best_departure_jd.toFixed(2) : '—'}
-<span class="label">TOF:</span>      ${msg.best_tof_days ? msg.best_tof_days.toFixed(1) + ' days' : '—'}`;
+      if (onProgress) onProgress(msg);
 
       if (msg.status === 'complete' || msg.status === 'failed') {
-        btn.classList.remove('loading');
-        btn.disabled = false;
-
-        // If complete, also compute and draw the best Lambert transfer
         if (msg.status === 'complete' && msg.best_departure_jd && msg.best_tof_days) {
+          // Auto-draw best result
           drawOptimalTransfer(payload.origin, payload.target, msg.best_departure_jd, msg.best_tof_days);
         }
+        if (onComplete) onComplete(msg);
+        ws.close();
+      }
+    };
+
+    ws.onerror = (e) => {
+      if (onComplete) onComplete({ status: 'failed', error: 'WS Error' });
+    };
+  } catch (e) {
+    if (onComplete) onComplete({ status: 'failed', error: e.message });
+  }
+}
+
+// ── Multi-leg Optimizer ───────────────────────────────────────────────────
+async function runMultiLegOptimizer(config, onProgress, onComplete) {
+  const payload = {
+    body_sequence: config.body_sequence,
+    dep_start: config.dep_start,
+    dep_end: config.dep_end,
+    leg_tof_bounds: config.leg_tof_bounds,
+    population_size: config.population_size || 40,
+    max_iterations: config.max_iterations || 200,
+    mode: config.mode || 'pareto',
+  };
+
+  try {
+    const res = await fetch(`${API}/optimize/multileg`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
+    const { job_id } = await res.json();
+
+    if (onProgress) onProgress({ status: 'starting', job_id, progress: 0 });
+
+    const ws = new WebSocket(`${WS}/ws/trajectory/${job_id}`);
+
+    ws.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+      if (onProgress) onProgress(msg);
+
+      if (msg.status === 'complete' || msg.status === 'failed') {
+        if (msg.status === 'complete' && msg.best_departure_jd && msg.best_leg_tof_days) {
+          fetchAndDrawOptimizedMultiLeg(
+            config.body_sequence, msg.best_departure_jd, msg.best_leg_tof_days,
+          );
+        }
+        if (onComplete) onComplete(msg);
+        ws.close();
       }
     };
 
     ws.onerror = () => {
-      // Fall back to polling
-      pollOptStatus(job_id, box, btn, payload);
+      if (onComplete) onComplete({ status: 'failed', error: 'WS Error' });
     };
-
-    ws.onclose = () => {};
   } catch (e) {
-    box.innerHTML = `<span style="color:var(--danger)">${e.message}</span>`;
-    btn.classList.remove('loading');
-    btn.disabled = false;
+    if (onComplete) onComplete({ status: 'failed', error: e.message });
   }
 }
 
-async function pollOptStatus(jobId, box, btn, payload) {
-  const poll = async () => {
-    try {
-      const res = await fetch(`${API}/optimize/${jobId}/status`);
-      const data = await res.json();
-      if (data.status === 'complete' || data.status === 'failed') {
-        const r = data.result || {};
-        box.innerHTML = `
-<span class="label">Status:</span> ${data.status}
-<span class="label">Best ΔV:</span> <span class="dv">${r.best_dv_total ? r.best_dv_total.toFixed(3) + ' km/s' : '—'}</span>
-<span class="label">TOF:</span> ${r.best_tof_days ? r.best_tof_days.toFixed(1) + ' days' : '—'}`;
-        btn.classList.remove('loading');
-        btn.disabled = false;
 
-        if (data.status === 'complete' && r.best_departure_jd && r.best_tof_days) {
-          drawOptimalTransfer(payload.origin, payload.target, r.best_departure_jd, r.best_tof_days);
-        }
-        return;
-      }
-      setTimeout(poll, 1000);
-    } catch (_) {
-      setTimeout(poll, 2000);
-    }
-  };
-  poll();
-}
-
-async function drawOptimalTransfer(origin, target, depJd, tofDays) {
-  // Convert JD to ISO date
-  const jdToDate = (jd) => {
-    const ms = (jd - 2440587.5) * 86400000;
-    return new Date(ms).toISOString().split('T')[0];
-  };
-  try {
-    const res = await fetch(`${API}/lambert`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        origin,
-        target,
-        departure_date: jdToDate(depJd),
-        tof_days: tofDays,
-      }),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      clearMarkers();
-      drawTransferArc(data.trajectory_points);
-    }
-  } catch (_) {}
-}
 
 // ── Simulation Controls ────────────────────────────────────────────────────
 function updateSimSpeed(val) {
@@ -774,18 +767,48 @@ function setStatus(state, text) {
   const txt = document.getElementById('status-text');
   dot.className = 'dot ' + state;
   txt.textContent = text;
+  txt.textContent = text;
+}
+
+// ── Presets ────────────────────────────────────────────────────────────────
+function loadPreset(name) {
+  const originSel = document.getElementById('plan-origin');
+  const targetSel = document.getElementById('plan-target');
+
+  // Simple mapping for now - just sets origin/target
+  // Complex multi-leg presets (vega, cassini) would need more UI support to show intermediate legs,
+  // but for now we'll just set the start/end points or defaults.
+
+  let origin = 'earth';
+  let target = 'mars';
+
+  switch (name) {
+    case 'earth-mars':
+      origin = 'earth'; target = 'mars';
+      break;
+    case 'vega':
+      origin = 'earth'; target = 'jupiter'; // Venus-Earth-Gravity-Assist
+      break;
+    case 'cassini':
+      origin = 'earth'; target = 'saturn';
+      break;
+    case 'messenger':
+      origin = 'earth'; target = 'mercury';
+      break;
+    case 'grand-tour':
+      origin = 'earth'; target = 'neptune';
+      break;
+  }
+
+  if (originSel) originSel.value = origin;
+  if (targetSel) targetSel.value = target;
+
+  console.log(`Loaded preset: ${name} (${origin} -> ${target})`);
 }
 
 // ── Event Bindings ─────────────────────────────────────────────────────────
 function bindEvents() {
-  document.getElementById('btn-lambert').addEventListener('click', computeLambert);
-  document.getElementById('btn-porkchop').addEventListener('click', generatePorkchop);
-  document.getElementById('btn-optimize').addEventListener('click', runOptimizer);
   document.getElementById('btn-pause').addEventListener('click', togglePause);
-  document.getElementById('btn-multileg').addEventListener('click', computeMultiLeg);
-  document.getElementById('btn-ml-add').addEventListener('click', mlAddLeg);
-  document.getElementById('btn-ml-optimize').addEventListener('click', runMultiLegOptimizer);
-
   document.getElementById('sim-speed').addEventListener('input', (e) => {
     updateSimSpeed(parseInt(e.target.value));
   });
@@ -801,18 +824,36 @@ function bindEvents() {
     }
   });
 
-  // Multi-leg preset button
-  document.getElementById('btn-ml-preset').addEventListener('click', (e) => {
-    const menu = document.getElementById('ml-preset-menu');
-    if (menu.classList.contains('hidden')) {
-      const rect = e.target.getBoundingClientRect();
-      menu.style.left = rect.left + 'px';
-      menu.style.top = (rect.bottom + 4) + 'px';
-      menu.classList.remove('hidden');
-    } else {
-      menu.classList.add('hidden');
-    }
+  // Planner Events
+  document.getElementById('btn-plan').addEventListener('click', planRoute);
+  document.getElementById('plan-any-date').addEventListener('change', (e) => {
+    const inputs = document.getElementById('plan-date-inputs');
+    if (e.target.checked) inputs.classList.add('hidden');
+    else inputs.classList.remove('hidden');
   });
+
+  // Visualize Window button (added dynamically or if present)
+  const vizBtn = document.getElementById('btn-viz-window');
+  if (vizBtn) vizBtn.addEventListener('click', visualizeWindows);
+
+
+
+
+  // Multi-leg preset button
+  const mlBtn = document.getElementById('btn-ml-preset');
+  if (mlBtn) {
+    mlBtn.addEventListener('click', (e) => {
+      const menu = document.getElementById('ml-preset-menu');
+      if (menu.classList.contains('hidden')) {
+        const rect = e.target.getBoundingClientRect();
+        menu.style.left = rect.left + 'px';
+        menu.style.top = (rect.bottom + 4) + 'px';
+        menu.classList.remove('hidden');
+      } else {
+        menu.classList.add('hidden');
+      }
+    });
+  }
 
   // Preset items
   document.querySelectorAll('.preset-item').forEach(item => {
@@ -834,392 +875,267 @@ function bindEvents() {
   loadPreset('earth-mars');
 }
 
-// ── Multi-Leg Trajectory ───────────────────────────────────────────────────
-
-// Preset trajectories with approximate TOFs
-const ML_PRESETS = {
-  'earth-mars': {
-    bodies: ['earth', 'mars'],
-    tofs: [259],
-    departure: '2028-11-15',
-  },
-  'vega': {
-    bodies: ['earth', 'venus', 'earth', 'jupiter'],
-    tofs: [140, 340, 580],
-    departure: '2030-01-15',
-  },
-  'cassini': {
-    bodies: ['earth', 'venus', 'venus', 'earth', 'jupiter', 'saturn'],
-    tofs: [120, 350, 350, 600, 1100],
-    departure: '2029-06-01',
-  },
-  'messenger': {
-    bodies: ['earth', 'venus', 'venus', 'mercury'],
-    tofs: [110, 225, 90],
-    departure: '2028-09-15',
-  },
-  'grand-tour': {
-    bodies: ['earth', 'jupiter', 'saturn', 'uranus', 'neptune'],
-    tofs: [700, 1050, 1800, 2500],
-    departure: '2030-06-01',
-  },
-};
-
-let mlBodies = ['earth', 'mars'];
-let mlTofs = [250];
-
-function loadPreset(name) {
-  const preset = ML_PRESETS[name];
-  if (!preset) return;
-  mlBodies = [...preset.bodies];
-  mlTofs = [...preset.tofs];
-  document.getElementById('ml-departure').value = preset.departure;
-  renderMLLegs();
-}
-
-function renderMLLegs() {
-  const container = document.getElementById('multileg-legs');
-  container.innerHTML = '';
-  const planets = getPlanets();
-
-  for (let i = 0; i < mlBodies.length; i++) {
-    const row = document.createElement('div');
-    row.className = 'leg-row';
-
-    // Body number
-    const num = document.createElement('span');
-    num.className = 'leg-num';
-    num.textContent = i === 0 ? 'DEP' : i === mlBodies.length - 1 ? 'ARR' : `F${i}`;
-    row.appendChild(num);
-
-    // Body selector
-    const sel = document.createElement('select');
-    sel.className = 'ml-body-select';
-    sel.dataset.index = i;
-    for (const p of planets) {
-      const opt = document.createElement('option');
-      opt.value = p.name.toLowerCase();
-      opt.textContent = p.name;
-      sel.appendChild(opt);
-    }
-    sel.value = mlBodies[i];
-    sel.addEventListener('change', (e) => {
-      mlBodies[parseInt(e.target.dataset.index)] = e.target.value;
-    });
-    row.appendChild(sel);
-
-    // TOF input (for each leg except last body)
-    if (i < mlBodies.length - 1) {
-      const arrow = document.createElement('span');
-      arrow.className = 'leg-arrow';
-      arrow.textContent = '\u2192';
-      row.appendChild(arrow);
-
-      const tofInput = document.createElement('input');
-      tofInput.type = 'number';
-      tofInput.min = '10';
-      tofInput.max = '20000';
-      tofInput.value = mlTofs[i] || 200;
-      tofInput.title = 'TOF (days)';
-      tofInput.dataset.index = i;
-      tofInput.addEventListener('change', (e) => {
-        mlTofs[parseInt(e.target.dataset.index)] = parseFloat(e.target.value);
-      });
-      row.appendChild(tofInput);
-
-      const dLabel = document.createElement('span');
-      dLabel.className = 'leg-arrow';
-      dLabel.textContent = 'd';
-      row.appendChild(dLabel);
-    }
-
-    // Remove button (not for first or if only 2 bodies)
-    if (i > 0 && mlBodies.length > 2) {
-      const removeBtn = document.createElement('button');
-      removeBtn.className = 'btn-remove-leg';
-      removeBtn.textContent = '\u00D7';
-      removeBtn.title = 'Remove';
-      removeBtn.dataset.index = i;
-      removeBtn.addEventListener('click', (e) => {
-        const idx = parseInt(e.target.dataset.index);
-        mlBodies.splice(idx, 1);
-        // Adjust TOFs: merge the two adjacent TOFs
-        if (idx < mlTofs.length) {
-          mlTofs.splice(idx > 0 ? idx - 1 : idx, 1);
-        } else if (mlTofs.length > mlBodies.length - 1) {
-          mlTofs.pop();
-        }
-        renderMLLegs();
-      });
-      row.appendChild(removeBtn);
-    }
-
-    container.appendChild(row);
-  }
-}
-
-function mlAddLeg() {
-  // Insert a new body before the last one (add a flyby)
-  const lastBody = mlBodies[mlBodies.length - 1];
-  mlBodies.splice(mlBodies.length - 1, 0, 'venus');
-  // Add a default TOF for the new leg
-  mlTofs.push(200);
-  renderMLLegs();
-}
-
-// Leg colors for multi-leg arcs
-const LEG_COLORS = [
-  0x4ea8de, // blue
-  0x34d399, // green
-  0xf59e0b, // amber
-  0xef4444, // red
-  0x7b2ff7, // purple
-  0xe879f9, // pink
-  0x06b6d4, // cyan
-  0xfbbf24, // yellow
-];
-
-function clearMultiLegArcs() {
-  for (const obj of multiLegLines) {
-    scene.remove(obj);
-    if (obj.geometry) obj.geometry.dispose();
-    if (obj.material) obj.material.dispose();
-  }
-  multiLegLines.length = 0;
-}
-
-function drawMultiLegArcs(legs) {
-  clearMultiLegArcs();
-  clearMarkers();
-
-  for (let i = 0; i < legs.length; i++) {
-    const leg = legs[i];
-    const color = LEG_COLORS[i % LEG_COLORS.length];
-    const positions = [];
-
-    for (const p of leg.trajectory_points) {
-      positions.push(p.x, p.z, -p.y);
-    }
-
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-    const mat = new THREE.LineBasicMaterial({ color, linewidth: 2 });
-    const line = new THREE.Line(geo, mat);
-    scene.add(line);
-    multiLegLines.push(line);
-
-    // Departure marker for first leg
-    if (i === 0 && leg.trajectory_points.length > 0) {
-      addMarker(leg.trajectory_points[0], 0x34d399, 2.5); // green = departure
-    }
-
-    // Flyby marker at each intermediate body
-    if (i < legs.length - 1 && leg.trajectory_points.length > 0) {
-      const lastPt = leg.trajectory_points[leg.trajectory_points.length - 1];
-      addMarker(lastPt, 0xf59e0b, 2); // amber = flyby
-    }
-
-    // Arrival marker for last leg
-    if (i === legs.length - 1 && leg.trajectory_points.length > 0) {
-      const lastPt = leg.trajectory_points[leg.trajectory_points.length - 1];
-      addMarker(lastPt, 0xef4444, 2.5); // red = arrival
-    }
-  }
-}
-
-async function computeMultiLeg() {
-  const btn = document.getElementById('btn-multileg');
-  const resultBox = document.getElementById('ml-result');
+// ── Planner Logic ──────────────────────────────────────────────────────────
+async function planRoute() {
+  const btn = document.getElementById('btn-plan');
+  const resultsDiv = document.getElementById('plan-results');
   btn.classList.add('loading');
   btn.disabled = true;
-  resultBox.classList.add('hidden');
+  resultsDiv.innerHTML = '';
+
+  const origin = document.getElementById('plan-origin').value;
+  const target = document.getElementById('plan-target').value;
+  const mode = document.querySelector('input[name="plan-mode"]:checked').value;
+  const anyDate = document.getElementById('plan-any-date').checked;
 
   const payload = {
-    body_sequence: [...mlBodies],
-    departure_date: document.getElementById('ml-departure').value,
-    leg_tof_days: mlTofs.slice(0, mlBodies.length - 1).map(Number),
+    origin, target, mode,
+    dep_start: anyDate ? null : document.getElementById('plan-start').value,
+    dep_end: anyDate ? null : document.getElementById('plan-end').value,
   };
 
   try {
-    const res = await fetch(`${API}/multileg`, {
+    const res = await fetch(`${API}/plan`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
 
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || res.statusText);
-    }
-
+    if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
     const data = await res.json();
 
-    // Build result display
-    resultBox.innerHTML = formatMultiLegResult(data);
-    resultBox.classList.remove('hidden');
-
-    // Draw in 3D
-    drawMultiLegArcs(data.legs);
-
+    if (data.routes.length === 0) {
+      resultsDiv.innerHTML = '<div class="result-box" style="text-align:center; color:var(--text-dim)">No routes found in this window.</div>';
+    } else {
+      data.routes.forEach((r, i) => renderRouteCard(r, i, resultsDiv));
+      // Auto-view first result
+      viewRoute(data.routes[0]);
+    }
   } catch (e) {
-    resultBox.innerHTML = `<span style="color:var(--danger)">${e.message}</span>`;
-    resultBox.classList.remove('hidden');
+    resultsDiv.innerHTML = `<div class="result-box" style="color:var(--danger)">${e.message}</div>`;
   } finally {
     btn.classList.remove('loading');
     btn.disabled = false;
   }
 }
 
-// ── Multi-leg result formatting (shared by compute + optimizer) ────────────
-function formatMultiLegResult(data) {
-  const m = massEstimate(data.total_dv_km_s);
-  let html = '';
-  html += `<span class="label">Route:</span> ${data.body_sequence.join(' \u2192 ')}\n`;
-  html += `<span class="label">Depart:</span> ${data.departure_iso.split('T')[0]}\n`;
-  html += `<span class="label">Arrive:</span> ${data.arrival_iso.split('T')[0]}\n`;
-  html += `<span class="label">Total TOF:</span> ${data.total_tof_days.toFixed(0)} days (${(data.total_tof_days / 365.25).toFixed(1)} years)\n`;
-  html += `<span class="label">Total \u0394V:</span> <span class="dv">${data.total_dv_km_s.toFixed(3)} km/s</span>\n`;
-  html += `<span class="label">  Departure:</span> <span class="dv">${data.departure_dv_km_s.toFixed(3)} km/s</span>\n`;
-  html += `<span class="label">  Arrival:</span> <span class="dv">${data.arrival_dv_km_s.toFixed(3)} km/s</span>\n`;
-  if (data.flyby_dv_km_s > 0) {
-    html += `<span class="label">  Flyby \u0394V:</span> <span class="dv">${data.flyby_dv_km_s.toFixed(3)} km/s</span>\n`;
-  }
-  // C3 + mass estimate
-  html += `<span class="label">C3 dep:</span>  ${(data.departure_dv_km_s ** 2).toFixed(2)} km\u00B2/s\u00B2\n`;
-  html += `<span class="label">C3 arr:</span>  ${(data.arrival_dv_km_s ** 2).toFixed(2)} km\u00B2/s\u00B2\n`;
-  html += `<span class="label">Mass est</span> <span class="label">(${MASS_M0}kg, Isp=${MASS_ISP}s):</span>\n`;
-  html += `  prop: ${m.propellant.toFixed(0)} kg  final: ${m.final.toFixed(0)} kg\n`;
+function renderRouteCard(route, index, container) {
+  const card = document.createElement('div');
+  card.className = `route-card ${index === 0 ? 'active' : ''}`;
+  card.dataset.index = index;
 
-  // Flyby details
-  for (const fb of data.flybys) {
-    html += `\n<div class="flyby-card">`;
-    html += `<div class="fb-header">${fb.body} flyby (${fb.epoch_iso.split('T')[0]})</div>`;
-    html += `V\u221E in: ${fb.v_inf_in_km_s.toFixed(2)} km/s  out: ${fb.v_inf_out_km_s.toFixed(2)} km/s\n`;
-    html += `Turn: ${fb.turning_angle_deg.toFixed(1)}\u00B0  Alt: ${fb.flyby_altitude_km.toFixed(0)} km\n`;
-    if (fb.feasible_unpowered) {
-      html += `<span class="fb-feasible">Unpowered flyby feasible</span>`;
-    } else {
-      html += `<span class="fb-powered">Powered: ${fb.powered_dv_km_s.toFixed(3)} km/s needed</span>`;
-    }
-    html += `</div>`;
-  }
+  const ratingClass = route.rating || 'moderate';
+  const stars = ratingClass === 'excellent' ? '\u2605\u2605\u2605' :
+    ratingClass === 'good' ? '\u2605\u2605' :
+      ratingClass === 'bad' ? '' : '\u2605';
 
-  // Leg summary
-  html += `\n<span class="label">Legs:</span>`;
-  for (const leg of data.legs) {
-    const conv = leg.converged ? '' : ' [!]';
-    html += `\n  ${leg.origin} \u2192 ${leg.target}: ${leg.tof_days.toFixed(0)}d, \u0394V dep=${leg.dv_departure_km_s.toFixed(2)} arr=${leg.dv_arrival_km_s.toFixed(2)} km/s${conv}`;
-  }
-  return html;
+  const m = massEstimate(route.total_dv_km_s);
+  const tofYears = (route.total_tof_days / 365.25).toFixed(1);
+  const via = route.type === 'multileg' ?
+    route.name.replace('Direct', '').replace(route.origin, '').replace(route.target, '').replace(/\b\w/g, l => l.toUpperCase()) :
+    'Direct';
+
+  card.innerHTML = `
+    <div class="rc-header">
+      <span class="rc-title">${via}</span>
+      <span class="rc-rating ${ratingClass}">${stars} ${route.rating.toUpperCase()}</span>
+    </div>
+    <div class="rc-stats">
+      <span>\u0394V: <span class="rc-val">${route.total_dv_km_s.toFixed(2)} km/s</span></span>
+      <span>TOF: <span class="rc-val">${route.total_tof_days.toFixed(0)}d</span> (${tofYears}y)</span>
+    </div>
+    <div class="rc-dates">
+      Dep: ${route.departure_iso.split('T')[0]} &nbsp; Arr: ${route.arrival_iso.split('T')[0]}
+    </div>
+    <div class="rc-actions">
+      <button class="rc-btn view-btn">View 3D</button>
+      <button class="rc-btn optimize opt-btn">Optimize</button>
+    </div>
+  `;
+
+  card.querySelector('.view-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.querySelectorAll('.route-card').forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+    viewRoute(route);
+  });
+
+  card.querySelector('.opt-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    optimizeRoute(route);
+  });
+
+  card.addEventListener('click', () => {
+    card.querySelector('.view-btn').click();
+  });
+
+  container.appendChild(card);
 }
 
-// ── Multi-leg Optimizer ───────────────────────────────────────────────────
+function viewRoute(route) {
+  // Clear scene
+  if (transferLine) {
+    scene.remove(transferLine);
+    transferLine = null;
+  }
+  clearMultiLegArcs();
+  clearMarkers();
+
+  // Draw based on type
+  if (route.type === 'direct') {
+    drawTransferArc(route.trajectory_points);
+  } else {
+    // For multileg, we need to construct 'legs' structure if not present or just draw points
+    // The backend returns 'legs' with trajectory_points inside
+    if (route.legs) {
+      drawMultiLegArcs(route.legs);
+    }
+  }
+}
+
+function optimizeRoute(route) {
+  // Find card
+  const card = document.querySelector(`.route-card[data-index="${route.index}"]`); // Need to add index to route obj or search
+  // Actually card is just in DOM. We can find it by active class or just re-render.
+  // Better: The caller passes the route object. Let's find the card by some ID or just update the UI state.
+
+  // Actually, let's just use the `card` element if we passed it, but we only passed `route`.
+  // We'll search by matching title/dates which is hacky.
+  // Let's assume the user clicked the button on the card, so we have context if we change signature.
+  // But sticking to signature:
+
+  // We will run the optimizer and show a modal or overlay on the card.
+  // For simplicity, let's replace the "Optimize" button with a progress bar.
+
+  // Find the button that triggered this? No event object here.
+  // Let's re-render the card with a progress bar.
+  // Or simpler: Just find the active card.
+  const activeCard = document.querySelector('.route-card.active');
+  if (!activeCard) return;
+
+  const actionsDiv = activeCard.querySelector('.rc-actions');
+  actionsDiv.innerHTML = `<div class="progress-bar" style="width:100%; margin:4px 0"><div class="fill" style="width:0%"></div></div><div class="rc-status" style="font-size:9px;color:var(--text-dim)">Starting...</div>`;
+
+  const onProgress = (msg) => {
+    const bar = actionsDiv.querySelector('.fill');
+    const stat = actionsDiv.querySelector('.rc-status');
+    if (bar && msg.max_iterations) {
+      const pct = (msg.iteration / msg.max_iterations) * 100;
+      bar.style.width = pct + '%';
+    }
+    if (stat) {
+      if (msg.status === 'running') {
+        stat.textContent = `Iter ${msg.iteration}: ${msg.best_dv_total ? msg.best_dv_total.toFixed(2) : '...'} km/s`;
+      } else {
+        stat.textContent = msg.status;
+      }
+    }
+  };
+
+  const onComplete = (msg) => {
+    // Re-render card with new stats?
+    // Or just update values.
+    if (msg.status === 'complete') {
+      const stat = actionsDiv.querySelector('.rc-status');
+      stat.textContent = `Done. Best: ${msg.best_dv_total.toFixed(2)} km/s`;
+
+      // Update card stats
+      const valEls = activeCard.querySelectorAll('.rc-val');
+      if (valEls.length >= 2) {
+        valEls[0].textContent = msg.best_dv_total.toFixed(2) + ' km/s';
+        // Update TOF if available (multi-leg vs single)
+        // msg structure differs slightly
+        let tof = msg.best_total_tof_days || msg.best_tof_days;
+        if (tof) valEls[1].textContent = tof.toFixed(0) + 'd';
+      }
+    }
+  };
+
+  if (route.type === 'direct') {
+    // Set window +/- 6 months around best date
+    const d = new Date(route.departure_iso);
+    const start = new Date(d); start.setMonth(d.getMonth() - 6);
+    const end = new Date(d); end.setMonth(d.getMonth() + 6);
+    const clamp = (dt) => dt.toISOString().split('T')[0];
+
+    runOptimizer({
+      origin: route.origin,
+      target: route.target,
+      dep_start: clamp(start),
+      dep_end: clamp(end),
+      // Use defaults for others
+    }, onProgress, onComplete);
+
+  } else {
+    // Multi-leg
+    // Departure window +/- 90 days
+    const d = new Date(route.departure_iso);
+    const start = new Date(d); start.setDate(d.getDate() - 90);
+    const end = new Date(d); end.setDate(d.getDate() + 90);
+    const clamp = (dt) => dt.toISOString().split('T')[0];
+
+    // Build bounds from legs in result
+    let legBounds = [];
+    if (route.legs) {
+      legBounds = route.legs.map(l => [l.tof_days * 0.5, l.tof_days * 1.5]);
+    } else {
+      // Fallback using route.legs_ratio and total TOF if we had that, 
+      // but we only have total.
+      // The catalog route has 'legs_ratio'.
+      // This is getting complex.
+      // If we are optimizing a planner result, it SHOULD have legs.
+      // If not, we abort.
+      console.error("Cannot optimize multi-leg without leg data");
+      return;
+    }
+
+    runMultiLegOptimizer({
+      body_sequence: route.body_sequence,
+      dep_start: clamp(start),
+      dep_end: clamp(end),
+      leg_tof_bounds: legBounds,
+    }, onProgress, onComplete);
+  }
+}
+
+async function visualizeWindows() {
+  const origin = document.getElementById('plan-origin').value;
+  const target = document.getElementById('plan-target').value;
+  const anyDate = document.getElementById('plan-any-date').checked;
+  let start = '2028-01-01', end = '2030-01-01'; // Defaults
+
+  if (!anyDate) {
+    start = document.getElementById('plan-start').value;
+    end = document.getElementById('plan-end').value;
+  } else {
+    // Default 2 year window from now? Or next synodic window?
+    // Just pick 2028-2030 for now as a demo window, or use current planner logic.
+    // Better: Use the date range from the date inputs if set, else defaults.
+    // If "Any date" is checked, inputs are hidden but have values.
+    // We'll just use the hidden values if they are reasonable, or force a 4-year window.
+    start = '2028-01-01';
+    end = '2032-01-01';
+  }
+
+  await generatePorkchop({
+    origin, target, dep_start: start, dep_end: end
+  });
+}
+
+function toggleAdvanced() {
+  // Deleted
+}
+
+// ── Multi-Leg Trajectory ───────────────────────────────────────────────────
+// (Manual functions removed, kept only formatting helpers if needed)
 function jdToIso(jd) {
   const ms = (jd - 2440587.5) * 86400000;
   return new Date(ms).toISOString().split('T')[0];
 }
 
-async function runMultiLegOptimizer() {
-  const btn = document.getElementById('btn-ml-optimize');
-  const box = document.getElementById('ml-opt-progress');
-  btn.classList.add('loading');
-  btn.disabled = true;
-  box.classList.remove('hidden');
-  box.innerHTML = '<span class="label">Submitting...</span>';
+// ── Multi-leg Optimizer ───────────────────────────────────────────────────
+// (Merged into runMultiLegOptimizer above)
 
-  const departure = document.getElementById('ml-departure').value;
-  const depDate = new Date(departure);
-
-  // Departure window: current departure +/- 90 days, clamped to epoch range
-  const depStart = new Date(depDate);
-  depStart.setDate(depStart.getDate() - 90);
-  const depEnd = new Date(depDate);
-  depEnd.setDate(depEnd.getDate() + 90);
-
-  const clampIso = (d) => {
-    const iso = d.toISOString().split('T')[0];
-    if (iso < epochRange.start) return epochRange.start;
-    if (iso > epochRange.end) return epochRange.end;
-    return iso;
-  };
-
-  // Build TOF bounds: each TOF +/- 50%, min 30 days
-  const legTofBounds = mlTofs.slice(0, mlBodies.length - 1).map(tof => {
-    const t = Number(tof);
-    return [Math.max(30, Math.round(t * 0.5)), Math.round(t * 1.5)];
-  });
-
-  const payload = {
-    body_sequence: [...mlBodies],
-    dep_start: clampIso(depStart),
-    dep_end: clampIso(depEnd),
-    leg_tof_bounds: legTofBounds,
-    population_size: 40,
-    max_iterations: 200,
-  };
-
-  try {
-    const res = await fetch(`${API}/optimize/multileg`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
-    const { job_id } = await res.json();
-
-    box.innerHTML = `<span class="label">Job:</span> ${job_id.slice(0, 8)}...\n<div class="progress-bar"><div class="fill" id="ml-opt-fill" style="width:0%"></div></div>`;
-
-    // Stream progress via WebSocket
-    const ws = new WebSocket(`${WS}/ws/trajectory/${job_id}`);
-
-    ws.onmessage = (event) => {
-      const msg = JSON.parse(event.data);
-      const pct = msg.max_iterations > 0
-        ? Math.round((msg.iteration / msg.max_iterations) * 100) : 0;
-      const dvStr = msg.best_dv_total != null ? msg.best_dv_total.toFixed(3) : '...';
-      const tofStr = msg.best_leg_tof_days
-        ? msg.best_leg_tof_days.map(t => t.toFixed(0) + 'd').join(', ') : '...';
-      const route = msg.body_sequence
-        ? msg.body_sequence.join(' \u2192 ') : mlBodies.join(' \u2192 ');
-
-      box.innerHTML = `<span class="label">Job:</span> ${job_id.slice(0, 8)}...  <span class="label">Status:</span> ${msg.status}
-<div class="progress-bar"><div class="fill" id="ml-opt-fill" style="width:${pct}%"></div></div>
-<span class="label">Iter:</span> ${msg.iteration} / ${msg.max_iterations}
-<span class="label">Best \u0394V:</span> <span class="dv">${dvStr} km/s</span>
-<span class="label">Route:</span> ${route}
-<span class="label">Leg TOFs:</span> ${tofStr}
-<span class="label">\u0394V dep:</span> ${msg.best_dv_departure != null ? msg.best_dv_departure.toFixed(3) : '...'} km/s
-<span class="label">\u0394V arr:</span> ${msg.best_dv_arrival != null ? msg.best_dv_arrival.toFixed(3) : '...'} km/s
-<span class="label">\u0394V flyby:</span> ${msg.best_dv_flyby != null ? msg.best_dv_flyby.toFixed(3) : '...'} km/s`;
-
-      if (msg.status === 'complete' || msg.status === 'failed') {
-        btn.classList.remove('loading');
-        btn.disabled = false;
-        if (msg.status === 'complete' && msg.best_departure_jd && msg.best_leg_tof_days) {
-          // Update UI with optimized parameters
-          document.getElementById('ml-departure').value = jdToIso(msg.best_departure_jd);
-          mlTofs = [...msg.best_leg_tof_days];
-          renderMLLegs();
-          // Fetch full trajectory and draw
-          fetchAndDrawOptimizedMultiLeg(
-            [...mlBodies], msg.best_departure_jd, msg.best_leg_tof_days,
-          );
-        }
-      }
-    };
-
-    ws.onerror = () => {
-      box.innerHTML += '\n<span style="color:var(--warn)">WS error</span>';
-      btn.classList.remove('loading');
-      btn.disabled = false;
-    };
-    ws.onclose = () => {};
-  } catch (e) {
-    box.innerHTML = `<span style="color:var(--danger)">${e.message}</span>`;
-    btn.classList.remove('loading');
-    btn.disabled = false;
-  }
-}
 
 async function fetchAndDrawOptimizedMultiLeg(bodies, depJd, legTofs) {
   try {
@@ -1235,12 +1151,8 @@ async function fetchAndDrawOptimizedMultiLeg(bodies, depJd, legTofs) {
     if (res.ok) {
       const data = await res.json();
       drawMultiLegArcs(data.legs);
-      // Show full result in ml-result box
-      const resultBox = document.getElementById('ml-result');
-      resultBox.innerHTML = formatMultiLegResult(data);
-      resultBox.classList.remove('hidden');
     }
-  } catch (_) {}
+  } catch (_) { }
 }
 
 // ── Render Loop ────────────────────────────────────────────────────────────

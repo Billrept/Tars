@@ -22,7 +22,12 @@ try:
     _PROTO_AVAILABLE = True
     logger.info("Protobuf generated modules loaded")
 except ImportError:
-    logger.warning("Protobuf modules not found — using manual binary encoding")
+    logger.warning(
+        "Protobuf modules not found -- using manual binary encoding. "
+        "Run `python -m grpc_tools.protoc -Iproto --python_out=src/serialization/proto "
+        "--pyi_out=src/serialization/proto proto/trajectory.proto` to compile, "
+        "or build with Docker. The fallback binary format is NOT compatible with protobuf."
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -96,32 +101,6 @@ def encode_trajectory(
         return traj.SerializeToString()
 
     return _encode_trajectory_binary(segments, total_dv, departure_jd, arrival_jd, tof_days)
-
-
-def encode_optimization_update(
-    job_id: str,
-    status: str,
-    progress: dict,
-    trajectory_bytes: bytes | None = None,
-) -> bytes:
-    """Encode an optimization progress update to protobuf binary."""
-    if _PROTO_AVAILABLE:
-        update = pb.OptimizationUpdate()
-        update.job_id = job_id
-        update.status = status
-        update.iteration = progress.get("iteration", 0)
-        update.max_iterations = progress.get("max_iterations", 0)
-        update.best_dv_total = progress.get("best_dv_total", 0.0) or 0.0
-        update.best_departure_jd = progress.get("best_departure_jd", 0.0)
-        update.best_tof_days = progress.get("best_tof_days", 0.0)
-        update.best_dv_departure = progress.get("best_dv_departure", 0.0) or 0.0
-        update.best_dv_arrival = progress.get("best_dv_arrival", 0.0) or 0.0
-        update.converged = progress.get("converged", False)
-        return update.SerializeToString()
-
-    # Fallback: just use JSON bytes
-    import json
-    return json.dumps({"job_id": job_id, "status": status, **progress}).encode()
 
 
 def encode_porkchop(

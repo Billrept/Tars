@@ -3,9 +3,9 @@
 
 Tests all endpoints:
 - /health, /bodies, /epoch-range
-- /positions, /lambert
-- /assess (NEW)
-- /optimize with mode parameter (NEW: min_dv, min_tof, pareto)
+- /bodies/{id}/ephemeris, /lambert
+- /assess
+- /optimize with mode parameter (min_dv, min_tof, pareto)
 - /porkchop
 - /multileg, /optimize/multileg
 - WebSocket streaming

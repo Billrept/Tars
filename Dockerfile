@@ -14,14 +14,16 @@ COPY proto/ proto/
 COPY scripts/ scripts/
 COPY src/ src/
 
-# Compile protobuf schemas
-RUN mkdir -p src/serialization/proto && \
+# Install grpcio-tools for proto compilation only, then compile and uninstall
+RUN pip install --no-cache-dir "grpcio-tools>=1.60" && \
+    mkdir -p src/serialization/proto && \
     python -m grpc_tools.protoc \
     -Iproto \
     --python_out=src/serialization/proto \
     --pyi_out=src/serialization/proto \
     proto/trajectory.proto && \
-    touch src/serialization/proto/__init__.py || true
+    touch src/serialization/proto/__init__.py && \
+    pip uninstall -y grpcio-tools || true
 
 ENV PYTHONPATH=/app/src
 ENV PYTHONUNBUFFERED=1

@@ -10,11 +10,11 @@ import asyncio
 import json
 import logging
 
-from arq.connections import RedisSettings
+from arq.connections import RedisSettings  # noqa: F401 (used by WorkerSettings indirectly)
 
 from config import settings
 from ephemeris.spline_cache import EphemerisCache
-from optimizer.dispatcher import publish_progress, publish_multileg_progress, JOB_PREFIX, get_redis
+from optimizer.dispatcher import publish_progress, publish_multileg_progress, JOB_PREFIX, get_redis, _redis_settings
 from optimizer.gmpa import (
     GreyWolfOptimizer,
     OptimizationRequest,
@@ -175,15 +175,6 @@ async def run_multileg_optimization(ctx: dict, job_id: str, request_data: dict) 
             await r.close()
 
         return {"status": "failed", "job_id": job_id, "error": str(e)}
-
-
-def _redis_settings() -> RedisSettings:
-    """Parse REDIS_URL into ARQ RedisSettings."""
-    url = settings.redis_url
-    parts = url.replace("redis://", "").split(":")
-    host = parts[0] if parts[0] else "localhost"
-    port = int(parts[1].split("/")[0]) if len(parts) > 1 else 6379
-    return RedisSettings(host=host, port=port)
 
 
 class WorkerSettings:
