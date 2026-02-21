@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { jdToIso, pointToUnixMs, findClosestIndexByTime } from './utils/dateUtils.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
 
 const API = 'http://localhost:8000';
@@ -33,10 +34,9 @@ function massEstimate(dvKms, m0 = MASS_M0, isp = MASS_ISP) {
 // ── State ──────────────────────────────────────────────────────────────────
 let bodies = [];                    // from /bodies
 let bodyMeshes = {};                // naif_id -> THREE.Mesh
-let orbitLines = {};                // naif_id -> THREE.Line
 let transferLine = null;            // current Lambert arc
 let multiLegLines = [];             // multi-leg arc lines
-let scene, camera, renderer, controls;
+let scene, camera, renderer, labelRenderer, controls;
 let ephemerisWs = null;             // WebSocket for streaming
 let simPaused = false;
 let simSpeed = 10;
@@ -44,7 +44,12 @@ let epochRange = { start: '2025-01-01', end: '2059-12-31' }; // updated from bac
 let stepDays = 3;
 let currentDate = new Date(epochRange.start);
 let orbitPoints = {};
-let orbitRedrawTimer = null;
+let planetTrails = {};      // naif_id -> THREE.Points
+let planetTrailHist = {};   // naif_id -> Array<THREE.Vector3>
+const TRAIL_MAX_POINTS = 100; // how long the trail is (increase for longer)
+let lastTrailSimTime = {};
+const TRAIL_SIM_INTERVAL_MS = 6 * 60 * 60 * 1000; 
+const orbitCircles = {}; // naif_id -> THREE.LineLoop
 
 // Planet display radii (scene units) — exaggerated for visibility
 const DISPLAY_RADIUS = {
@@ -67,8 +72,6 @@ async function init() {
   await fetchEpochRange();
   populateSelects();
   await fetchOrbits();
-  drawOrbits();              // draw once immediately
-  startOrbitRedrawLoop(1000); // redraw every 1 second (change as you like)
   connectEphemeris();
   bindEvents();
   animate();
@@ -85,12 +88,20 @@ function initScene() {
   camera.lookAt(0, 0, 0);
 
   // Renderer
-  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true});
-  // renderer.autoClearColor = false;
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   container.appendChild(renderer.domElement);
+
+  // CSS2D labels renderer
+  labelRenderer = new CSS2DRenderer();
+  labelRenderer.setSize(window.innerWidth, window.innerHeight);
+  labelRenderer.domElement.style.position = 'absolute';
+  labelRenderer.domElement.style.top = '0';
+  labelRenderer.domElement.style.left = '0';
+  labelRenderer.domElement.style.pointerEvents = 'none';
+  container.appendChild(labelRenderer.domElement);
 
   // Controls
   controls = new OrbitControls(camera, renderer.domElement);
@@ -121,6 +132,9 @@ function initScene() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+
+    // add this:
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
   });
 }
 
@@ -217,95 +231,39 @@ async function fetchOrbits() {
   }
 }
 
-function drawOrbits() {
-  const planets = bodies.filter(b => b.parent_id === null);
-
-  for (const body of planets) {
-    const points = orbitPoints[body.name]; // because you store orbitPoints[data.body]
-    if (!points) continue;
-
-    drawOrbit(body, points, {
-      windowDays: 120,     // 1 month
-      smooth: true,
-      sampleCount: 120,
-      keepEvery: 1
-    });
-  }
+function removePlanetTrail(bodyNaifId) {
+  const prev = planetTrails[bodyNaifId];
+  if (!prev) return;
+  prev.parent?.remove(prev);
+  prev.geometry?.dispose?.();
+  prev.material?.dispose?.();
+  planetTrails[bodyNaifId] = null;
 }
 
-function drawOrbit(body, points, opts = {}) {
-  const {
-    windowDays = 120,       // draw 1 month by default
-    smooth = true,         // make it curvy
-    sampleCount = 120,     // how many points to render along the curve
-    keepEvery = 1          // use fewer raw points before smoothing (bigger => fewer)
-  } = opts;
+function updatePlanetTrail(body, worldPosVec3) {
+  const id = body.naif_id;
+  if (!planetTrailHist[id]) planetTrailHist[id] = [];
+  const hist = planetTrailHist[id];
 
-  if (!points || points.length < 2) return;
+  // push newest position
+  hist.push(worldPosVec3.clone());
+  while (hist.length > TRAIL_MAX_POINTS) hist.shift();
 
-  // 1) Delete previous line if there is one
-  removeOrbitLine(body.naif_id);
-
-  const isSun = body.naif_id === 10;
-  if (isSun) return; // you were hiding it anyway; just skip creating it
-
-  // 2) Find segment from currentDate to currentDate + 1 month
-  const startMs = (currentDate instanceof Date) ? currentDate.getTime() : Date.parse(currentDate);
-  const endMs = startMs + windowDays * 86400 * 1000;
-
-  const startIndex = findClosestIndexByTime(points, startMs);
-  // Walk forward until we pass endMs (assumes points are time-ordered)
-  let endIndex = startIndex;
-  while (endIndex < points.length) {
-    const t = pointToUnixMs(points[endIndex]);
-    if (Number.isFinite(t) && t > endMs) break;
-    endIndex++;
-  }
-
-  let segment = points.slice(startIndex, Math.max(endIndex, startIndex + 2));
-  console.log(body.name);
-  // console.log(Math.max(endIndex, startIndex + 2));
-  // console.log(endIndex);
-  // console.log(segment.length);
-  if (segment.length < 2) return;
-
-  // 3) Optionally smooth using CatmullRomCurve3 (curvy look with few points)
-  // Convert to THREE.Vector3 in your axis convention: (x, z, -y)
-  let drawPoints;
-
-  if (smooth && segment.length >= 4) {
-    // console.log("Smoothing");
-    // Use fewer points first (keepEvery) then generate a smooth curve
-    const sparse = [];
-    for (let i = 0; i < segment.length; i += keepEvery) {
-      const p = segment[i];
-      sparse.push(new THREE.Vector3(p.x, p.z, -p.y));
-    }
-    // Ensure the last point is included
-    const last = segment[segment.length - 1];
-    sparse.push(new THREE.Vector3(last.x, last.z, -last.y));
-
-    const curve = new THREE.CatmullRomCurve3(sparse, false, "centripetal");
-    drawPoints = curve.getPoints(sampleCount); // sampled smooth points
-  } else {
-    // No smoothing: just use the segment points
-    drawPoints = segment.map(p => new THREE.Vector3(p.x, p.z, -p.y));
-  }
+  // rebuild the trail geometry (simple + works)
+  removePlanetTrail(id);
 
   const positions = [];
   const colors = [];
   const base = new THREE.Color(body.color);
-  const n = drawPoints.length;
-
-  console.log(n);
+  const n = hist.length;
 
   for (let i = 0; i < n; i++) {
-    const v = drawPoints[i];
+    const v = hist[i];
     positions.push(v.x, v.y, v.z);
 
-    // fading trail
+    // fade: old dim -> new bright
     const t = n > 1 ? i / (n - 1) : 1;
-    const brightness = 0.12 + 0.78 * t;
+    const brightness = 0.05 + 0.95 * t;
     colors.push(base.r * brightness, base.g * brightness, base.b * brightness);
   }
 
@@ -313,37 +271,46 @@ function drawOrbit(body, points, opts = {}) {
   geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
   geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
 
-  const mat = new THREE.LineBasicMaterial({
+  const mat = new THREE.ShaderMaterial({
+    uniforms: {},
+    vertexShader: `
+      varying vec3 vColor;
+      void main() {
+        vColor = color;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        gl_PointSize = 3.0;
+      }
+    `,
+    fragmentShader: `
+      varying vec3 vColor;
+      void main() {
+        float d = length(gl_PointCoord - vec2(0.5));
+        if (d > 0.5) discard;
+        gl_FragColor = vec4(vColor, 1.0);
+      }
+    `,
     vertexColors: true,
     transparent: true,
-    opacity: 0.55
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
   });
 
-  const line = new THREE.Line(geo, mat);
-  scene.add(line);
-  orbitLines[body.naif_id] = line;
+  const pts = new THREE.Points(geo, mat);
+  pts.userData.type = "planetTrail";
+  pts.userData.naifId = id;
+
+  scene.add(pts);
+  planetTrails[id] = pts;
 }
 
-function startOrbitRedrawLoop(intervalMs = 1000) {
-  if (orbitRedrawTimer) clearInterval(orbitRedrawTimer);
-  orbitRedrawTimer = setInterval(() => {
-    drawOrbits();
-  }, intervalMs);
-}
+function createCss2DLabel(text) {
+  const div = document.createElement('div');
+  div.className = 'planet-label';
+  div.textContent = text;
 
-function stopOrbitRedrawLoop() {
-  if (orbitRedrawTimer) clearInterval(orbitRedrawTimer);
-  orbitRedrawTimer = null;
-}
-
-function removeOrbitLine(bodyNaifId) {
-  const prev = orbitLines[bodyNaifId];
-  if (!prev) return;
-  scene.remove(prev);
-  prev.geometry?.dispose?.();
-  prev.material?.dispose?.();
-  orbitLines[bodyNaifId] = null;
-
+  const label = new CSS2DObject(div);
+  label.userData.isPlanetLabel = true;
+  return label;
 }
 
 // ── Create Body Meshes ─────────────────────────────────────────────────────
@@ -383,10 +350,9 @@ function ensureBodyMesh(body) {
     mesh = new THREE.Mesh(geo, mat);
   }
 
-  // Name label sprite
-  const label = createTextSprite(body.name, body.color);
-  label.position.set(0, radius + 2, 0);
-  label.scale.set(20, 10, 1);
+  // Name label (CSS2D)
+  const label = createCss2DLabel(body.name);
+  label.position.set(0, radius -25, 0);
   mesh.add(label);
 
   mesh.userData = { body };
@@ -408,23 +374,6 @@ function createGlowTexture() {
   ctx.fillRect(0, 0, size, size);
   const tex = new THREE.CanvasTexture(canvas);
   return tex;
-}
-
-function createTextSprite(text, color) {
-  const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 128;
-  const ctx = canvas.getContext('2d');
-  ctx.font = 'bold 42px monospace';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = color;
-  ctx.globalAlpha = 0.8;
-  ctx.fillText(text, 128, 64);
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.minFilter = THREE.LinearFilter;
-  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false });
-  return new THREE.Sprite(mat);
 }
 
 // ── WebSocket Ephemeris Streaming ──────────────────────────────────────────
@@ -450,7 +399,8 @@ function connectEphemeris() {
 
   ephemerisWs.onmessage = (event) => {
     const snap = JSON.parse(event.data);
-    currentDate = snap.epoch_iso ? snap.epoch_iso.split('T')[0] : '';
+    currentDate = new Date(snap.epoch_iso);
+    const currentSimMs = currentDate.getTime();
 
     updatePlanetPositions(snap);
   };
@@ -480,6 +430,19 @@ function updatePlanetPositions(snapshot) {
     // Three.js: x=right, y=up, z=toward-camera
     // Map: three.x = ecliptic.x, three.y = ecliptic.z, three.z = -ecliptic.y
     mesh.position.set(bd.position[0], bd.position[2], -bd.position[1]);
+    const simMs = new Date(snapshot.epoch_iso).getTime();
+    const id = bodyInfo.naif_id;
+
+    if (!lastTrailSimTime[id]) {
+      lastTrailSimTime[id] = simMs;
+      updatePlanetTrail(bodyInfo, mesh.position);
+    } else {
+      const delta = simMs - lastTrailSimTime[id];
+      if (delta >= TRAIL_SIM_INTERVAL_MS) {
+        lastTrailSimTime[id] = simMs;
+        updatePlanetTrail(bodyInfo, mesh.position);
+      }
+    }
   }
 }
 
@@ -1362,6 +1325,7 @@ function animate() {
   requestAnimationFrame(animate);
   controls.update();
   renderer.render(scene, camera);
+  labelRenderer.render(scene, camera); // <-- add this
 }
 
 // ── Boot ───────────────────────────────────────────────────────────────────

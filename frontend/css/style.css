@@ -22,8 +22,19 @@ html, body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font);
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.5;
+}
+
+.planet-label{
+  font-size: 14px;
+  color: white;
+  font-weight: 600;
+  text-shadow: 0 0 4px rgba(255,255,255,0.8),
+               0 0 10px rgba(255,255,255,0.5);
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 /* ── Viewport ────────────────────────────────────────────── */
