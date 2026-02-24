@@ -69,6 +69,21 @@ const DISPLAY_RADIUS = {
   999: 1.0,    // Pluto
 };
 
+// ── Planet Data Dictionary ────────────────────────────────────────────────
+const PLANET_INFO = {
+  10:  { type: 'Star', radius: '696,340 km', day: '25 days', year: '230 M yr', temp: '5,500°C', desc: 'The star at the center of our Solar System.' },
+  199: { type: 'Planet', radius: '2,439 km', day: '59 days', year: '88 days', temp: '167°C', desc: 'The smallest planet in the Solar System and the closest to the Sun.' },
+  299: { type: 'Planet', radius: '6,051 km', day: '243 days', year: '225 days', temp: '464°C', desc: 'Second planet from the Sun. It has a thick atmosphere trapping heat.' },
+  399: { type: 'Planet', radius: '6,371 km', day: '24 hours', year: '365 days', temp: '15°C', desc: 'Our home. The only known planet to harbor life.' },
+  499: { type: 'Planet', radius: '3,389 km', day: '24h 37m', year: '687 days', temp: '-65°C', desc: 'The Red Planet. Dusty, cold, desert world with a very thin atmosphere.' },
+  599: { type: 'Gas Giant', radius: '69,911 km', day: '9h 56m', year: '12 years', temp: '-110°C', desc: 'The largest planet in the Solar System.' },
+  699: { type: 'Gas Giant', radius: '58,232 km', day: '10h 42m', year: '29 years', temp: '-140°C', desc: 'Adorned with a dazzling, complex system of icy rings.' },
+  799: { type: 'Ice Giant', radius: '25,362 km', day: '17h 14m', year: '84 years', temp: '-195°C', desc: 'Rotates at a nearly 90-degree angle from the plane of its orbit.' },
+  899: { type: 'Ice Giant', radius: '24,622 km', day: '16h 6m', year: '165 years', temp: '-200°C', desc: 'The most distant major planet, dark, cold, and whipped by supersonic winds.' },
+  999: { type: 'Dwarf Planet', radius: '1,188 km', day: '153 hours', year: '248 years', temp: '-225°C', desc: 'A dwarf planet in the Kuiper belt, a ring of bodies beyond Neptune.' }
+};
+
+
 // ── Init ───────────────────────────────────────────────────────────────────
 async function init() {
   initScene();
@@ -354,6 +369,20 @@ function ensureBodyMesh(body) {
     mesh = new THREE.Mesh(geo, mat);
   }
 
+  // Create an invisible hitbox (2x to 4x larger than the visual planet)
+  // For very small planets, we ensure a minimum clickable size
+  const hitboxRadius = Math.max(radius * 10, 3.0); 
+  const hitboxGeo = new THREE.SphereGeometry(hitboxRadius, 16, 16);
+  const hitboxMat = new THREE.MeshBasicMaterial({ 
+    visible: false, // Invisible!
+    color: 0xff0000,
+    wireframe: true // Helpful for debugging if you set visible: true
+  });
+  
+  const hitbox = new THREE.Mesh(hitboxGeo, hitboxMat);
+  hitbox.userData = { isHitbox: true, parentBody: body }; // Tag it
+  mesh.add(hitbox); // Attach to planet so it moves with it
+
   // Name label (CSS2D)
   const label = createCss2DLabel(body.name);
   label.position.set(0, radius -25, 0);
@@ -462,10 +491,18 @@ function onMouseClick(event) {
   const intersects = raycaster.intersectObjects(meshes, true);
 
   if (intersects.length > 0) {
-    // --- CLICKED A PLANET ---
-    let object = intersects[0].object;
-    
-    // Traverse up to find the root mesh with userData
+    // Get the first object hit
+    const hitObj = intersects[0].object;
+
+    // Check if it's our invisible hitbox
+    if (hitObj.userData.isHitbox) {
+      // Use the parent body data we stored
+      focusOnBody(hitObj.userData.parentBody.naif_id);
+      return;
+    }
+
+    // Standard check (if they clicked the visual mesh directly)
+    let object = hitObj;
     while(object.parent && !object.userData.body) {
       object = object.parent;
     }
@@ -474,27 +511,19 @@ function onMouseClick(event) {
       focusOnBody(object.userData.body.naif_id);
     }
   } else {
-    // --- CLICKED EMPTY SPACE (BACKGROUND) ---
+    // Clicked empty space
     if (focusedBodyId !== null) {
-      console.log("Unfocusing camera");
-      
-      // 1. Clear the focused ID
-      focusedBodyId = null;
-      
-      // 2. Reset the controls target to the center (Sun) or keep it where it is?
-      // Option A: Reset to Sun (0,0,0)
-      // controls.target.set(0, 0, 0);
-      
-      // Option B: Keep target where it currently is (smoother)
-      // The target is currently at the last known position of the planet.
-      // We don't need to do anything special here; OrbitControls will just 
-      // orbit around that point in space until the user pans.
-      
-      // 3. Optional: Reset camera zoom/position if you want a "global view"
-      // For now, just unlocking is usually what users expect.
+      unlockCamera();
     }
   }
 }
+
+function unlockCamera() {
+  focusedBodyId = null;
+  // Hide (Add .hidden class to trigger CSS transition)
+  document.getElementById('planet-info-panel').classList.add('hidden');
+}
+
 
 
 function focusOnBody(naifId) {
@@ -513,53 +542,97 @@ function focusOnBody(naifId) {
   camera.position.copy(mesh.position).add(offset);
   controls.target.copy(mesh.position);
   controls.update();
+  updatePlanetInfoPanel(naifId, mesh.userData.body);
+
+  const bodyData = mesh.userData.body;
+  const info = PLANET_INFO[naifId] || { 
+    type: 'Unknown', radius: '?', day: '?', year: '?', temp: '?', desc: 'No data available.' 
+  };
+
+  // Populate
+  document.getElementById('pi-name').textContent = bodyData.name;
+  const swatch = document.getElementById('pi-color-swatch');
+  swatch.style.backgroundColor = bodyData.color || '#fff';
+  swatch.style.boxShadow = `0 0 15px ${bodyData.color || '#fff'}`; // Add glow to swatch
+  
+  document.getElementById('pi-type').textContent = info.type;
+  document.getElementById('pi-radius').textContent = info.radius;
+  document.getElementById('pi-day').textContent = info.day;
+  document.getElementById('pi-year').textContent = info.year;
+  document.getElementById('pi-temp').textContent = info.temp;
+  document.getElementById('pi-desc').textContent = info.desc;
+
+  // Show (Remove .hidden class to trigger CSS transition)
+  document.getElementById('planet-info-panel').classList.remove('hidden');
+}
+
+function updatePlanetInfoPanel(id, bodyData) {
+  const panel = document.getElementById('planet-info-panel');
+  const info = PLANET_INFO[id] || { 
+    type: 'Unknown', radius: '?', day: '?', year: '?', temp: '?', desc: 'No data available.' 
+  };
+
+  // Populate fields
+  document.getElementById('pi-name').textContent = bodyData.name;
+  document.getElementById('pi-color-swatch').style.backgroundColor = bodyData.color || '#fff';
+  document.getElementById('pi-type').textContent = info.type;
+  document.getElementById('pi-radius').textContent = info.radius;
+  document.getElementById('pi-day').textContent = info.day;
+  document.getElementById('pi-year').textContent = info.year;
+  document.getElementById('pi-temp').textContent = info.temp;
+  document.getElementById('pi-desc').textContent = info.desc;
+
+  // Show panel
+  panel.classList.remove('hidden');
 }
 
 function onMouseMove(event) {
-  // 1. Calculate mouse position
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-  // 2. Raycast
   raycaster.setFromCamera(mouse, camera);
   const meshes = Object.values(bodyMeshes);
   const intersects = raycaster.intersectObjects(meshes, true);
 
-  // 3. Handle Intersection
   if (intersects.length > 0) {
-    // Find the root mesh with userData
-    let object = intersects[0].object;
-    while (object.parent && !object.userData.body) {
-      object = object.parent;
+    const hitObj = intersects[0].object;
+    let bodyId = null;
+    let bodyName = "";
+
+    // Check Hitbox
+    if (hitObj.userData.isHitbox) {
+      bodyId = hitObj.userData.parentBody.naif_id;
+      bodyName = hitObj.userData.parentBody.name;
+    } 
+    // Check Visual Mesh
+    else {
+      let object = hitObj;
+      while (object.parent && !object.userData.body) {
+        object = object.parent;
+      }
+      if (object.userData.body) {
+        bodyId = object.userData.body.naif_id;
+        bodyName = object.userData.body.name;
+      }
     }
 
-    const body = object.userData.body;
-    if (body) {
-      // If we are hovering over a NEW body
-      if (hoveredBodyId !== body.naif_id) {
-        // Reset previous body if exists
+    if (bodyId) {
+      if (hoveredBodyId !== bodyId) {
         resetHover();
-        
-        // Set new hovered body
-        hoveredBodyId = body.naif_id;
-        document.body.style.cursor = 'pointer'; // Change cursor to hand
-        
-        // Apply Glow Effect
+        hoveredBodyId = bodyId;
+        document.body.style.cursor = 'pointer';
         highlightBody(hoveredBodyId, true);
-        
-        // Optional: Show tooltip
-        showTooltip(event, body.name);
+        showTooltip(event, bodyName);
       }
-      // Update tooltip position if it's moving
       updateTooltipPosition(event);
     }
   } else {
-    // If we are hovering over NOTHING, but previously were hovering something
     if (hoveredBodyId !== null) {
       resetHover();
     }
   }
 }
+
 
 function resetHover() {
   if (hoveredBodyId !== null) {
@@ -1049,6 +1122,10 @@ function bindEvents() {
     }
   });
 
+  document.getElementById('btn-unlock-cam').addEventListener('click', () => {
+    unlockCamera();
+  });
+
   // Multi-leg preset button
   document.getElementById('btn-ml-preset').addEventListener('click', (e) => {
     const menu = document.getElementById('ml-preset-menu');
@@ -1077,6 +1154,11 @@ function bindEvents() {
       menu.classList.add('hidden');
     }
   });
+
+  const unlockBtn = document.getElementById('btn-unlock-cam');
+  if(unlockBtn) {
+    unlockBtn.addEventListener('click', unlockCamera);
+  }
 
   window.addEventListener('click', onMouseClick);
   window.addEventListener('mousemove', onMouseMove);

@@ -10,6 +10,26 @@
   <!-- 3D viewport -->
   <div id="viewport"></div>
 
+  <!-- Left Sidebar for Planet Info -->
+  <div id="planet-info-panel" class="left-panel hidden">
+    <h2 id="pi-name">Planet Name</h2>
+    <div class="planet-hero">
+      <div id="pi-color-swatch"></div>
+    </div>
+    <div class="info-grid">
+      <div class="label">Type</div>     <div id="pi-type" class="val">Planet</div>
+      <div class="label">Radius</div>   <div id="pi-radius" class="val">0 km</div>
+      <div class="label">Day</div>      <div id="pi-day" class="val">0 h</div>
+      <div class="label">Year</div>     <div id="pi-year" class="val">0 d</div>
+      <div class="label">Temp</div>     <div id="pi-temp" class="val">0°C</div>
+    </div>
+    <div class="desc-box">
+      <p id="pi-desc">Description...</p>
+    </div>
+    <button id="btn-unlock-cam" class="secondary">Unlock Camera</button>
+  </div>
+
+
   <!-- Top bar -->
   <header id="topbar">
     <div class="logo">TARS</div>
