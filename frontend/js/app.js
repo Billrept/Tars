@@ -49,7 +49,11 @@ let planetTrailHist = {};   // naif_id -> Array<THREE.Vector3>
 const TRAIL_MAX_POINTS = 100; // how long the trail is (increase for longer)
 let lastTrailSimTime = {};
 const TRAIL_SIM_INTERVAL_MS = 6 * 60 * 60 * 1000; 
-const orbitCircles = {}; // naif_id -> THREE.LineLoop
+let raycaster = new THREE.Raycaster();
+let mouse = new THREE.Vector2();
+let focusedBodyId = null; 
+let previousBodyPosition = new THREE.Vector3(); // To track delta movement
+let hoveredBodyId = null;
 
 // Planet display radii (scene units) — exaggerated for visibility
 const DISPLAY_RADIUS = {
@@ -445,6 +449,175 @@ function updatePlanetPositions(snapshot) {
     }
   }
 }
+
+function onMouseClick(event) {
+  // 1. Calculate mouse position
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+
+  // 2. Intersect with planets
+  const meshes = Object.values(bodyMeshes);
+  const intersects = raycaster.intersectObjects(meshes, true);
+
+  if (intersects.length > 0) {
+    // --- CLICKED A PLANET ---
+    let object = intersects[0].object;
+    
+    // Traverse up to find the root mesh with userData
+    while(object.parent && !object.userData.body) {
+      object = object.parent;
+    }
+
+    if (object.userData.body) {
+      focusOnBody(object.userData.body.naif_id);
+    }
+  } else {
+    // --- CLICKED EMPTY SPACE (BACKGROUND) ---
+    if (focusedBodyId !== null) {
+      console.log("Unfocusing camera");
+      
+      // 1. Clear the focused ID
+      focusedBodyId = null;
+      
+      // 2. Reset the controls target to the center (Sun) or keep it where it is?
+      // Option A: Reset to Sun (0,0,0)
+      // controls.target.set(0, 0, 0);
+      
+      // Option B: Keep target where it currently is (smoother)
+      // The target is currently at the last known position of the planet.
+      // We don't need to do anything special here; OrbitControls will just 
+      // orbit around that point in space until the user pans.
+      
+      // 3. Optional: Reset camera zoom/position if you want a "global view"
+      // For now, just unlocking is usually what users expect.
+    }
+  }
+}
+
+
+function focusOnBody(naifId) {
+  focusedBodyId = naifId;
+  const mesh = bodyMeshes[naifId];
+  
+  if (!mesh) return;
+
+  // Store the current position so we can calculate the delta in the next frame
+  previousBodyPosition.copy(mesh.position);
+
+  // OPTIONAL: Snap camera closer immediately upon click
+  // This moves the camera to a fixed offset (e.g., 100 units away)
+  // If you prefer to keep the camera where it is and just start following, remove these 4 lines:
+  const offset = new THREE.Vector3(50, 50, 50); 
+  camera.position.copy(mesh.position).add(offset);
+  controls.target.copy(mesh.position);
+  controls.update();
+}
+
+function onMouseMove(event) {
+  // 1. Calculate mouse position
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  // 2. Raycast
+  raycaster.setFromCamera(mouse, camera);
+  const meshes = Object.values(bodyMeshes);
+  const intersects = raycaster.intersectObjects(meshes, true);
+
+  // 3. Handle Intersection
+  if (intersects.length > 0) {
+    // Find the root mesh with userData
+    let object = intersects[0].object;
+    while (object.parent && !object.userData.body) {
+      object = object.parent;
+    }
+
+    const body = object.userData.body;
+    if (body) {
+      // If we are hovering over a NEW body
+      if (hoveredBodyId !== body.naif_id) {
+        // Reset previous body if exists
+        resetHover();
+        
+        // Set new hovered body
+        hoveredBodyId = body.naif_id;
+        document.body.style.cursor = 'pointer'; // Change cursor to hand
+        
+        // Apply Glow Effect
+        highlightBody(hoveredBodyId, true);
+        
+        // Optional: Show tooltip
+        showTooltip(event, body.name);
+      }
+      // Update tooltip position if it's moving
+      updateTooltipPosition(event);
+    }
+  } else {
+    // If we are hovering over NOTHING, but previously were hovering something
+    if (hoveredBodyId !== null) {
+      resetHover();
+    }
+  }
+}
+
+function resetHover() {
+  if (hoveredBodyId !== null) {
+    highlightBody(hoveredBodyId, false);
+    hoveredBodyId = null;
+    document.body.style.cursor = 'auto';
+    hideTooltip();
+  }
+}
+
+function highlightBody(naifId, isHovered) {
+  const mesh = bodyMeshes[naifId];
+  if (!mesh) return;
+
+  // The Sun (ID 10) is a BasicMaterial and already glows, so we skip it or handle differently
+  if (naifId === 10) return; 
+
+  // For planets (StandardMaterial)
+  if (mesh.material && mesh.material.emissive) {
+    // Save original intensity if not saved yet
+    if (mesh.userData.originalEmissive === undefined) {
+      mesh.userData.originalEmissive = mesh.material.emissiveIntensity;
+      mesh.userData.originalColor = mesh.material.color.getHex();
+    }
+
+    if (isHovered) {
+      // Make it glow brighter
+      mesh.material.emissiveIntensity = 0.8; 
+      // Optional: lighten the color slightly
+      mesh.material.color.setHex(0xffffff); 
+    } else {
+      // Reset
+      mesh.material.emissiveIntensity = mesh.userData.originalEmissive;
+      mesh.material.color.setHex(mesh.userData.originalColor);
+    }
+  }
+}
+
+function showTooltip(event, text) {
+  const tooltip = document.getElementById('body-tooltip');
+  tooltip.textContent = text;
+  tooltip.classList.remove('hidden');
+  updateTooltipPosition(event);
+}
+
+function updateTooltipPosition(event) {
+  const tooltip = document.getElementById('body-tooltip');
+  if (!tooltip.classList.contains('hidden')) {
+    tooltip.style.left = (event.clientX + 15) + 'px';
+    tooltip.style.top = (event.clientY + 15) + 'px';
+  }
+}
+
+function hideTooltip() {
+  const tooltip = document.getElementById('body-tooltip');
+  tooltip.classList.add('hidden');
+}
+
 
 // ── Lambert Transfer ───────────────────────────────────────────────────────
 async function computeLambert() {
@@ -905,6 +1078,9 @@ function bindEvents() {
     }
   });
 
+  window.addEventListener('click', onMouseClick);
+  window.addEventListener('mousemove', onMouseMove);
+
   // Initialize default multi-leg sequence
   loadPreset('earth-mars');
 }
@@ -1323,10 +1499,29 @@ async function fetchAndDrawOptimizedMultiLeg(bodies, depJd, legTofs) {
 // ── Render Loop ────────────────────────────────────────────────────────────
 function animate() {
   requestAnimationFrame(animate);
+
+  if (focusedBodyId && bodyMeshes[focusedBodyId]) {
+    const mesh = bodyMeshes[focusedBodyId];
+    const currentBodyPosition = mesh.position;
+
+    // 1. Calculate how much the planet moved since last frame
+    const delta = new THREE.Vector3().subVectors(currentBodyPosition, previousBodyPosition);
+
+    // 2. Add that movement to the camera's position
+    camera.position.add(delta);
+
+    // 3. Update the controls target to look at the new planet position
+    controls.target.copy(currentBodyPosition);
+
+    // 4. Update previous position for the next frame
+    previousBodyPosition.copy(currentBodyPosition);
+  }
+
   controls.update();
   renderer.render(scene, camera);
-  labelRenderer.render(scene, camera); // <-- add this
+  labelRenderer.render(scene, camera);
 }
+
 
 // ── Boot ───────────────────────────────────────────────────────────────────
 init();

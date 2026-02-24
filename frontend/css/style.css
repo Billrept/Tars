@@ -103,6 +103,24 @@ html, body {
   accent-color: var(--accent);
 }
 
+#body-tooltip {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  pointer-events: none; /* Important so the mouse doesn't get stuck on the tooltip */
+  font-family: sans-serif;
+  font-size: 12px;
+  border: 1px solid #444;
+  z-index: 1000;
+}
+
+.hidden {
+  display: none !important;
+}
+
+
 #btn-pause {
   background: none;
   border: 1px solid var(--border);
