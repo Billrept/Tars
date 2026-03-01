@@ -5,6 +5,8 @@
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { jdToIso, pointToUnixMs, findClosestIndexByTime } from './utils/dateUtils.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
 const API = 'http://localhost:8000';
 const WS = 'ws://localhost:8000';
@@ -31,14 +33,26 @@ function massEstimate(dvKms, m0 = MASS_M0, isp = MASS_ISP) {
 // ── State ──────────────────────────────────────────────────────────────────
 let bodies = [];                    // from /bodies
 let bodyMeshes = {};                // naif_id -> THREE.Mesh
-let orbitLines = {};                // naif_id -> THREE.Line
 let transferLine = null;            // current Lambert arc
 let multiLegLines = [];             // multi-leg arc lines
-let scene, camera, renderer, controls;
+let scene, camera, renderer, labelRenderer, controls;
 let ephemerisWs = null;             // WebSocket for streaming
 let simPaused = false;
 let simSpeed = 10;
-let epochRange = { start: '2025-01-01', end: '2059-12-31', start_jd: null, end_jd: null }; // updated from backend
+let epochRange = { start: '2025-01-01', end: '2059-12-31' }; // updated from backend
+let stepDays = 3;
+let currentDate = new Date(epochRange.start);
+let orbitPoints = {};
+let planetTrails = {};      // naif_id -> THREE.Points
+let planetTrailHist = {};   // naif_id -> Array<THREE.Vector3>
+const TRAIL_MAX_POINTS = 100; // how long the trail is (increase for longer)
+let lastTrailSimTime = {};
+const TRAIL_SIM_INTERVAL_MS = 6 * 60 * 60 * 1000; 
+let raycaster = new THREE.Raycaster();
+let mouse = new THREE.Vector2();
+let focusedBodyId = null; 
+let previousBodyPosition = new THREE.Vector3(); // To track delta movement
+let hoveredBodyId = null;
 
 // Planet display radii (scene units) — exaggerated for visibility
 const DISPLAY_RADIUS = {
@@ -52,6 +66,20 @@ const DISPLAY_RADIUS = {
   799: 2.5,    // Uranus
   899: 2.4,    // Neptune
   999: 1.0,    // Pluto
+};
+
+// ── Planet Data Dictionary ────────────────────────────────────────────────
+const PLANET_INFO = {
+  10:  { type: 'Star', radius: '696,340 km', day: '25 days', year: '230 M yr', temp: '5,500°C', desc: 'The star at the center of our Solar System.' },
+  199: { type: 'Planet', radius: '2,439 km', day: '59 days', year: '88 days', temp: '167°C', desc: 'The smallest planet in the Solar System and the closest to the Sun.' },
+  299: { type: 'Planet', radius: '6,051 km', day: '243 days', year: '225 days', temp: '464°C', desc: 'Second planet from the Sun. It has a thick atmosphere trapping heat.' },
+  399: { type: 'Planet', radius: '6,371 km', day: '24 hours', year: '365 days', temp: '15°C', desc: 'Our home. The only known planet to harbor life.' },
+  499: { type: 'Planet', radius: '3,389 km', day: '24h 37m', year: '687 days', temp: '-65°C', desc: 'The Red Planet. Dusty, cold, desert world with a very thin atmosphere.' },
+  599: { type: 'Gas Giant', radius: '69,911 km', day: '9h 56m', year: '12 years', temp: '-110°C', desc: 'The largest planet in the Solar System.' },
+  699: { type: 'Gas Giant', radius: '58,232 km', day: '10h 42m', year: '29 years', temp: '-140°C', desc: 'Adorned with a dazzling, complex system of icy rings.' },
+  799: { type: 'Ice Giant', radius: '25,362 km', day: '17h 14m', year: '84 years', temp: '-195°C', desc: 'Rotates at a nearly 90-degree angle from the plane of its orbit.' },
+  899: { type: 'Ice Giant', radius: '24,622 km', day: '16h 6m', year: '165 years', temp: '-200°C', desc: 'The most distant major planet, dark, cold, and whipped by supersonic winds.' },
+  999: { type: 'Dwarf Planet', radius: '1,188 km', day: '153 hours', year: '248 years', temp: '-225°C', desc: 'A dwarf planet in the Kuiper belt, a ring of bodies beyond Neptune.' }
 };
 
 // ── Init ───────────────────────────────────────────────────────────────────
@@ -83,6 +111,15 @@ function initScene() {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   container.appendChild(renderer.domElement);
 
+  // CSS2D labels renderer
+  labelRenderer = new CSS2DRenderer();
+  labelRenderer.setSize(window.innerWidth, window.innerHeight);
+  labelRenderer.domElement.style.position = 'absolute';
+  labelRenderer.domElement.style.top = '0';
+  labelRenderer.domElement.style.left = '0';
+  labelRenderer.domElement.style.pointerEvents = 'none';
+  container.appendChild(labelRenderer.domElement);
+
   // Controls
   controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
@@ -112,6 +149,7 @@ function initScene() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
   });
 }
 
@@ -124,7 +162,7 @@ function createStarfield() {
     const r = 15000 + Math.random() * 30000;
     const theta = Math.random() * Math.PI * 2;
     const phi = Math.acos(2 * Math.random() - 1);
-    positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+    positions[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
     positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
     positions[i * 3 + 2] = r * Math.cos(phi);
     const b = 0.5 + Math.random() * 0.5;
@@ -146,10 +184,8 @@ async function fetchEpochRange() {
       const data = await res.json();
       epochRange.start = data.start_iso;
       epochRange.end = data.end_iso;
-      epochRange.start_jd = data.start_jd;
-      epochRange.end_jd = data.end_jd;
     }
-  } catch (_) { }
+  } catch (_) {}
 }
 
 async function fetchBodies() {
@@ -191,47 +227,101 @@ function populateSelects() {
 }
 
 async function fetchOrbits() {
-  // Fetch orbit paths for planets over the full ephemeris range
   const planets = bodies.filter(b => b.parent_id === null);
   for (const body of planets) {
     try {
       const res = await fetch(
-        `${API}/bodies/${body.name.toLowerCase()}/ephemeris?start=${epochRange.start}&end=${epochRange.end}&step_days=10&scene_units=true`
+        `${API}/bodies/${body.name.toLowerCase()}/ephemeris?start=${epochRange.start}&end=${epochRange.end}&step_days=${stepDays}&scene_units=true`
       );
       const data = await res.json();
-      drawOrbit(body, data.points);
+
+      orbitPoints[data.body] = data.points;
     } catch (e) {
       console.warn(`Failed to fetch orbit for ${body.name}:`, e);
     }
   }
 }
 
-function drawOrbit(body, points) {
+function removePlanetTrail(bodyNaifId) {
+  const prev = planetTrails[bodyNaifId];
+  if (!prev) return;
+  prev.parent?.remove(prev);
+  prev.geometry?.dispose?.();
+  prev.material?.dispose?.();
+  planetTrails[bodyNaifId] = null;
+}
+
+function updatePlanetTrail(body, worldPosVec3) {
+  const id = body.naif_id;
+  if (!planetTrailHist[id]) planetTrailHist[id] = [];
+  const hist = planetTrailHist[id];
+
+  // push newest position
+  hist.push(worldPosVec3.clone());
+  while (hist.length > TRAIL_MAX_POINTS) hist.shift();
+
+  // rebuild the trail geometry (simple + works)
+  removePlanetTrail(id);
+
   const positions = [];
   const colors = [];
   const base = new THREE.Color(body.color);
-  const n = points.length;
-  const isSun = body.naif_id === 10;
+  const n = hist.length;
 
   for (let i = 0; i < n; i++) {
-    positions.push(points[i].x, points[i].z, -points[i].y);
-    // Trail fading: dim at start (old positions), bright at end (recent)
+    const v = hist[i];
+    positions.push(v.x, v.y, v.z);
+
+    // fade: old dim -> new bright
     const t = n > 1 ? i / (n - 1) : 1;
-    const brightness = 0.12 + 0.78 * t;
+    const brightness = 0.05 + 0.95 * t;
     colors.push(base.r * brightness, base.g * brightness, base.b * brightness);
   }
 
   const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-  geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-  const mat = new THREE.LineBasicMaterial({
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+
+  const mat = new THREE.ShaderMaterial({
+    uniforms: {},
+    vertexShader: `
+      varying vec3 vColor;
+      void main() {
+        vColor = color;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        gl_PointSize = 3.0;
+      }
+    `,
+    fragmentShader: `
+      varying vec3 vColor;
+      void main() {
+        float d = length(gl_PointCoord - vec2(0.5));
+        if (d > 0.5) discard;
+        gl_FragColor = vec4(vColor, 1.0);
+      }
+    `,
     vertexColors: true,
     transparent: true,
-    opacity: isSun ? 0 : 0.55,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
   });
-  const line = new THREE.Line(geo, mat);
-  scene.add(line);
-  orbitLines[body.naif_id] = line;
+
+  const pts = new THREE.Points(geo, mat);
+  pts.userData.type = "planetTrail";
+  pts.userData.naifId = id;
+
+  scene.add(pts);
+  planetTrails[id] = pts;
+}
+
+function createCss2DLabel(text) {
+  const div = document.createElement('div');
+  div.className = 'planet-label';
+  div.textContent = text;
+
+  const label = new CSS2DObject(div);
+  label.userData.isPlanetLabel = true;
+  return label;
 }
 
 // ── Create Body Meshes ─────────────────────────────────────────────────────
@@ -271,10 +361,23 @@ function ensureBodyMesh(body) {
     mesh = new THREE.Mesh(geo, mat);
   }
 
-  // Name label sprite
-  const label = createTextSprite(body.name, body.color);
-  label.position.set(0, radius + 2, 0);
-  label.scale.set(20, 10, 1);
+  // Create an invisible hitbox (2x to 4x larger than the visual planet)
+  // For very small planets, we ensure a minimum clickable size
+  const hitboxRadius = Math.max(radius * 10, 3.0); 
+  const hitboxGeo = new THREE.SphereGeometry(hitboxRadius, 16, 16);
+  const hitboxMat = new THREE.MeshBasicMaterial({ 
+    visible: false, // Invisible!
+    color: 0xff0000,
+    wireframe: true // Helpful for debugging if you set visible: true
+  });
+  
+  const hitbox = new THREE.Mesh(hitboxGeo, hitboxMat);
+  hitbox.userData = { isHitbox: true, parentBody: body }; // Tag it
+  mesh.add(hitbox); // Attach to planet so it moves with it
+
+  // Name label (CSS2D)
+  const label = createCss2DLabel(body.name);
+  label.position.set(0, radius - 25, 0);
   mesh.add(label);
 
   mesh.userData = { body };
@@ -318,7 +421,7 @@ function createTextSprite(text, color) {
 // ── WebSocket Ephemeris Streaming ──────────────────────────────────────────
 function connectEphemeris() {
   if (ephemerisWs) {
-    try { ephemerisWs.close(); } catch (_) { }
+    try { ephemerisWs.close(); } catch (_) {}
   }
 
   ephemerisWs = new WebSocket(`${WS}/ws/ephemeris/stream`);
@@ -327,11 +430,9 @@ function connectEphemeris() {
     setStatus('ok', 'Streaming');
     // Send config — only planets (no moons for now to keep it clean)
     const planetIds = bodies.filter(b => b.parent_id === null).map(b => b.naif_id);
-    // Use the epoch range fetched from the backend
-    const startJd = epochRange.start_jd || 2460676.5;
     ephemerisWs.send(JSON.stringify({
       body_ids: planetIds,
-      start_jd: startJd,
+      start_jd: 2460676.5,   // ~2025-01-01
       speed: simSpeed,
       fps: 30,
       scene_units: true,
@@ -340,6 +441,9 @@ function connectEphemeris() {
 
   ephemerisWs.onmessage = (event) => {
     const snap = JSON.parse(event.data);
+    currentDate = new Date(snap.epoch_iso);
+    const currentSimMs = currentDate.getTime();
+
     updatePlanetPositions(snap);
   };
 
@@ -368,8 +472,234 @@ function updatePlanetPositions(snapshot) {
     // Three.js: x=right, y=up, z=toward-camera
     // Map: three.x = ecliptic.x, three.y = ecliptic.z, three.z = -ecliptic.y
     mesh.position.set(bd.position[0], bd.position[2], -bd.position[1]);
+    const simMs = new Date(snapshot.epoch_iso).getTime();
+    const id = bodyInfo.naif_id;
+
+    if (!lastTrailSimTime[id]) {
+      lastTrailSimTime[id] = simMs;
+      updatePlanetTrail(bodyInfo, mesh.position);
+    } else {
+      const delta = simMs - lastTrailSimTime[id];
+      if (delta >= TRAIL_SIM_INTERVAL_MS) {
+        lastTrailSimTime[id] = simMs;
+        updatePlanetTrail(bodyInfo, mesh.position);
+      }
+    }
   }
 }
+
+function onMouseClick(event) {
+  // 1. Calculate mouse position
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+
+  // 2. Intersect with planets
+  const meshes = Object.values(bodyMeshes);
+  const intersects = raycaster.intersectObjects(meshes, true);
+
+  if (intersects.length > 0) {
+    // Get the first object hit
+    const hitObj = intersects[0].object;
+
+    // Check if it's our invisible hitbox
+    if (hitObj.userData.isHitbox) {
+      // Use the parent body data we stored
+      focusOnBody(hitObj.userData.parentBody.naif_id);
+      return;
+    }
+
+    // Standard check (if they clicked the visual mesh directly)
+    let object = hitObj;
+    while(object.parent && !object.userData.body) {
+      object = object.parent;
+    }
+
+    if (object.userData.body) {
+      focusOnBody(object.userData.body.naif_id);
+    }
+  } else {
+    // Clicked empty space
+    if (focusedBodyId !== null) {
+      unlockCamera();
+    }
+  }
+}
+
+function unlockCamera() {
+  focusedBodyId = null;
+  // Hide (Add .hidden class to trigger CSS transition)
+  document.getElementById('planet-info-panel').classList.add('hidden');
+}
+
+
+
+function focusOnBody(naifId) {
+  focusedBodyId = naifId;
+  const mesh = bodyMeshes[naifId];
+  
+  if (!mesh) return;
+
+  // Store the current position so we can calculate the delta in the next frame
+  previousBodyPosition.copy(mesh.position);
+
+  // OPTIONAL: Snap camera closer immediately upon click
+  // This moves the camera to a fixed offset (e.g., 100 units away)
+  // If you prefer to keep the camera where it is and just start following, remove these 4 lines:
+  const offset = new THREE.Vector3(50, 50, 50); 
+  camera.position.copy(mesh.position).add(offset);
+  controls.target.copy(mesh.position);
+  controls.update();
+  updatePlanetInfoPanel(naifId, mesh.userData.body);
+
+  const bodyData = mesh.userData.body;
+  const info = PLANET_INFO[naifId] || { 
+    type: 'Unknown', radius: '?', day: '?', year: '?', temp: '?', desc: 'No data available.' 
+  };
+
+  // Populate
+  document.getElementById('pi-name').textContent = bodyData.name;
+  const swatch = document.getElementById('pi-color-swatch');
+  swatch.style.backgroundColor = bodyData.color || '#fff';
+  swatch.style.boxShadow = `0 0 15px ${bodyData.color || '#fff'}`; // Add glow to swatch
+  
+  document.getElementById('pi-type').textContent = info.type;
+  document.getElementById('pi-radius').textContent = info.radius;
+  document.getElementById('pi-day').textContent = info.day;
+  document.getElementById('pi-year').textContent = info.year;
+  document.getElementById('pi-temp').textContent = info.temp;
+  document.getElementById('pi-desc').textContent = info.desc;
+
+  // Show (Remove .hidden class to trigger CSS transition)
+  document.getElementById('planet-info-panel').classList.remove('hidden');
+}
+
+function updatePlanetInfoPanel(id, bodyData) {
+  const panel = document.getElementById('planet-info-panel');
+  const info = PLANET_INFO[id] || { 
+    type: 'Unknown', radius: '?', day: '?', year: '?', temp: '?', desc: 'No data available.' 
+  };
+
+  // Populate fields
+  document.getElementById('pi-name').textContent = bodyData.name;
+  document.getElementById('pi-color-swatch').style.backgroundColor = bodyData.color || '#fff';
+  document.getElementById('pi-type').textContent = info.type;
+  document.getElementById('pi-radius').textContent = info.radius;
+  document.getElementById('pi-day').textContent = info.day;
+  document.getElementById('pi-year').textContent = info.year;
+  document.getElementById('pi-temp').textContent = info.temp;
+  document.getElementById('pi-desc').textContent = info.desc;
+
+  // Show panel
+  panel.classList.remove('hidden');
+}
+
+function onMouseMove(event) {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+  const meshes = Object.values(bodyMeshes);
+  const intersects = raycaster.intersectObjects(meshes, true);
+
+  if (intersects.length > 0) {
+    const hitObj = intersects[0].object;
+    let bodyId = null;
+    let bodyName = "";
+
+    // Check Hitbox
+    if (hitObj.userData.isHitbox) {
+      bodyId = hitObj.userData.parentBody.naif_id;
+      bodyName = hitObj.userData.parentBody.name;
+    } 
+    // Check Visual Mesh
+    else {
+      let object = hitObj;
+      while (object.parent && !object.userData.body) {
+        object = object.parent;
+      }
+      if (object.userData.body) {
+        bodyId = object.userData.body.naif_id;
+        bodyName = object.userData.body.name;
+      }
+    }
+
+    if (bodyId) {
+      if (hoveredBodyId !== bodyId) {
+        resetHover();
+        hoveredBodyId = bodyId;
+        document.body.style.cursor = 'pointer';
+        highlightBody(hoveredBodyId, true);
+        showTooltip(event, bodyName);
+      }
+      updateTooltipPosition(event);
+    }
+  } else {
+    if (hoveredBodyId !== null) {
+      resetHover();
+    }
+  }
+}
+
+
+function resetHover() {
+  if (hoveredBodyId !== null) {
+    highlightBody(hoveredBodyId, false);
+    hoveredBodyId = null;
+    document.body.style.cursor = 'auto';
+    hideTooltip();
+  }
+}
+
+function highlightBody(naifId, isHovered) {
+  const mesh = bodyMeshes[naifId];
+  if (!mesh) return;
+
+  // The Sun (ID 10) is a BasicMaterial and already glows, so we skip it or handle differently
+  if (naifId === 10) return; 
+
+  // For planets (StandardMaterial)
+  if (mesh.material && mesh.material.emissive) {
+    // Save original intensity if not saved yet
+    if (mesh.userData.originalEmissive === undefined) {
+      mesh.userData.originalEmissive = mesh.material.emissiveIntensity;
+      mesh.userData.originalColor = mesh.material.color.getHex();
+    }
+
+    if (isHovered) {
+      // Make it glow brighter
+      mesh.material.emissiveIntensity = 0.8; 
+      // Optional: lighten the color slightly
+      mesh.material.color.setHex(0xffffff); 
+    } else {
+      // Reset
+      mesh.material.emissiveIntensity = mesh.userData.originalEmissive;
+      mesh.material.color.setHex(mesh.userData.originalColor);
+    }
+  }
+}
+
+function showTooltip(event, text) {
+  const tooltip = document.getElementById('body-tooltip');
+  tooltip.textContent = text;
+  tooltip.classList.remove('hidden');
+  updateTooltipPosition(event);
+}
+
+function updateTooltipPosition(event) {
+  const tooltip = document.getElementById('body-tooltip');
+  if (!tooltip.classList.contains('hidden')) {
+    tooltip.style.left = (event.clientX + 15) + 'px';
+    tooltip.style.top = (event.clientY + 15) + 'px';
+  }
+}
+
+function hideTooltip() {
+  const tooltip = document.getElementById('body-tooltip');
+  tooltip.classList.add('hidden');
+}
+
 
 // ── Lambert Transfer ───────────────────────────────────────────────────────
 // (Manual UI removed, helper used by optimizer)
@@ -871,6 +1201,14 @@ function bindEvents() {
     }
   });
 
+  const unlockBtn = document.getElementById('btn-unlock-cam');
+  if(unlockBtn) {
+    unlockBtn.addEventListener('click', unlockCamera);
+  }
+
+  window.addEventListener('click', onMouseClick);
+  window.addEventListener('mousemove', onMouseMove);
+
   // Initialize default multi-leg sequence
   loadPreset('earth-mars');
 }
@@ -1057,13 +1395,15 @@ function optimizeRoute(route) {
     const start = new Date(d); start.setMonth(d.getMonth() - 6);
     const end = new Date(d); end.setMonth(d.getMonth() + 6);
     const clamp = (dt) => dt.toISOString().split('T')[0];
+    
+    const selectedMode = document.querySelector('input[name="plan-mode"]:checked').value;
 
     runOptimizer({
       origin: route.origin,
       target: route.target,
       dep_start: clamp(start),
       dep_end: clamp(end),
-      // Use defaults for others
+      mode: selectedMode,
     }, onProgress, onComplete);
 
   } else {
@@ -1079,21 +1419,18 @@ function optimizeRoute(route) {
     if (route.legs) {
       legBounds = route.legs.map(l => [l.tof_days * 0.5, l.tof_days * 1.5]);
     } else {
-      // Fallback using route.legs_ratio and total TOF if we had that, 
-      // but we only have total.
-      // The catalog route has 'legs_ratio'.
-      // This is getting complex.
-      // If we are optimizing a planner result, it SHOULD have legs.
-      // If not, we abort.
       console.error("Cannot optimize multi-leg without leg data");
       return;
     }
+    
+    const selectedMode = document.querySelector('input[name="plan-mode"]:checked').value;
 
     runMultiLegOptimizer({
       body_sequence: route.body_sequence,
       dep_start: clamp(start),
       dep_end: clamp(end),
       leg_tof_bounds: legBounds,
+      mode: selectedMode,
     }, onProgress, onComplete);
   }
 }
@@ -1158,8 +1495,27 @@ async function fetchAndDrawOptimizedMultiLeg(bodies, depJd, legTofs) {
 // ── Render Loop ────────────────────────────────────────────────────────────
 function animate() {
   requestAnimationFrame(animate);
+
+  if (focusedBodyId && bodyMeshes[focusedBodyId]) {
+    const mesh = bodyMeshes[focusedBodyId];
+    const currentBodyPosition = mesh.position;
+
+    // 1. Calculate how much the planet moved since last frame
+    const delta = new THREE.Vector3().subVectors(currentBodyPosition, previousBodyPosition);
+
+    // 2. Add that movement to the camera's position
+    camera.position.add(delta);
+
+    // 3. Update the controls target to look at the new planet position
+    controls.target.copy(currentBodyPosition);
+
+    // 4. Update previous position for the next frame
+    previousBodyPosition.copy(currentBodyPosition);
+  }
+
   controls.update();
   renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
 }
 
 // ── Boot ───────────────────────────────────────────────────────────────────
