@@ -22,10 +22,11 @@ services:
       - PORT=8000
     volumes:
       - ephemeris_cache:/app/data/cache
+      - ./src:/app/src
     depends_on:
       redis:
         condition: service_healthy
-    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
   worker:
     build: .
@@ -34,6 +35,7 @@ services:
       - EPHEMERIS_CACHE_DIR=/app/data/cache
     volumes:
       - ephemeris_cache:/app/data/cache
+      - ./src:/app/src
     depends_on:
       redis:
         condition: service_healthy
