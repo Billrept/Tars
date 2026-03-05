@@ -15,15 +15,17 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import math
 from datetime import datetime
 
 import numpy as np
 from fastapi import APIRouter, HTTPException, Query, Request, Response
 from pydantic import BaseModel, Field, field_validator
 
-from ephemeris.bodies import ALL_BODIES, BODY_BY_ID, BODY_BY_NAME, CelestialBody
+from ephemeris.bodies import ALL_BODIES, BODY_BY_ID, BODY_BY_NAME, CelestialBody, GM_SUN
 from ephemeris.spline_cache import EphemerisCache, EphemerisRangeError
 from mechanics.lambert import compute_transfer_dv, solve_lambert
+from mechanics.kepler import compute_apsis_points, elements_to_state, generate_full_orbit_points
 from mechanics.multileg import compute_multileg_trajectory, multileg_result_to_dict
 from mechanics.transforms import (
     iso_to_jd,
@@ -214,6 +216,15 @@ class PlanRequest(BaseModel):
         if v:
             return _validate_iso_date(v)
         return v
+
+
+class OrbitElementsRequest(BaseModel):
+    a_km: float
+    e: float
+    i_deg: float
+    raan_deg: float
+    arg_p_deg: float
+    mu: float = GM_SUN
 
 
 # --------------------------------------------------------------------------- #
@@ -791,3 +802,47 @@ async def start_multileg_optimization(req: MultiLegOptimizeRequest, request: Req
         "body_sequence": req.body_sequence,
         "message": f"Multi-leg optimization job submitted. Connect to WS /ws/trajectory/{job_id} for live updates.",
     }
+
+
+@router.post("/orbit-info")
+async def get_orbit_details(req: OrbitElementsRequest):
+    """Get detailed orbital information from elements."""
+    try:
+        # Convert degrees to radians for calculation
+        i_rad = math.radians(req.i_deg)
+        raan_rad = math.radians(req.raan_deg)
+        argp_rad = math.radians(req.arg_p_deg)
+        
+        # Calculate apsis points
+        r_peri, r_apo = compute_apsis_points(
+            req.a_km, req.e, i_rad, raan_rad, argp_rad, req.mu
+        )
+        
+        # Generate full orbit points
+        pts_km = generate_full_orbit_points(
+            req.a_km, req.e, i_rad, raan_rad, argp_rad, req.mu
+        )
+        pts_scene = positions_to_scene(pts_km)
+        
+        # Basic distances
+        peri_dist = req.a_km * (1.0 - req.e)
+        apo_dist = req.a_km * (1.0 + req.e)
+        
+        # Orbital period (seconds)
+        if req.e < 1.0:
+            period = 2.0 * math.pi * math.sqrt(abs(req.a_km)**3 / req.mu)
+        else:
+            period = float('inf')
+
+        return {
+            "periapsis_distance_km": peri_dist,
+            "apoapsis_distance_km": apo_dist,
+            "period_seconds": period,
+            "periapsis_point_km": r_peri.tolist(),
+            "apoapsis_point_km": r_apo.tolist(),
+            "periapsis_point_scene": km_to_scene(r_peri).tolist(),
+            "apoapsis_point_scene": km_to_scene(r_apo).tolist(),
+            "full_orbit_points_scene": pts_scene.tolist(),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=f"Failed to calculate orbit info: {e}")

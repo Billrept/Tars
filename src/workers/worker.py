@@ -16,10 +16,12 @@ from config import settings
 from ephemeris.spline_cache import EphemerisCache
 from optimizer.dispatcher import publish_progress, publish_multileg_progress, JOB_PREFIX, get_redis, _redis_settings
 from optimizer.gmpa import (
-    GreyWolfOptimizer,
     OptimizationRequest,
-    MultiLegGreyWolfOptimizer,
     MultiLegOptimizationRequest,
+)
+from optimizer.nsga2 import (
+    NSGA2Optimizer,
+    MultiLegNSGA2Optimizer,
 )
 
 logger = logging.getLogger("tars.worker")
@@ -77,7 +79,7 @@ async def run_optimization(ctx: dict, job_id: str, request_data: dict) -> dict:
     finally:
         await r.close()
 
-    optimizer = GreyWolfOptimizer(request, cache)
+    optimizer = NSGA2Optimizer(request, cache)
     last_progress = None
 
     try:
@@ -142,7 +144,7 @@ async def run_multileg_optimization(ctx: dict, job_id: str, request_data: dict) 
     finally:
         await r.close()
 
-    optimizer = MultiLegGreyWolfOptimizer(request, cache)
+    optimizer = MultiLegNSGA2Optimizer(request, cache)
     last_progress = None
 
     try:

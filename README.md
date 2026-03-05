@@ -77,7 +77,7 @@ src/
   optimizer/
     objective.py             # Single-leg delta-v objective, porkchop grid
     multileg_objective.py    # Multi-leg objective function (with optional C3 constraint)
-    gmpa.py                  # Grey Wolf Optimizer (PLACEHOLDER -- see below)
+    nsga2.py                 # Multi-Objective Evolutionary Algorithm (NSGA-II)
     dispatcher.py            # Job submission, Redis pub/sub progress streaming
   serialization/
     encoder.py               # Protobuf encoder with manual binary fallback
@@ -91,114 +91,16 @@ frontend/
 
 ---
 
-## For the Tata and Pino (Swapping in The real from research paper)
+## The Optimization Engine (NSGA-II)
 
-The Grey Wolf Optimizer in `src/optimizer/gmpa.py` is a **placeholder**. It works but is
-intentionally simple. You need to replace it with your research-paper algorithm.
+The previous placeholder Grey Wolf Optimizer has been replaced with a full **Non-dominated Sorting Genetic Algorithm II (NSGA-II)** (`src/optimizer/nsga2.py`). 
 
-### What you need to implement
+This evolutionary algorithm computes a true Pareto front by evolving a population of trajectories to explicitly evaluate the physical trade-off between **Time of Flight (Minimum Time)** and **Total Delta-V (Minimum Fuel)**.
 
-There are **two optimizer classes**, one for single-leg and one for multi-leg:
-
-#### 1. Single-leg optimizer
-
-```python
-# File: src/optimizer/gmpa.py (or your own file)
-
-class YourOptimizer:
-    """Replace GreyWolfOptimizer with this."""
-
-    def __init__(self, request: OptimizationRequest, cache: EphemerisCache):
-        self.req = request    # Has: origin_id, target_id, dep_start_jd, dep_end_jd,
-                              #      tof_min_days, tof_max_days, population_size,
-                              #      max_iterations
-        self.cache = cache    # EphemerisCache -- call cache.get_state(naif_id, jd) to
-                              # get (position, velocity) for any body at any epoch
-
-    def run(self) -> Generator[OptimizationProgress, None, None]:
-        """Yield progress at each iteration. MUST yield at least once at the end."""
-        # Search space: 2D -- [departure_jd, tof_days]
-        # Objective: minimize total delta-v
-
-        for iteration in range(self.req.max_iterations):
-            # ... your algorithm ...
-
-            yield OptimizationProgress(
-                iteration=iteration,
-                max_iterations=self.req.max_iterations,
-                best_dv_total=...,          # float, km/s
-                best_departure_jd=...,      # float, Julian Date
-                best_tof_days=...,          # float
-                best_dv_departure=...,      # float, km/s
-                best_dv_arrival=...,        # float, km/s
-                converged=True,             # bool
-                population_best_dvs=[...],  # top-3 dv values (for frontend display)
-            )
-```
-
-#### 2. Multi-leg optimizer (gravity assists)
-
-```python
-class YourMultiLegOptimizer:
-    """Replace MultiLegGreyWolfOptimizer with this."""
-
-    def __init__(self, request: MultiLegOptimizationRequest, cache: EphemerisCache):
-        self.req = request    # Has: body_names (list[str]), dep_start_jd, dep_end_jd,
-                              #      leg_tof_bounds (list[tuple[min,max]]),
-                              #      population_size, max_iterations, max_c3 (optional)
-        self.cache = cache
-
-    def run(self) -> Generator[MultiLegOptimizationProgress, None, None]:
-        """Yield progress at each iteration."""
-        # Search space: (N+1)-D -- [departure_jd, tof_leg0, tof_leg1, ...]
-        # N = len(body_names) - 1
-
-        for iteration in range(self.req.max_iterations):
-            yield MultiLegOptimizationProgress(
-                iteration=iteration,
-                max_iterations=self.req.max_iterations,
-                best_dv_total=...,          # float
-                best_departure_jd=...,      # float
-                best_leg_tof_days=[...],    # list[float], one per leg
-                best_total_tof_days=...,    # float
-                best_dv_departure=...,      # float
-                best_dv_arrival=...,        # float
-                best_dv_flyby=...,          # float (sum of powered flyby dv)
-                converged=True,
-                body_sequence=self.req.body_names,
-                population_best_dvs=[...],
-            )
-```
-
-### Objective functions (already implemented, you can reuse)
-
-```python
-from optimizer.objective import delta_v_objective
-from optimizer.multileg_objective import multileg_objective, multileg_objective_full
-
-# Single-leg: returns float (total dv, or inf if infeasible)
-dv = delta_v_objective(dep_jd, tof_days, origin_id, target_id, cache)
-
-# Multi-leg: returns float (total dv with optional C3 penalty)
-# pos = np.array([departure_jd, tof_leg0, tof_leg1, ...])
-dv = multileg_objective(pos, body_names, cache, max_c3=None)
-
-# Multi-leg with full result (returns MultiLegResult or None)
-result = multileg_objective_full(pos, body_names, cache, n_traj_points=0)
-```
-
-### Where to wire it in
-
-1. Edit your optimizer class in `src/optimizer/gmpa.py` (or create a new file)
-2. Update imports in `src/workers/worker.py` (lines 18-22)
-3. That's it. The dispatcher, API routes, and WebSocket streaming all work unchanged.
-
-### Key constraint
-
-Your `run()` generator must:
-- Yield `OptimizationProgress` / `MultiLegOptimizationProgress` dataclasses
-- Yield at least every ~10 iterations (so the WebSocket doesn't time out)
-- Yield a final progress with `iteration >= max_iterations` to signal completion
+### Features
+- **Intelligent Insights:** The optimizer records the initial feasible trajectory found in early generations and compares it against the final optimized result, providing natural-language insights (e.g., *"Saved 1.2 km/s by shifting departure 5 days earlier"*).
+- **Orbital Elements:** Cartesian state vectors are automatically converted into classical Keplerian elements ($a, e, i, \Omega, \omega, \nu$) at the optimal transfer point.
+- **Side-by-Side Comparison:** The API computes and returns the full 3D coordinates for both the initial and optimized orbits, allowing the frontend to render the physical orbital shift in real-time.
 
 ---
 
@@ -233,6 +135,40 @@ Base URL: `http://localhost:8000`
 Health check.
 
 **Response:** `{"status": "ok", "service": "tars"}`
+
+---
+
+### POST /orbit-info
+
+Calculate detailed orbital parameters and 3D paths from classical Keplerian elements.
+
+**Request body:**
+```json
+{
+  "a_km": 189870206.34,
+  "e": 0.218,
+  "i_deg": 1.01,
+  "raan_deg": 38.03,
+  "arg_p_deg": 4.08
+}
+```
+
+**Response:**
+```json
+{
+  "periapsis_distance_km": 148478521.36,
+  "apoapsis_distance_km": 231261891.33,
+  "period_seconds": 44962294.02,
+  "periapsis_point_km": [110120365.69, 99543200.37, 186097.63],
+  "apoapsis_point_km": [-171584408.62, -155103563.82, -289968.63],
+  "periapsis_point_scene": [736.10, 665.40, 1.24],
+  "apoapsis_point_scene": [-1146.97, -1036.80, -1.93],
+  "full_orbit_points_scene": [
+    [736.10, 665.40, 1.24],
+    ... (100 points tracing the full ellipse)
+  ]
+}
+```
 
 ---
 

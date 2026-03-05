@@ -243,7 +243,6 @@ def test_porkchop():
     log("Has departure_isos", status == 200 and len(resp.get("departure_isos", [])) == 10)
     log("Has tof_days", status == 200 and len(resp.get("tof_days", [])) == 10)
 
-
 # --------------------------------------------------------------------------- #
 #  Multi-leg Endpoints
 # --------------------------------------------------------------------------- #
@@ -293,7 +292,7 @@ def test_job_status():
         "target": "mars",
         "dep_start": "2026-06-01",
         "dep_end": "2026-12-01",
-        "max_iterations": 20,
+        "max_iterations": 100,
     })
     if resp:
         job_id = resp.get("job_id")
@@ -317,7 +316,7 @@ async def test_websocket():
         "target": "mars",
         "dep_start": "2026-06-01",
         "dep_end": "2026-12-01",
-        "max_iterations": 20,
+        "max_iterations": 100,
         "mode": "pareto",
     })
 
@@ -402,7 +401,6 @@ def main():
     print("\n" + "=" * 60)
     print("TEST SUITE COMPLETE")
     print("=" * 60)
-
 
 if __name__ == "__main__":
     main()

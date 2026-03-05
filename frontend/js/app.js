@@ -1310,6 +1310,159 @@ function renderRouteCard(route, index, container) {
   container.appendChild(card);
 }
 
+async function showOrbitInsights(msg, initialElements = null) {
+  let box = document.getElementById('orbit-insights-box');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'orbit-insights-box';
+    box.className = 'panel';
+    box.style.position = 'fixed';
+    box.style.bottom = '20px';
+    box.style.right = '320px';
+    box.style.width = '320px';
+    box.style.zIndex = '100';
+    box.style.background = 'rgba(18, 18, 30, 0.95)';
+    box.style.maxHeight = '500px';
+    box.style.overflowY = 'auto';
+    box.style.borderLeft = '4px solid var(--accent)';
+    document.body.appendChild(box);
+  }
+  
+  box.classList.remove('hidden');
+  
+  const optimizedEl = msg.orbit_elements || (msg.orbit_elements_list ? msg.orbit_elements_list[0] : null);
+  const initialEl = initialElements || optimizedEl; // Fallback if no initial
+  const insight = msg.insight || "Trajectory refined via NSGA-II.";
+  
+  let html = `
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); margin-bottom:8px; padding-bottom:4px">
+      <h2 style="margin:0; font-size:10px">Orbit Comparison</h2>
+      <button onclick="this.parentElement.parentElement.classList.add('hidden')" style="background:none; border:none; color:var(--text-dim); cursor:pointer">&times;</button>
+    </div>
+    <div style="font-size:11px; color:var(--accent); margin-bottom:12px; line-height:1.4">
+      ${insight}
+    </div>
+    <div id="orbit-insight-content">Loading orbit details...</div>
+  `;
+  box.innerHTML = html;
+
+  if (optimizedEl) {
+    try {
+      // Fetch details for initial
+      const resInit = await fetch(`${API}/orbit-info`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          a_km: initialEl.a_km || initialEl.semi_major_axis_km,
+          e: initialEl.e || initialEl.eccentricity,
+          i_deg: initialEl.i_deg || initialEl.inclination_deg,
+          raan_deg: initialEl.raan_deg,
+          arg_p_deg: initialEl.arg_p_deg || initialEl.argp_deg
+        })
+      });
+      const initialInfo = await resInit.json();
+
+      // Fetch details for optimized
+      const resOpt = await fetch(`${API}/orbit-info`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          a_km: optimizedEl.a_km || optimizedEl.semi_major_axis_km,
+          e: optimizedEl.e || optimizedEl.eccentricity,
+          i_deg: optimizedEl.i_deg || optimizedEl.inclination_deg,
+          raan_deg: optimizedEl.raan_deg,
+          arg_p_deg: optimizedEl.arg_p_deg || optimizedEl.argp_deg
+        })
+      });
+      const optimizedInfo = await resOpt.json();
+
+      const row = (label, oldVal, newVal, unit = '', color = '') => {
+        const diff = newVal - oldVal;
+        const pct = oldVal !== 0 ? (diff / Math.abs(oldVal) * 100) : 0;
+        const diffColor = diff < 0 ? 'var(--success)' : 'var(--warn)'; 
+        
+        return `
+          <div class="label" style="${color ? 'color:'+color : ''}">${label}</div>
+          <div class="val" style="display:flex; flex-direction:column; align-items:flex-end">
+            <span style="color:var(--text-dim); font-size:8px; text-decoration:line-through">${oldVal.toFixed(2)}${unit}</span>
+            <span>${newVal.toFixed(2)}${unit}</span>
+            ${initialElements ? `<span style="font-size:7px; color:${diffColor}">${diff > 0 ? '+' : ''}${pct.toFixed(1)}%</span>` : ''}
+          </div>
+        `;
+      };
+
+      const content = document.getElementById('orbit-insight-content');
+      let detailsHtml = `
+        <div class="info-grid" style="font-size:10px; grid-template-columns: 1fr 1fr; row-gap:12px">
+          ${row('SMA (a)', (initialEl.a_km || initialEl.semi_major_axis_km) / 1e6, (optimizedEl.a_km || optimizedEl.semi_major_axis_km) / 1e6, 'M km')}
+          ${row('Ecc (e)', initialEl.e || initialEl.eccentricity, optimizedEl.e || optimizedEl.eccentricity)}
+          ${row('Inc (i)', initialEl.i_deg || initialEl.inclination_deg, optimizedEl.i_deg || optimizedEl.inclination_deg, '°')}
+          ${row('Periapsis', initialInfo.periapsis_distance_km / 1e6, optimizedInfo.periapsis_distance_km / 1e6, 'M km', 'var(--success)')}
+          ${row('Apoapsis', initialInfo.apoapsis_distance_km / 1e6, optimizedInfo.apoapsis_distance_km / 1e6, 'M km', 'var(--warn)')}
+        </div>
+      `;
+
+      if (msg.orbit_elements_list && msg.orbit_elements_list.length > 1) {
+        detailsHtml += `<div style="font-size:9px; color:var(--text-dim); margin-top:8px">+ ${msg.orbit_elements_list.length - 1} more legs computed</div>`;
+      }
+      content.innerHTML = detailsHtml;
+
+      // Visuals: Draw Full Orbits
+      clearFullOrbits();
+      if (initialElements && initialInfo.full_orbit_points_scene) {
+        drawFullOrbit(initialInfo.full_orbit_points_scene, 0x555555, true); // Dashed grey for old
+      }
+      if (optimizedInfo.full_orbit_points_scene) {
+        drawFullOrbit(optimizedInfo.full_orbit_points_scene, 0x4ea8de, false); // Solid accent for new
+      }
+
+      // Visuals: Apsis Markers
+      clearMarkers();
+      if (optimizedInfo.periapsis_point_scene) {
+        const p = optimizedInfo.periapsis_point_scene;
+        addMarker({x: p[0], z: p[1], y: -p[2]}, 0x34d399, 1.5); // Periapsis
+      }
+      if (optimizedInfo.apoapsis_point_scene) {
+        const a = optimizedInfo.apoapsis_point_scene;
+        addMarker({x: a[0], z: a[1], y: -a[2]}, 0xf59e0b, 1.5); // Apoapsis
+      }
+
+    } catch (e) {
+      document.getElementById('orbit-insight-content').innerHTML = `<div style="color:var(--danger)">Error loading details</div>`;
+      console.error("Failed to fetch orbit info:", e);
+    }
+  }
+}
+
+let fullOrbitLines = [];
+function drawFullOrbit(points, color, dashed = false) {
+  const threePts = points.map(p => new THREE.Vector3(p[0], p[2], -p[1]));
+  // Close the loop for elliptic
+  if (points.length > 2) threePts.push(threePts[0]);
+
+  const geo = new THREE.BufferGeometry().setFromPoints(threePts);
+  let mat;
+  if (dashed) {
+    mat = new THREE.LineDashedMaterial({ color, dashSize: 10, gapSize: 5, transparent: true, opacity: 0.5 });
+  } else {
+    mat = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.8 });
+  }
+  
+  const line = new THREE.Line(geo, mat);
+  if (dashed) line.computeLineDistances();
+  scene.add(line);
+  fullOrbitLines.push(line);
+}
+
+function clearFullOrbits() {
+  fullOrbitLines.forEach(l => {
+    scene.remove(l);
+    l.geometry.dispose();
+    l.material.dispose();
+  });
+  fullOrbitLines = [];
+}
+
 function viewRoute(route) {
   // Clear scene
   if (transferLine) {
@@ -1354,16 +1507,25 @@ function optimizeRoute(route) {
   const actionsDiv = activeCard.querySelector('.rc-actions');
   actionsDiv.innerHTML = `<div class="progress-bar" style="width:100%; margin:4px 0"><div class="fill" style="width:0%"></div></div><div class="rc-status" style="font-size:9px;color:var(--text-dim)">Starting...</div>`;
 
+  let initialElements = null;
+
   const onProgress = (msg) => {
     const bar = actionsDiv.querySelector('.fill');
     const stat = actionsDiv.querySelector('.rc-status');
+
+    // Store first feasible result as "initial" baseline for comparison
+    if (!initialElements && (msg.orbit_elements || msg.orbit_elements_list)) {
+      initialElements = msg.orbit_elements || msg.orbit_elements_list[0];
+    }
+
     if (bar && msg.max_iterations) {
       const pct = (msg.iteration / msg.max_iterations) * 100;
       bar.style.width = pct + '%';
     }
     if (stat) {
       if (msg.status === 'running') {
-        stat.textContent = `Iter ${msg.iteration}: ${msg.best_dv_total ? msg.best_dv_total.toFixed(2) : '...'} km/s`;
+        const insightText = msg.insight ? `<div style="margin-top:2px; font-style:italic; color:var(--accent); font-size:8px">${msg.insight}</div>` : '';
+        stat.innerHTML = `Iter ${msg.iteration}: ${msg.best_dv_total ? msg.best_dv_total.toFixed(2) : '...'} km/s${insightText}`;
       } else {
         stat.textContent = msg.status;
       }
@@ -1371,8 +1533,6 @@ function optimizeRoute(route) {
   };
 
   const onComplete = (msg) => {
-    // Re-render card with new stats?
-    // Or just update values.
     if (msg.status === 'complete') {
       const stat = actionsDiv.querySelector('.rc-status');
       stat.textContent = `Done. Best: ${msg.best_dv_total.toFixed(2)} km/s`;
@@ -1381,10 +1541,12 @@ function optimizeRoute(route) {
       const valEls = activeCard.querySelectorAll('.rc-val');
       if (valEls.length >= 2) {
         valEls[0].textContent = msg.best_dv_total.toFixed(2) + ' km/s';
-        // Update TOF if available (multi-leg vs single)
-        // msg structure differs slightly
         let tof = msg.best_total_tof_days || msg.best_tof_days;
         if (tof) valEls[1].textContent = tof.toFixed(0) + 'd';
+      }
+
+      if (msg.orbit_elements || msg.orbit_elements_list) {
+        showOrbitInsights(msg, initialElements);
       }
     }
   };
@@ -1465,10 +1627,6 @@ function toggleAdvanced() {
 
 // ── Multi-Leg Trajectory ───────────────────────────────────────────────────
 // (Manual functions removed, kept only formatting helpers if needed)
-function jdToIso(jd) {
-  const ms = (jd - 2440587.5) * 86400000;
-  return new Date(ms).toISOString().split('T')[0];
-}
 
 // ── Multi-leg Optimizer ───────────────────────────────────────────────────
 // (Merged into runMultiLegOptimizer above)

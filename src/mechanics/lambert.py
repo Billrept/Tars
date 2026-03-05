@@ -17,6 +17,7 @@ import math
 
 import numpy as np
 from numba import njit
+from mechanics.kepler import state_to_elements, compute_apsis_points
 
 
 # --------------------------------------------------------------------------- #
@@ -308,6 +309,24 @@ def compute_transfer_dv(
     dv1 = np.linalg.norm(result["v1"] - v1_planet)
     dv2 = np.linalg.norm(result["v2"] - v2_planet)
 
+    a, ecc, inc, raan, argp, nu = state_to_elements(r1, result["v1"], mu)
+    r_peri, r_apo = compute_apsis_points(a, ecc, inc, raan, argp, mu)
+    
+    from mechanics.transforms import km_to_scene
+
+    orbit_elements = {
+        "a_km": float(a),
+        "e": float(ecc),
+        "i_deg": float(math.degrees(inc)),
+        "raan_deg": float(math.degrees(raan)),
+        "arg_p_deg": float(math.degrees(argp)),
+        "nu_deg": float(math.degrees(nu)),
+        "periapsis_point_km": r_peri.tolist(),
+        "apoapsis_point_km": r_apo.tolist(),
+        "periapsis_point_scene": km_to_scene(r_peri).tolist(),
+        "apoapsis_point_scene": km_to_scene(r_apo).tolist(),
+    }
+
     return {
         "dv_departure": float(dv1),
         "dv_arrival": float(dv2),
@@ -315,4 +334,5 @@ def compute_transfer_dv(
         "v1_transfer": result["v1"],
         "v2_transfer": result["v2"],
         "converged": True,
+        "orbit_elements": orbit_elements,
     }

@@ -80,6 +80,9 @@ class LegResult:
     v1_planet: np.ndarray
     v2_planet: np.ndarray
 
+    # Orbital elements of the transfer arc
+    orbit_elements: dict | None = None
+
     # Trajectory points for visualization (in scene units)
     trajectory_points: list[dict] = field(default_factory=list)
 
@@ -208,6 +211,7 @@ def compute_multileg_trajectory(
             v2_transfer=result["v2_transfer"],
             v1_planet=v1_planet,
             v2_planet=v2_planet,
+            orbit_elements=result.get("orbit_elements"),
             trajectory_points=traj_points,
             converged=result["converged"],
         )
@@ -381,6 +385,7 @@ def multileg_result_to_dict(result: MultiLegResult) -> dict:
             "tof_days": leg.tof_days,
             "dv_departure_km_s": leg.dv_departure_km_s,
             "dv_arrival_km_s": leg.dv_arrival_km_s,
+            "orbit_elements": leg.orbit_elements,
             "trajectory_points": leg.trajectory_points,
             "converged": leg.converged,
         })

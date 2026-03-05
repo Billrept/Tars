@@ -71,6 +71,7 @@ def _inf_result(dep: float, arr: float, tof: float) -> dict:
         "departure_jd": dep,
         "arrival_jd": arr,
         "tof_days": tof,
+        "orbit_elements": None,
     }
 
 

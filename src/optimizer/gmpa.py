@@ -42,6 +42,8 @@ class OptimizationProgress:
     population_positions: list[list[float]] = field(default_factory=list)  # [[dep_jd, tof], ...]
     pareto_front: list[dict] = field(default_factory=list)  # [{dv, tof, dep_jd, ...}]
     mode: str = "min_dv"
+    insight: str = ""
+    orbit_elements: dict | None = None
 
 
 @dataclass
@@ -117,6 +119,7 @@ class GreyWolfOptimizer:
     def __init__(self, request: OptimizationRequest, cache: EphemerisCache) -> None:
         self.req = request
         self.cache = cache
+        self.initial_best = None
 
     def run(self) -> Generator[OptimizationProgress, None, None]:
         """Run the GWO optimization, yielding progress at each improvement."""
@@ -159,7 +162,30 @@ class GreyWolfOptimizer:
             mode,
         )
 
+        # Number of weight segments for Pareto exploration
+        n_segments = 5 if mode == "pareto" else 1
+        segment_length = max(1, max_iter // n_segments)
+
         for iteration in range(1, max_iter + 1):
+            if mode == "pareto" and (iteration - 1) % segment_length == 0:
+                # Shift weight smoothly from 1.0 (min_dv) to 0.0 (min_tof) across segments
+                segment_idx = (iteration - 1) // segment_length
+                self.current_weight = 1.0 - (segment_idx / max(1, n_segments - 1))
+                
+                # Re-evaluate fitness of current population under new weights
+                fitness = np.array([self._get_fitness(r) for r in results_full])
+                sorted_idx = np.argsort(fitness)
+                
+                # Re-elect Alpha, Beta, Delta for the new objective
+                alpha_pos = positions[sorted_idx[0]].copy()
+                alpha_fit = fitness[sorted_idx[0]]
+                beta_pos = positions[sorted_idx[1]].copy()
+                beta_fit = fitness[sorted_idx[1]]
+                delta_pos = positions[sorted_idx[2]].copy()
+                delta_fit = fitness[sorted_idx[2]]
+                best_fit = alpha_fit
+                best_result = results_full[sorted_idx[0]]
+
             a = 2.0 * (1.0 - iteration / max_iter)
 
             for i in range(n_wolves):
@@ -234,9 +260,22 @@ class GreyWolfOptimizer:
 
     def _get_fitness(self, result: dict) -> float:
         """Get fitness value based on optimization mode."""
+        dv = result.get("dv_total", 1e12)
+        tof = result.get("tof_days", result.get("total_tof_days", 1e12))
+        
         if self.req.mode == "min_tof":
-            return result["tof_days"] if result["tof_days"] > 0 else 1e12
-        return result["dv_total"]
+            return tof if tof > 0 else 1e12
+        elif self.req.mode == "pareto":
+            # Weighted sum scalarization: J = w * (dv / dv_norm) + (1-w) * (tof / tof_norm)
+            # Use typical scales: dv ~ 20 km/s, tof ~ 1000 days
+            if dv > 1e11 or tof <= 0:
+                return 1e12
+            dv_norm = dv / 20.0
+            tof_norm = tof / 1000.0
+            w = self.current_weight
+            return w * dv_norm + (1.0 - w) * tof_norm
+            
+        return dv
 
     def _evaluate_full(self, pos: np.ndarray) -> dict:
         """Get full result dict for a wolf position."""
@@ -296,6 +335,8 @@ class MultiLegOptimizationProgress:
     population_positions: list[list[float]] = field(default_factory=list)
     pareto_front: list[dict] = field(default_factory=list)
     mode: str = "min_dv"
+    insight: str = ""
+    orbit_elements_list: list[dict] | None = None  # List of elements for each leg
 
 
 @dataclass
@@ -332,6 +373,7 @@ class MultiLegGreyWolfOptimizer:
         self.cache = cache
         self.n_legs = len(request.body_names) - 1
         self.n_dims = 1 + self.n_legs
+        self.current_weight = 1.0
 
     def run(self) -> Generator[MultiLegOptimizationProgress, None, None]:
         """Run the GWO optimization for multi-leg trajectories."""
@@ -380,7 +422,30 @@ class MultiLegGreyWolfOptimizer:
             eval_result=best_result,
         )
 
+        # Number of weight segments for Pareto exploration
+        n_segments = 5 if mode == "pareto" else 1
+        segment_length = max(1, max_iter // n_segments)
+
         for iteration in range(1, max_iter + 1):
+            if mode == "pareto" and (iteration - 1) % segment_length == 0:
+                # Shift weight smoothly from 1.0 (min_dv) to 0.0 (min_tof) across segments
+                segment_idx = (iteration - 1) // segment_length
+                self.current_weight = 1.0 - (segment_idx / max(1, n_segments - 1))
+                
+                # Re-evaluate fitness of current population under new weights
+                fitness = np.array([self._get_fitness(r) for r in results_full])
+                sorted_idx = np.argsort(fitness)
+                
+                # Re-elect Alpha, Beta, Delta for the new objective
+                alpha_pos = positions[sorted_idx[0]].copy()
+                alpha_fit = fitness[sorted_idx[0]]
+                beta_pos = positions[sorted_idx[1]].copy()
+                beta_fit = fitness[sorted_idx[1]]
+                delta_pos = positions[sorted_idx[2]].copy()
+                delta_fit = fitness[sorted_idx[2]]
+                best_fit = alpha_fit
+                best_result = results_full[sorted_idx[0]]
+
             a = 2.0 * (1.0 - iteration / max_iter)
 
             for i in range(n_wolves):
@@ -458,9 +523,22 @@ class MultiLegGreyWolfOptimizer:
 
     def _get_fitness(self, result: dict) -> float:
         """Get fitness value based on optimization mode."""
+        dv = result.get("dv_total", 1e12)
+        tof = result.get("total_tof_days", 1e12)
+
         if self.req.mode == "min_tof":
-            return result.get("total_tof_days", 1e12)
-        return result.get("dv_total", 1e12)
+            return tof if tof > 0 else 1e12
+        elif self.req.mode == "pareto":
+            # Weighted sum scalarization
+            # Multi-leg trajectories take longer, use 3000 days as typical max
+            if dv > 1e11 or tof <= 0:
+                return 1e12
+            dv_norm = dv / 30.0
+            tof_norm = tof / 3000.0
+            w = self.current_weight
+            return w * dv_norm + (1.0 - w) * tof_norm
+            
+        return dv
 
     def _evaluate_full(self, pos: np.ndarray) -> dict:
         """Get full result dict for a wolf position."""

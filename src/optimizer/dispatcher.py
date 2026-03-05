@@ -203,6 +203,8 @@ def _progress_to_dict(p: OptimizationProgress) -> dict:
         "population_positions": p.population_positions,
         "pareto_front": p.pareto_front,
         "mode": p.mode,
+        "insight": p.insight,
+        "orbit_elements": p.orbit_elements,
     }
 
 
@@ -307,4 +309,6 @@ def _multileg_progress_to_dict(p: MultiLegOptimizationProgress) -> dict:
         "population_positions": p.population_positions,
         "pareto_front": p.pareto_front,
         "mode": p.mode,
+        "insight": p.insight,
+        "orbit_elements_list": p.orbit_elements_list,
     }

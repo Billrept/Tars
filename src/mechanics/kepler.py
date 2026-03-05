@@ -282,3 +282,47 @@ def propagate_kepler(r0: np.ndarray, v0: np.ndarray, dt: float, mu: float) -> tu
             )
 
     return elements_to_state(a, ecc, inc, raan, argp, nu, mu)
+
+
+@njit(cache=True)
+def compute_apsis_points(a: float, ecc: float, inc: float, raan: float, argp: float, mu: float) -> tuple[np.ndarray, np.ndarray]:
+    """Compute the 3D position vectors (km) for periapsis and apoapsis.
+    
+    Periapsis occurs at true anomaly nu = 0.
+    Apoapsis occurs at true anomaly nu = pi.
+    """
+    # Periapsis (nu = 0)
+    r_peri, _ = elements_to_state(a, ecc, inc, raan, argp, 0.0, mu)
+    
+    # Apoapsis (nu = pi)
+    # Note: for hyperbolic orbits (e > 1), apoapsis doesn't exist in the same way,
+    # but we'll return the point on the empty branch if nu=pi is evaluated.
+    # For trajectories in Tars, we usually deal with elliptic transfers.
+    r_apo, _ = elements_to_state(a, ecc, inc, raan, argp, math.pi, mu)
+    
+    return r_peri, r_apo
+
+
+@njit(cache=True)
+def generate_full_orbit_points(a: float, ecc: float, inc: float, raan: float, argp: float, mu: float, n_points: int = 100) -> np.ndarray:
+    """Generate a sequence of points (km) representing a full orbit.
+    
+    For elliptic orbits (e < 1), this covers a full 2*pi range of true anomaly.
+    For hyperbolic orbits (e > 1), it covers the visible arc.
+    """
+    pts = np.zeros((n_points, 3))
+    
+    if ecc < 1.0:
+        # Elliptic: 0 to 2pi
+        nus = np.linspace(0, 2.0 * np.pi, n_points)
+    else:
+        # Hyperbolic: limit the range to avoid the asymptote
+        # cos(nu) = -1/e
+        limit_nu = math.acos(-1.0 / ecc) * 0.95
+        nus = np.linspace(-limit_nu, limit_nu, n_points)
+        
+    for i in range(n_points):
+        r, _ = elements_to_state(a, ecc, inc, raan, argp, nus[i], mu)
+        pts[i] = r
+        
+    return pts
