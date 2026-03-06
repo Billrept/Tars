@@ -55,6 +55,14 @@ let focusedBodyId = null;
 let previousBodyPosition = new THREE.Vector3(); // To track delta movement
 let hoveredBodyId = null;
 const timer = new Timer();
+let isSimulationMaster = false; // TRUE = Frontend drives time (Mission), FALSE = Backend drives time (Stream)
+let lastWsRequestTime = 0; // Throttling helper
+let orbitLines = {}; // Store the visual lines so we can toggle them if needed
+
+// ── Mission State ──────────────────────────────────────────────────────────
+let activeMission = null; // Object { mesh, pathPoints, startTime, durationMs }
+let spacecraftMesh = null;
+
 
 // Planet display radii (scene units) — exaggerated for visibility
 const DISPLAY_RADIUS = {
@@ -261,20 +269,49 @@ function populateSelects() {
 }
 
 async function fetchOrbits() {
-  const planets = bodies.filter(b => b.parent_id === null);
+  const planets = bodies.filter(b => b.parent_id === null && b.naif_id !== 10);
+  
   for (const body of planets) {
     try {
+      // VISUAL TWEAK: simplify the request to get a clean single loop
+      // We estimate one year based on PLANET_INFO (or default to 1 Earth year)
+      // If we ask for 30 years, the line looks thick and messy.
+      
+      let daysToFetch = 365; // Default Earth
+      const info = PLANET_INFO[body.naif_id];
+      
+      // Parse "88 days" or "12 years" from your text dictionary (Simple Heuristic)
+      if (info && info.year) {
+         if (info.year.includes('days')) daysToFetch = parseInt(info.year) + 10; // +buffer
+         if (info.year.includes('years')) daysToFetch = parseInt(info.year) * 365;
+         if (info.year.includes('yr')) daysToFetch = parseInt(info.year) * 365; // Handle "230 M yr" cautiously
+         if (daysToFetch > 10000) daysToFetch = 10000; // Cap at ~30 years
+      }
+
+      // Calculate end date based on One Period
+      const startDate = new Date(epochRange.start);
+      const endDate = new Date(startDate.getTime() + (daysToFetch * 86400000));
+      const endIso = endDate.toISOString().split('T')[0];
+
+      // Step size: For Mercury (88 days) step 3 is too blocky. Use 1 for inner planets.
+      const step = daysToFetch < 200 ? 1 : 5; 
+
       const res = await fetch(
-        `${API}/bodies/${body.name.toLowerCase()}/ephemeris?start=${epochRange.start}&end=${epochRange.end}&step_days=${stepDays}&scene_units=true`
+        `${API}/bodies/${body.name.toLowerCase()}/ephemeris?start=${epochRange.start}&end=${endIso}&step_days=${step}&scene_units=true`
       );
       const data = await res.json();
 
       orbitPoints[data.body] = data.points;
+      
+      // CALL DRAWING FUNCTION
+      drawOrbitPath(body.naif_id, data.points);
+
     } catch (e) {
       console.warn(`Failed to fetch orbit for ${body.name}:`, e);
     }
   }
 }
+
 
 function removePlanetTrail(bodyNaifId) {
   const prev = planetTrails[bodyNaifId];
@@ -395,7 +432,7 @@ function ensureBodyMesh(body) {
       blending: THREE.AdditiveBlending,
     });
     const glow = new THREE.Sprite(spriteMat);
-    glow.scale.set(radius * 8, radius * 8, 1);
+    glow.scale.set(radius * 4, radius * 4, 1);
     mesh.add(glow);
   } 
   
@@ -499,13 +536,20 @@ function connectEphemeris() {
     }));
   };
 
-  ephemerisWs.onmessage = (event) => {
+    ephemerisWs.onmessage = (event) => {
     const snap = JSON.parse(event.data);
-    currentDate = new Date(snap.epoch_iso);
-    const currentSimMs = currentDate.getTime();
+    
+    // CRITICAL FIX:
+    // If we are flying a mission (isSimulationMaster = true), 
+    // we ignore the epoch from the server to prevent "time fighting".
+    // We only want the body positions corresponding to the time we requested.
+    if (!isSimulationMaster) {
+        currentDate = new Date(snap.epoch_iso);
+    }
 
     updatePlanetPositions(snap);
   };
+
 
   ephemerisWs.onclose = () => {
     setStatus('err', 'Disconnected');
@@ -589,9 +633,15 @@ function onMouseClick(event) {
 
 function unlockCamera() {
   focusedBodyId = null;
-  // Hide (Add .hidden class to trigger CSS transition)
+  // If we were flying, stop flying
+  if (activeMission) {
+    scene.remove(activeMission.mesh);
+    activeMission = null;
+    isSimulationMaster = false; // Hand control back to server
+  }
   document.getElementById('planet-info-panel').classList.add('hidden');
 }
+
 
 
 
@@ -740,6 +790,8 @@ function highlightBody(naifId, isHovered) {
   }
 }
 
+
+
 function showTooltip(event, text) {
   const tooltip = document.getElementById('body-tooltip');
   tooltip.textContent = text;
@@ -819,6 +871,51 @@ function drawTransferArc(points) {
   addMarker(points[0], 0x34d399, 2);               // green — departure
   addMarker(points[points.length - 1], 0xef4444, 2); // red — arrival
 }
+
+// ── Draw Static Orbit (Gray Ellipse) ───────────────────────────────────────
+function drawOrbitPath(bodyId, points) {
+  // 1. Remove existing if any
+  if (orbitLines[bodyId]) {
+    scene.remove(orbitLines[bodyId]);
+    orbitLines[bodyId].geometry.dispose();
+    orbitLines[bodyId].material.dispose();
+  }
+
+  if (!points || points.length < 3) return;
+
+  // 2. Filter points to get roughly ONE full orbit (single loop)
+  // The API might return 30 years of data. We only want to draw 1 revolution for a clean look.
+  const singleLoopPoints = [];
+  const startV = new THREE.Vector3(points[0].x, points[0].z, -points[0].y);
+  singleLoopPoints.push(startV.x, startV.y, startV.z);
+
+  // We simply grab points until we are "close" to the start again, 
+  // OR just limit by a reasonable count if checking distance is too heavy.
+  // For simplicity here: We just draw the entire set provided by the API 
+  // but we make it transparent so overlaps aren't ugly.
+  // Converting backend (x, y, z) -> Scene (x, z, -y)
+  
+  const positions = [];
+  points.forEach(p => {
+    positions.push(p.x, p.z, -p.y);
+  });
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+
+  // 3. Create the Line
+  const mat = new THREE.LineBasicMaterial({
+    color: 0x555555, // Dark Gray
+    transparent: true,
+    opacity: 0.3,    // Faint, so it doesn't distract from the mission line
+    linewidth: 1     // Note: WebGL linewidth is always 1 on most browsers
+  });
+
+  const line = new THREE.Line(geo, mat); // Use LineLoop if you want to force close, but Line is safer for open ephemeris
+  scene.add(line);
+  orbitLines[bodyId] = line;
+}
+
 
 const markers = [];
 function addMarker(point, color, size) {
@@ -1346,10 +1443,17 @@ function renderRouteCard(route, index, container) {
       Dep: ${route.departure_iso.split('T')[0]} &nbsp; Arr: ${route.arrival_iso.split('T')[0]}
     </div>
     <div class="rc-actions">
+      <button class="rc-btn fly-btn" style="background:var(--accent); color:#fff">Fly Mission</button> <!-- NEW BUTTON -->
       <button class="rc-btn view-btn">View 3D</button>
       <button class="rc-btn optimize opt-btn">Optimize</button>
     </div>
   `;
+
+  card.querySelector('.fly-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    viewRoute(route); // Draw the line first
+    startMissionSimulation(route); // Then fly it
+  });
 
   card.querySelector('.view-btn').addEventListener('click', (e) => {
     e.stopPropagation();
@@ -1657,6 +1761,111 @@ function optimizeRoute(route) {
   }
 }
 
+function createSpacecraftMesh() {
+  const group = new THREE.Group();
+
+  // Body (Cylinder)
+  const bodyGeo = new THREE.CylinderGeometry(0.5, 1.2, 4, 12);
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.4, metalness: 0.8 });
+  const body = new THREE.Mesh(bodyGeo, bodyMat);
+  body.rotation.x = Math.PI / 2; // Orient along Z axis initially
+  group.add(body);
+
+  // Engine / Base (Darker)
+  const engineGeo = new THREE.CylinderGeometry(1.2, 0.8, 1, 12);
+  const engineMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
+  const engine = new THREE.Mesh(engineGeo, engineMat);
+  engine.rotation.x = Math.PI / 2;
+  engine.position.z = -2.5;
+  group.add(engine);
+
+  // Engine Glow (Sprite)
+  const spriteMat = new THREE.SpriteMaterial({ 
+    map: createGlowTexture(), 
+    color: 0x00aaff, 
+    blending: THREE.AdditiveBlending 
+  });
+  const glow = new THREE.Sprite(spriteMat);
+  glow.scale.set(4, 4, 1);
+  glow.position.z = -3.5;
+  group.add(glow);
+
+  return group;
+}
+
+function startMissionSimulation(route) {
+  // 1. Cleanup old mission
+  if (activeMission) {
+    scene.remove(activeMission.mesh);
+    activeMission = null;
+  }
+
+    // 1. Remove visual meshes
+  Object.keys(planetTrails).forEach(id => {
+    removePlanetTrail(id); // Helper function you already have
+  });
+
+  // 2. Clear data history
+  planetTrailHist = {};   // Reset position history
+  lastTrailSimTime = {};  // Reset timer so next frame forces a new point
+  // ──────────────────────────────────────────────────────────────────
+  
+  // 2. Prepare Data
+  const startTime = new Date(route.departure_iso).getTime();
+  const endTime = new Date(route.arrival_iso).getTime();
+  const durationMs = endTime - startTime;
+
+  // Transform backend points {x,y,z} to Scene Vectors (x, z, -y)
+  // Determine if it's a direct route or multi-leg
+  let rawPoints = [];
+  if (route.type === 'direct') {
+    rawPoints = route.trajectory_points;
+  } else if (route.legs) {
+    // Flatten all legs into one path
+    route.legs.forEach(leg => rawPoints.push(...leg.trajectory_points));
+  }
+  
+  // Convert to ThreeJS Vectors
+  const pathPoints = rawPoints.map(p => new THREE.Vector3(p.x, p.z, -p.y));
+
+  // 3. Setup Scene
+  spacecraftMesh = createSpacecraftMesh();
+  scene.add(spacecraftMesh);
+
+  // 4. Update Global State
+  activeMission = {
+    mesh: spacecraftMesh,
+    pathPoints: pathPoints,
+    startTime: startTime,
+    durationMs: durationMs
+  };
+
+  // 5. Jump Time & Camera
+  focusedBodyId = null; 
+  simPaused = false;
+  isSimulationMaster = true; // TAKE CONTROL
+  
+  // Set simulation date slightly before launch
+  currentDate = new Date(startTime);
+  
+  // Snap camera near launch point (first point in path)
+  const startPos = pathPoints[0];
+  const offset = new THREE.Vector3(20, 10, 20); // Close up view
+  
+  camera.position.copy(startPos).add(offset);
+  controls.target.copy(startPos);
+  
+  // Set speed to traverse mission in ~30 seconds real-time
+  // durationMs (mission time) / 30000 (real ms) = speed factor
+  // But strictly speaking, your app uses "days per second"
+  const missionDays = durationMs / (1000 * 60 * 60 * 24);
+  const idealRealTimeSeconds = 30; // Animation length
+  simSpeed = missionDays / idealRealTimeSeconds; 
+  document.getElementById('sim-speed-val').textContent = simSpeed.toFixed(1);
+  
+  setStatus('ok', 'Mission Started: ' + route.origin + ' to ' + route.target);
+}
+
 async function visualizeWindows() {
   const origin = document.getElementById('plan-origin').value;
   const target = document.getElementById('plan-target').value;
@@ -1709,11 +1918,91 @@ async function fetchAndDrawOptimizedMultiLeg(bodies, depJd, legTofs) {
 function animate() {
   requestAnimationFrame(animate);
 
-  // 1. Update the timer first!
   timer.update(); 
-  
-  // 2. Get the time passed since last frame (in seconds)
   const delta = timer.getDelta(); 
+
+  // ── TIME MANAGEMENT ──────────────────────────────────────────
+  if (!simPaused) {
+    // defined in days/sec -> convert to ms/sec 
+    // Using a specific speed for Missions vs normal stream? 
+    // For now simSpeed is set by startMissionSimulation
+    const msPerSecond = simSpeed * 86400000; 
+    const stepMs = msPerSecond * delta;
+    
+    // Only increment locally if WE are the master
+    // If backend is master, we wait for WS message to update this
+    if (isSimulationMaster) {
+       const newTime = currentDate.getTime() + stepMs;
+       currentDate = new Date(newTime);
+    }
+    
+    // Update Text
+    document.getElementById('status-text').textContent = currentDate.toISOString().split('T')[0];
+  }
+
+  // ── SYNC BACKEND (If Frontend is Master) ─────────────────────
+  if (isSimulationMaster && ephemerisWs && ephemerisWs.readyState === WebSocket.OPEN) {
+    // We don't want to spam the server 60 times a second. 
+    // Throttle requests to 10-20 times per second.
+    const now = performance.now();
+    if (now - lastWsRequestTime > 50) { // Approx 20 FPS updates
+        lastWsRequestTime = now;
+        
+        // Construct a "Seek" payload 
+        // Note: Your python backend needs to handle this 'seek' or 'epoch' key
+        // If your backend only processes 'speed' updates, this might be tricky.
+        // Assuming your backend supports { "override_jd": 245... } or similar?
+        // If not, we can simulate it by sending start_jd = current.
+        
+        const jd = (currentDate.getTime() / 86400000) + 2440587.5;
+        
+        ephemerisWs.send(JSON.stringify({
+          start_jd: jd,
+          speed: simSpeed, // Keep speed synced
+          scene_units: true
+        }));
+    }
+  }
+
+  // ── SPACECRAFT LOGIC (New!) ─────────────────────────────
+  if (activeMission) {
+    const now = currentDate.getTime();
+    const t = (now - activeMission.startTime) / activeMission.durationMs;
+
+    // Safety Check: Mission over?
+    if (t >= 1.0) {
+      // Mission Complete
+      // console.log("Arrival!");
+    } else if (t >= 0) {
+      // Interpolate Position
+      const floatIndex = t * (activeMission.pathPoints.length - 1);
+      const i = Math.floor(floatIndex);
+      const fraction = floatIndex - i;
+
+      const p1 = activeMission.pathPoints[i];
+      const p2 = activeMission.pathPoints[Math.min(i + 1, activeMission.pathPoints.length - 1)];
+
+      if (p1 && p2) {
+        // Calculate Position
+        const currentPos = new THREE.Vector3().lerpVectors(p1, p2, fraction);
+        activeMission.mesh.position.copy(currentPos);
+        
+        // Calculate Orientation (Look at next point)
+        activeMission.mesh.lookAt(p2);
+
+        // LOCK CAMERA
+        // We calculate movement delta to keep smooth orbit controls
+        const posDelta = new THREE.Vector3().subVectors(currentPos, previousBodyPosition);
+        
+        // If this is the very first frame of mission, don't jump camera wildy
+        if (previousBodyPosition.lengthSq() > 0) {
+           camera.position.add(posDelta);
+           controls.target.copy(currentPos);
+        }
+        previousBodyPosition.copy(currentPos);
+      }
+    }
+  }
 
   // ── ROTATION LOGIC ───────────────────────────────────────────
   for (const [id, mesh] of Object.entries(bodyMeshes)) {
@@ -1722,18 +2011,7 @@ function animate() {
     const periodDays = (typeof ROTATION_PERIODS !== 'undefined' && ROTATION_PERIODS[id]) 
                        ? ROTATION_PERIODS[id] 
                        : 1.0; 
-
-    // Calculate rotation speed
-    // Formula: (2 * PI) / (Period * DayLength)
-    // We multiply by simSpeed so visual rotation matches simulation speed
-    // If sim is paused, we use a tiny 'idle' rotation (0.05) or 0
-    
-    // Safety check: preserve sign of simSpeed but keep it positive for multiplier 
-    // (unless you want retrograde time, but let's keep visuals simple)
     const visualSpeedFactor = 1; 
-    
-    // We limit 'effectiveSpeed' slightly so if you crank time scale to 100 days/sec, 
-    // the planets don't turn into a blurry mess.
     const speed = simPaused ? 0.2 : Math.min(Math.abs(simSpeed), 20); 
 
     const rotationStep = (delta * speed * visualSpeedFactor) / Math.abs(periodDays);
@@ -1742,7 +2020,10 @@ function animate() {
         mesh.rotation.y += rotationStep;
     }
   }
-  // ─────────────────────────────────────────────────────────────
+  
+  if (document.getElementById('status-text').textContent !== "") {
+     // Trigger WS update logic here if needed, or rely on existing stream
+  }
 
   // Camera Following Logic
   if (focusedBodyId && bodyMeshes[focusedBodyId]) {
