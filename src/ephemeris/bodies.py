@@ -142,10 +142,7 @@ ALL_BODIES: list[CelestialBody] = [
     SUN,
     MERCURY, VENUS, EARTH, MARS, JUPITER, SATURN, URANUS, NEPTUNE,
     PLUTO, CERES,
-    MOON, PHOBOS, DEIMOS,
-    IO, EUROPA, GANYMEDE, CALLISTO,
-    TITAN, ENCELADUS,
-    TRITON, CHARON,
+    MOON,
 ]
 
 BODY_BY_ID: dict[int, CelestialBody] = {b.naif_id: b for b in ALL_BODIES}

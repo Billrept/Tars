@@ -21,7 +21,6 @@ logger = logging.getLogger("tars.optimizer.multileg")
 # Penalty value for infeasible solutions
 INF_COST = 1e12
 
-
 def multileg_objective(
     x: np.ndarray,
     body_names: list[str],
