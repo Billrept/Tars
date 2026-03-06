@@ -161,14 +161,15 @@ html, body {
 
 /* ── Top Bar ─────────────────────────────────────────────── */
 #topbar {
-  position: fixed;
+  position: relative;
   top: 0; left: 0; right: 0;
+  justify-content: space-between;
   height: 40px;
   z-index: 10;
   display: flex;
   align-items: center;
   gap: 20px;
-  padding: 0 16px;
+  padding: 0 20px;
   background: linear-gradient(180deg, rgba(10,10,18,0.95), rgba(10,10,18,0.7));
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(12px);
@@ -713,4 +714,32 @@ button.secondary:hover { border-color: var(--accent); }
 .rc-btn.optimize:hover {
   background: var(--accent2);
   color: #fff;
+}
+
+.search-container {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);    /* perfect centering */
+}
+
+#search-input {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;            /* More rounded looks better in center */
+  padding: 8px 16px;
+  color: #fff;
+  width: 250px;                   /* Wider */
+  text-align: center;             /* Text in middle */
+  transition: all 0.2s;
+}
+
+#search-input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--accent, #4ea8de);
+  width: 320px;                   /* Expands on click */
+}
+
+#search-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
 }

@@ -58,6 +58,8 @@ const timer = new Timer();
 let isSimulationMaster = false; // TRUE = Frontend drives time (Mission), FALSE = Backend drives time (Stream)
 let lastWsRequestTime = 0; // Throttling helper
 let orbitLines = {}; // Store the visual lines so we can toggle them if needed
+let isFlyingToTarget = false; // Controls the transition animation
+
 
 // ── Mission State ──────────────────────────────────────────────────────────
 let activeMission = null; // Object { mesh, pathPoints, startTime, durationMs }
@@ -133,6 +135,7 @@ async function init() {
   fetchOrbits();
   connectEphemeris();
   bindEvents();
+  initSearchBar();
   animate();
 }
 
@@ -192,6 +195,49 @@ function initScene() {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
     labelRenderer.setSize(window.innerWidth, window.innerHeight);
+  });
+}
+
+function initSearchBar() {
+  const input = document.getElementById('search-input');
+  const dataList = document.getElementById('planet-list');
+
+  // 1. Populate the autocomplete list
+  // Filter out moons or keep them if you want, currently only top-level bodies
+  const searchableBodies = bodies.filter(b => b.naif_id !== 10); // Exclude Sun? Or keep it.
+  
+  searchableBodies.forEach(body => {
+    const opt = document.createElement('option');
+    opt.value = body.name;
+    dataList.appendChild(opt);
+  });
+
+  // 2. Handle Selection
+  input.addEventListener('change', (e) => {
+    const query = e.target.value.toLowerCase().trim();
+    if (!query) return;
+
+    // Find the body ID by name
+    const found = bodies.find(b => b.name.toLowerCase() === query);
+    
+    if (found) {
+      focusOnBody(found.naif_id);
+      input.value = ''; // Clear after search
+      input.blur();     // Remove focus
+    }
+  });
+
+  // 3. Optional: Allow pressing Enter even if not fully typed
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const query = input.value.toLowerCase().trim();
+      const found = bodies.find(b => b.name.toLowerCase().includes(query));
+      if (found) {
+        focusOnBody(found.naif_id);
+        input.value = '';
+        input.blur();
+      }
+    }
   });
 }
 
@@ -648,31 +694,26 @@ function unlockCamera() {
 function focusOnBody(naifId) {
   focusedBodyId = naifId;
   const mesh = bodyMeshes[naifId];
-  
   if (!mesh) return;
 
-  // Store the current position so we can calculate the delta in the next frame
+  isFlyingToTarget = true;
+  controls.enableDamping = false;
+
   previousBodyPosition.copy(mesh.position);
 
-  // OPTIONAL: Snap camera closer immediately upon click
-  // This moves the camera to a fixed offset (e.g., 100 units away)
-  // If you prefer to keep the camera where it is and just start following, remove these 4 lines:
-  const offset = new THREE.Vector3(50, 50, 50); 
-  camera.position.copy(mesh.position).add(offset);
-  controls.target.copy(mesh.position);
-  controls.update();
+  // 3. Update UI
   updatePlanetInfoPanel(naifId, mesh.userData.body);
 
   const bodyData = mesh.userData.body;
   const info = PLANET_INFO[naifId] || { 
     type: 'Unknown', radius: '?', day: '?', year: '?', temp: '?', desc: 'No data available.' 
   };
-
-  // Populate
+  
+  // Populate UI
   document.getElementById('pi-name').textContent = bodyData.name;
   const swatch = document.getElementById('pi-color-swatch');
   swatch.style.backgroundColor = bodyData.color || '#fff';
-  swatch.style.boxShadow = `0 0 15px ${bodyData.color || '#fff'}`; // Add glow to swatch
+  swatch.style.boxShadow = `0 0 15px ${bodyData.color || '#fff'}`;
   
   document.getElementById('pi-type').textContent = info.type;
   document.getElementById('pi-radius').textContent = info.radius;
@@ -681,9 +722,9 @@ function focusOnBody(naifId) {
   document.getElementById('pi-temp').textContent = info.temp;
   document.getElementById('pi-desc').textContent = info.desc;
 
-  // Show (Remove .hidden class to trigger CSS transition)
   document.getElementById('planet-info-panel').classList.remove('hidden');
 }
+
 
 function updatePlanetInfoPanel(id, bodyData) {
   const panel = document.getElementById('planet-info-panel');
@@ -1923,14 +1964,10 @@ function animate() {
 
   // ── TIME MANAGEMENT ──────────────────────────────────────────
   if (!simPaused) {
-    // defined in days/sec -> convert to ms/sec 
-    // Using a specific speed for Missions vs normal stream? 
-    // For now simSpeed is set by startMissionSimulation
+
     const msPerSecond = simSpeed * 86400000; 
     const stepMs = msPerSecond * delta;
     
-    // Only increment locally if WE are the master
-    // If backend is master, we wait for WS message to update this
     if (isSimulationMaster) {
        const newTime = currentDate.getTime() + stepMs;
        currentDate = new Date(newTime);
@@ -1942,17 +1979,9 @@ function animate() {
 
   // ── SYNC BACKEND (If Frontend is Master) ─────────────────────
   if (isSimulationMaster && ephemerisWs && ephemerisWs.readyState === WebSocket.OPEN) {
-    // We don't want to spam the server 60 times a second. 
-    // Throttle requests to 10-20 times per second.
     const now = performance.now();
     if (now - lastWsRequestTime > 50) { // Approx 20 FPS updates
         lastWsRequestTime = now;
-        
-        // Construct a "Seek" payload 
-        // Note: Your python backend needs to handle this 'seek' or 'epoch' key
-        // If your backend only processes 'speed' updates, this might be tricky.
-        // Assuming your backend supports { "override_jd": 245... } or similar?
-        // If not, we can simulate it by sending start_jd = current.
         
         const jd = (currentDate.getTime() / 86400000) + 2440587.5;
         
@@ -2025,22 +2054,61 @@ function animate() {
      // Trigger WS update logic here if needed, or rely on existing stream
   }
 
-  // Camera Following Logic
+  // ── CAMERA LOGIC ────────────────────────────────────────────────
   if (focusedBodyId && bodyMeshes[focusedBodyId]) {
     const mesh = bodyMeshes[focusedBodyId];
-    const currentBodyPosition = mesh.position;
-    
-    // Move camera by the difference
-    const posDelta = new THREE.Vector3().subVectors(currentBodyPosition, previousBodyPosition);
-    camera.position.add(posDelta);
-    
-    // Keep looking at target
-    controls.target.copy(currentBodyPosition);
-    
-    // Update tracking var
+    // Clone position to ensure we have a stable snapshot for this frame
+    const currentBodyPosition = mesh.position.clone();
+
+    // 1. PHYSICAL TRACKING (The Fix for SimSpeed > 1)
+    // Calculate exactly how much the planet moved this frame
+    const deltaMovement = new THREE.Vector3().subVectors(currentBodyPosition, previousBodyPosition);
+
+    // Apply this movement to the camera rig immediately.
+    // This ensures the camera falls "in sync" with the planet's speed,
+    // so it doesn't matter if simSpeed is 1 or 100.
+    camera.position.add(deltaMovement);
+    controls.target.add(deltaMovement);
+
+    // 2. VISUAL ZOOMING ("The Animation")
+    if (isFlyingToTarget) {
+      
+      // A. Calculate Target Zoom Distance
+      const visualSizeFactor = 10; 
+      const rawRadius = (DISPLAY_RADIUS[focusedBodyId] || 1.0);
+      const planetRadius = rawRadius * visualSizeFactor;
+
+      // Distance: 4x radius + 50 units buffer (prevents being too zoomed in)
+      const idealDist = (planetRadius * 4.0) + 50.0; 
+
+      // B. Calculate where the camera SHOULD be relative to the moving planet
+      // Get vector from Planet -> Camera
+      const currentDir = new THREE.Vector3().subVectors(camera.position, currentBodyPosition).normalize();
+      
+      // Safety check
+      if (currentDir.lengthSq() === 0) currentDir.set(0, 0, 1);
+
+      // The target is the Planet Position + (Direction * Distance)
+      const targetPos = currentBodyPosition.clone().add(currentDir.multiplyScalar(idealDist));
+      
+      // C. Smooth Move (Lerp)
+      // Since the camera is already moving WITH the planet (via Step 1), 
+      // this lerp just gently closes the gap.
+      camera.position.lerp(targetPos, 0.1); 
+      controls.target.lerp(currentBodyPosition, 0.1);
+
+      // D. Check Arrival
+      if (camera.position.distanceTo(targetPos) < 2.0) {
+        isFlyingToTarget = false;
+        controls.enableDamping = true; // Re-enable manual rotation
+      }
+    } 
+
+    // 3. Update history for the next frame
     previousBodyPosition.copy(currentBodyPosition);
   }
 
+  // Update controls LAST
   controls.update();
   renderer.render(scene, camera);
   labelRenderer.render(scene, camera);

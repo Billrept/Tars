@@ -38,6 +38,12 @@
       <span id="status-dot" class="dot"></span>
       <span id="status-text">Connecting...</span>
     </div>
+    <div class="search-container">
+      <input type="text" id="search-input" placeholder="Search planet..." list="planet-list">
+      <datalist id="planet-list">
+        <!-- Options will be populated by JS -->
+      </datalist>
+    </div>
     <div class="sim-controls">
       <label>Speed
         <input type="range" id="sim-speed" min="0" max="100" value="10" />
