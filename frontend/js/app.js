@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { jdToIso, pointToUnixMs, findClosestIndexByTime } from './utils/dateUtils.js';
+import { Timer } from 'three/addons/misc/Timer.js'; 
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
 const API = 'http://localhost:8000';
@@ -53,6 +54,7 @@ let mouse = new THREE.Vector2();
 let focusedBodyId = null; 
 let previousBodyPosition = new THREE.Vector3(); // To track delta movement
 let hoveredBodyId = null;
+const timer = new Timer();
 
 // Planet display radii (scene units) — exaggerated for visibility
 const DISPLAY_RADIUS = {
@@ -61,11 +63,11 @@ const DISPLAY_RADIUS = {
   299: 1.6,    // Venus
   399: 1.8,    // Earth
   499: 1.5,    // Mars
-  599: 4,      // Jupiter
+  599: 4.0,      // Jupiter
   699: 3.5,    // Saturn
   799: 2.5,    // Uranus
   899: 2.4,    // Neptune
-  999: 1.0,    // Pluto
+  999: 1.0,    // Ceres
 };
 
 // ── Planet Data Dictionary ────────────────────────────────────────────────
@@ -81,6 +83,38 @@ const PLANET_INFO = {
   899: { type: 'Ice Giant', radius: '24,622 km', day: '16h 6m', year: '165 years', temp: '-200°C', desc: 'The most distant major planet, dark, cold, and whipped by supersonic winds.' },
   999: { type: 'Dwarf Planet', radius: '1,188 km', day: '153 hours', year: '248 years', temp: '-225°C', desc: 'A dwarf planet in the Kuiper belt, a ring of bodies beyond Neptune.' }
 };
+
+// ── Textures ──────────────────────────────────────────────────────────────
+const textureLoader = new THREE.TextureLoader();
+
+const TEXTURE_MAP = {
+  10:  '2k_sun.jpg',        // Sun
+  199: '2k_mercury.jpg',    // Mercury
+  299: '2k_venus_surface.jpg', // Venus
+  399: '2k_earth_daymap.jpg',  // Earth
+  499: '2k_mars.jpg',       // Mars
+  599: '2k_jupiter.jpg',    // Jupiter
+  699: '2k_saturn.jpg',     // Saturn
+  799: '2k_uranus.jpg',     // Uranus
+  899: '2k_neptune.jpg',    // Neptune
+  999: '2k_ceres_fictional.jpg'      // Ceres
+};
+
+// ── Rotation Periods (in Earth Days) ───────────────────────────────────────
+const ROTATION_PERIODS = {
+  10:  25.0,    // Sun
+  199: 58.6,    // Mercury
+  299: -243.0,  // Venus (Retrograde)
+  399: 1.0,     // Earth
+  499: 1.03,    // Mars
+  599: 0.41,    // Jupiter (Fast!)
+  699: 0.45,    // Saturn
+  799: 0.72,    // Uranus
+  899: 0.67,    // Neptune
+  999: 6.39     // Pluto
+};
+
+
 
 // ── Init ───────────────────────────────────────────────────────────────────
 async function init() {
@@ -131,7 +165,7 @@ function initScene() {
   scene.add(new THREE.AmbientLight(0x334466, 0.5));
 
   // Sun point light
-  const sunLight = new THREE.PointLight(0xfff8e7, 2, 0, 0.5);
+  const sunLight = new THREE.PointLight(0xfff8e7, 5.0, 0, 0); 
   sunLight.position.set(0, 0, 0);
   scene.add(sunLight);
 
@@ -328,17 +362,31 @@ function createCss2DLabel(text) {
 function ensureBodyMesh(body) {
   if (bodyMeshes[body.naif_id]) return bodyMeshes[body.naif_id];
 
-  const radius = DISPLAY_RADIUS[body.naif_id] || 0.8;
-  const color = new THREE.Color(body.color);
+  const visualSizeFactor = 10;
 
+  const radius = (DISPLAY_RADIUS[body.naif_id] || 0.8) * visualSizeFactor;
+  const textureFile = TEXTURE_MAP[body.naif_id];
+  
   let mesh;
+
+  // 1. THE SUN (Needs special handling: Emissive, no shadows)
   if (body.naif_id === 10) {
-    // Sun — emissive sphere + glow
-    const geo = new THREE.SphereGeometry(radius, 32, 32);
-    const mat = new THREE.MeshBasicMaterial({ color });
+    const geo = new THREE.SphereGeometry(radius, 64, 64);
+    let mat;
+
+    if (textureFile) {
+      // Use texture if available
+      mat = new THREE.MeshBasicMaterial({
+        map: textureLoader.load(`js/textures/${textureFile}`),
+      });
+    } else {
+      // Fallback to solid yellow
+      mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(body.color) });
+    }
+
     mesh = new THREE.Mesh(geo, mat);
 
-    // Glow sprite
+    // Keep the glow sprite you already had
     const spriteMat = new THREE.SpriteMaterial({
       map: createGlowTexture(),
       color: 0xfff0c0,
@@ -349,35 +397,46 @@ function ensureBodyMesh(body) {
     const glow = new THREE.Sprite(spriteMat);
     glow.scale.set(radius * 8, radius * 8, 1);
     mesh.add(glow);
-  } else {
-    const geo = new THREE.SphereGeometry(radius, 24, 24);
-    const mat = new THREE.MeshStandardMaterial({
-      color,
-      roughness: 0.8,
+  } 
+  
+  // 2. PLANETS (Standard Material that reacts to light)
+  else {
+    const geo = new THREE.SphereGeometry(radius, 64, 64); // Increased segments for smoother textures
+    const matParams = {
+      roughness: 0.7,
       metalness: 0.1,
-      emissive: color,
-      emissiveIntensity: 0.05,
-    });
+    };
+
+    if (textureFile) {
+      // Load texture
+      matParams.map = textureLoader.load(`js/textures/${textureFile}`);
+      matParams.color = 0xffffff; // Important! White base ensures texture colors assume their natural hue
+    } else {
+      // Fallback: Use the color from the API
+      matParams.color = new THREE.Color(body.color);
+      matParams.emissive = new THREE.Color(body.color);
+      matParams.emissiveIntensity = 0.05;
+    }
+
+    const mat = new THREE.MeshStandardMaterial(matParams);
     mesh = new THREE.Mesh(geo, mat);
   }
 
-  // Create an invisible hitbox (2x to 4x larger than the visual planet)
-  // For very small planets, we ensure a minimum clickable size
-  const hitboxRadius = Math.max(radius * 10, 3.0); 
+  // 3. HITBOX (Invisible sphere for easier clicking)
+  const hitboxRadius = Math.max(radius * 3, 3.0); // Adjusted size
   const hitboxGeo = new THREE.SphereGeometry(hitboxRadius, 16, 16);
   const hitboxMat = new THREE.MeshBasicMaterial({ 
-    visible: false, // Invisible!
-    color: 0xff0000,
-    wireframe: true // Helpful for debugging if you set visible: true
+    visible: false,
+    color: 0xff0000 
   });
   
   const hitbox = new THREE.Mesh(hitboxGeo, hitboxMat);
-  hitbox.userData = { isHitbox: true, parentBody: body }; // Tag it
-  mesh.add(hitbox); // Attach to planet so it moves with it
+  hitbox.userData = { isHitbox: true, parentBody: body };
+  mesh.add(hitbox);
 
-  // Name label (CSS2D)
+  // 4. LABEL
   const label = createCss2DLabel(body.name);
-  label.position.set(0, radius - 25, 0);
+  label.position.set(0, radius + (radius * 0.5) + 2, 0); // Position label roughly above current radius
   mesh.add(label);
 
   mesh.userData = { body };
@@ -385,6 +444,7 @@ function ensureBodyMesh(body) {
   bodyMeshes[body.naif_id] = mesh;
   return mesh;
 }
+
 
 function createGlowTexture() {
   const size = 128;
@@ -1621,10 +1681,6 @@ async function visualizeWindows() {
   });
 }
 
-function toggleAdvanced() {
-  // Deleted
-}
-
 // ── Multi-Leg Trajectory ───────────────────────────────────────────────────
 // (Manual functions removed, kept only formatting helpers if needed)
 
@@ -1650,24 +1706,57 @@ async function fetchAndDrawOptimizedMultiLeg(bodies, depJd, legTofs) {
   } catch (_) { }
 }
 
-// ── Render Loop ────────────────────────────────────────────────────────────
 function animate() {
   requestAnimationFrame(animate);
 
+  // 1. Update the timer first!
+  timer.update(); 
+  
+  // 2. Get the time passed since last frame (in seconds)
+  const delta = timer.getDelta(); 
+
+  // ── ROTATION LOGIC ───────────────────────────────────────────
+  for (const [id, mesh] of Object.entries(bodyMeshes)) {
+    // Rotation Period in Earth Days (default to 1.0 if missing)
+    // Make sure you added the ROTATION_PERIODS constant I gave you earlier!
+    const periodDays = (typeof ROTATION_PERIODS !== 'undefined' && ROTATION_PERIODS[id]) 
+                       ? ROTATION_PERIODS[id] 
+                       : 1.0; 
+
+    // Calculate rotation speed
+    // Formula: (2 * PI) / (Period * DayLength)
+    // We multiply by simSpeed so visual rotation matches simulation speed
+    // If sim is paused, we use a tiny 'idle' rotation (0.05) or 0
+    
+    // Safety check: preserve sign of simSpeed but keep it positive for multiplier 
+    // (unless you want retrograde time, but let's keep visuals simple)
+    const visualSpeedFactor = 1; 
+    
+    // We limit 'effectiveSpeed' slightly so if you crank time scale to 100 days/sec, 
+    // the planets don't turn into a blurry mess.
+    const speed = simPaused ? 0.2 : Math.min(Math.abs(simSpeed), 20); 
+
+    const rotationStep = (delta * speed * visualSpeedFactor) / Math.abs(periodDays);
+
+    if (mesh) {
+        mesh.rotation.y += rotationStep;
+    }
+  }
+  // ─────────────────────────────────────────────────────────────
+
+  // Camera Following Logic
   if (focusedBodyId && bodyMeshes[focusedBodyId]) {
     const mesh = bodyMeshes[focusedBodyId];
     const currentBodyPosition = mesh.position;
-
-    // 1. Calculate how much the planet moved since last frame
-    const delta = new THREE.Vector3().subVectors(currentBodyPosition, previousBodyPosition);
-
-    // 2. Add that movement to the camera's position
-    camera.position.add(delta);
-
-    // 3. Update the controls target to look at the new planet position
+    
+    // Move camera by the difference
+    const posDelta = new THREE.Vector3().subVectors(currentBodyPosition, previousBodyPosition);
+    camera.position.add(posDelta);
+    
+    // Keep looking at target
     controls.target.copy(currentBodyPosition);
-
-    // 4. Update previous position for the next frame
+    
+    // Update tracking var
     previousBodyPosition.copy(currentBodyPosition);
   }
 
@@ -1675,6 +1764,7 @@ function animate() {
   renderer.render(scene, camera);
   labelRenderer.render(scene, camera);
 }
+
 
 // ── Boot ───────────────────────────────────────────────────────────────────
 init();
