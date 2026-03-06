@@ -69,7 +69,9 @@ const particleMaterial = new THREE.MeshBasicMaterial({
 });
 let particlePool = []; 
 let activeParticles = []; // { mesh, life }
-
+// Mouse Interaction State
+let mouseDownTime = 0;
+let mouseDownPos = new THREE.Vector2();
 
 
 // ── Mission State ──────────────────────────────────────────────────────────
@@ -721,31 +723,43 @@ function updatePlanetPositions(snapshot) {
 }
 
 function onMouseClick(event) {
-  // 1. Calculate mouse position
+  // 1. CHECK FOR DRAG (The Fix)
+  // Calculate how far the mouse moved between Down and Up
+  const dx = event.clientX - mouseDownPos.x;
+  const dy = event.clientY - mouseDownPos.y;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  // If moved more than 5 pixels, assume it was a drag/rotation.
+  // STOP execution here. Do NOT unlock camera.
+  if (distance > 5) return;
+
+
+  // 2. EXISTING LOGIC...
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
   raycaster.setFromCamera(mouse, camera);
 
-  // 2. Intersect with planets
+  // Intersect with planets
   const meshes = Object.values(bodyMeshes);
+  
+  // Note: Since we switched to Groups (rootGroup), we need recursive=true
   const intersects = raycaster.intersectObjects(meshes, true);
 
   if (intersects.length > 0) {
-    // Get the first object hit
     const hitObj = intersects[0].object;
 
-    // Check if it's our invisible hitbox
+    // Handle Hitbox
     if (hitObj.userData.isHitbox) {
-      // Use the parent body data we stored
       focusOnBody(hitObj.userData.parentBody.naif_id);
       return;
     }
 
-    // Standard check (if they clicked the visual mesh directly)
+    // Handle Visual Mesh (traverse up to find root group data)
     let object = hitObj;
+    // Walk up until we find the root group with 'body' data
     while(object.parent && !object.userData.body) {
-      object = object.parent;
+       object = object.parent;
     }
 
     if (object.userData.body) {
@@ -753,11 +767,13 @@ function onMouseClick(event) {
     }
   } else {
     // Clicked empty space
+    // Only unlock if we actually CLICKED, which we verified in Step 1
     if (focusedBodyId !== null) {
       unlockCamera();
     }
   }
 }
+
 
 function unlockCamera() {
   focusedBodyId = null;
@@ -1447,9 +1463,6 @@ function bindEvents() {
   const vizBtn = document.getElementById('btn-viz-window');
   if (vizBtn) vizBtn.addEventListener('click', visualizeWindows);
 
-
-
-
   // Multi-leg preset button
   const mlBtn = document.getElementById('btn-ml-preset');
   if (mlBtn) {
@@ -1500,6 +1513,12 @@ function bindEvents() {
   if(unlockBtn) {
     unlockBtn.addEventListener('click', unlockCamera);
   }
+
+  window.addEventListener('mousedown', (event) => {
+    mouseDownPos.x = event.clientX;
+    mouseDownPos.y = event.clientY;
+    mouseDownTime = performance.now();
+  });
 
   window.addEventListener('click', onMouseClick);
   window.addEventListener('mousemove', onMouseMove);
