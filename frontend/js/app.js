@@ -73,15 +73,18 @@ const DISPLAY_RADIUS = {
   299: 1.6,    // Venus
   399: 1.8,    // Earth
   499: 1.5,    // Mars
-  599: 4.0,      // Jupiter
+  599: 4.0,    // Jupiter
   699: 3.5,    // Saturn
   799: 2.5,    // Uranus
   899: 2.4,    // Neptune
-  999: 1.0,    // Ceres
+  999: 1.0,    // Pluto (Small)
+  2000001: 0.8 // Ceres (Smaller)
 };
+
 
 // ── Planet Data Dictionary ────────────────────────────────────────────────
 const PLANET_INFO = {
+  // ... (keep 10 to 899 as they are) ...
   10:  { type: 'Star', radius: '696,340 km', day: '25 days', year: '230 M yr', temp: '5,500°C', desc: 'The star at the center of our Solar System.' },
   199: { type: 'Planet', radius: '2,439 km', day: '59 days', year: '88 days', temp: '167°C', desc: 'The smallest planet in the Solar System and the closest to the Sun.' },
   299: { type: 'Planet', radius: '6,051 km', day: '243 days', year: '225 days', temp: '464°C', desc: 'Second planet from the Sun. It has a thick atmosphere trapping heat.' },
@@ -91,40 +94,44 @@ const PLANET_INFO = {
   699: { type: 'Gas Giant', radius: '58,232 km', day: '10h 42m', year: '29 years', temp: '-140°C', desc: 'Adorned with a dazzling, complex system of icy rings.' },
   799: { type: 'Ice Giant', radius: '25,362 km', day: '17h 14m', year: '84 years', temp: '-195°C', desc: 'Rotates at a nearly 90-degree angle from the plane of its orbit.' },
   899: { type: 'Ice Giant', radius: '24,622 km', day: '16h 6m', year: '165 years', temp: '-200°C', desc: 'The most distant major planet, dark, cold, and whipped by supersonic winds.' },
-  999: { type: 'Dwarf Planet', radius: '1,188 km', day: '153 hours', year: '248 years', temp: '-225°C', desc: 'A dwarf planet in the Kuiper belt, a ring of bodies beyond Neptune.' }
+  999: { type: 'Dwarf Planet', radius: '1,188 km', day: '153 hours', year: '248 years', temp: '-225°C', desc: 'Once considered the ninth planet, it has a large heart-shaped glacier.' },
+  2000001: { type: 'Dwarf Planet', radius: '473 km', day: '9 hours', year: '4.6 years', temp: '-105°C', desc: 'The largest object in the asteroid belt between Mars and Jupiter.' }
 };
+
 
 // ── Textures ──────────────────────────────────────────────────────────────
 const textureLoader = new THREE.TextureLoader();
 
+// ── Textures ──────────────────────────────────────────────────────────────
 const TEXTURE_MAP = {
-  10:  '2k_sun.jpg',        // Sun
-  199: '2k_mercury.jpg',    // Mercury
-  299: '2k_venus_surface.jpg', // Venus
-  399: '2k_earth_daymap.jpg',  // Earth
-  499: '2k_mars.jpg',       // Mars
-  599: '2k_jupiter.jpg',    // Jupiter
-  699: '2k_saturn.jpg',     // Saturn
-  799: '2k_uranus.jpg',     // Uranus
-  899: '2k_neptune.jpg',    // Neptune
-  999: '2k_ceres_fictional.jpg'      // Ceres
+  10:  '2k_sun.jpg',
+  199: '2k_mercury.jpg',
+  299: '2k_venus_surface.jpg',
+  399: '2k_earth_daymap.jpg',
+  499: '2k_mars.jpg',
+  599: '2k_jupiter.jpg',
+  699: '2k_saturn.jpg',
+  799: '2k_uranus.jpg',
+  899: '2k_neptune.jpg',
+  999: '2k_pluto.jpg',
+  2000001: '2k_ceres_fictional.jpg' 
 };
+
 
 // ── Rotation Periods (in Earth Days) ───────────────────────────────────────
 const ROTATION_PERIODS = {
-  10:  25.0,    // Sun
-  199: 58.6,    // Mercury
-  299: -243.0,  // Venus (Retrograde)
-  399: 1.0,     // Earth
-  499: 1.03,    // Mars
-  599: 0.41,    // Jupiter (Fast!)
-  699: 0.45,    // Saturn
-  799: 0.72,    // Uranus
-  899: 0.67,    // Neptune
-  999: 6.39     // Pluto
+  10:  25.0,
+  199: 58.6,
+  299: -243.0,
+  399: 1.0,
+  499: 1.03,
+  599: 0.41,
+  699: 0.45,
+  799: 0.72,
+  899: 0.67,
+  999: 6.39,
+  2000001: 0.375
 };
-
-
 
 // ── Init ───────────────────────────────────────────────────────────────────
 async function init() {
@@ -348,7 +355,6 @@ async function fetchOrbits() {
       const data = await res.json();
 
       orbitPoints[data.body] = data.points;
-      
       // CALL DRAWING FUNCTION
       drawOrbitPath(body.naif_id, data.points);
 
