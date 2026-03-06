@@ -383,93 +383,143 @@ function createCss2DLabel(text) {
   return label;
 }
 
-// ── Create Body Meshes ─────────────────────────────────────────────────────
 function ensureBodyMesh(body) {
   if (bodyMeshes[body.naif_id]) return bodyMeshes[body.naif_id];
 
   const visualSizeFactor = 10;
-
-  const radius = (DISPLAY_RADIUS[body.naif_id] || 0.8) * visualSizeFactor;
+  const rawRadius = (DISPLAY_RADIUS[body.naif_id] || 0.8);
+  const radius = rawRadius * visualSizeFactor;
   const textureFile = TEXTURE_MAP[body.naif_id];
-  
-  let mesh;
 
-  // 1. THE SUN (Needs special handling: Emissive, no shadows)
+  // 1. ROOT GROUP: Handles Position (Orbit)
+  const rootGroup = new THREE.Group();
+  rootGroup.userData = { body, naifId: body.naif_id };
+
+  // 2. TILT GROUP: Handles Axial Tilt (Static)
+  const tiltGroup = new THREE.Group();
+  
+  // Apply axial tilt here (Z-axis only)
+  // Earth = 23.5, Mars = 25, Saturn = 26.7, Uranus = 98 (side)
+  let tiltDeg = 0;
+  if (body.naif_id === 399) tiltDeg = 23.5;
+  if (body.naif_id === 499) tiltDeg = 25.0;
+  if (body.naif_id === 699) tiltDeg = 26.7;
+  if (body.naif_id === 799) tiltDeg = 97.7;
+  
+  tiltGroup.rotation.z = tiltDeg * (Math.PI / 180);
+  rootGroup.add(tiltGroup);
+
+  // 3. SPIN MESH: The Visual Sphere + Rings (Rotates Y in loop)
+  let spinMesh; // This is what we will rotate in animate()
+
+  // ── A. THE SUN ──────────────────────────────────────────────
   if (body.naif_id === 10) {
     const geo = new THREE.SphereGeometry(radius, 64, 64);
-    let mat;
+    const mat = new THREE.MeshBasicMaterial({
+      map: textureFile ? textureLoader.load(`js/textures/${textureFile}`) : null,
+      color: textureFile ? 0xffffff : new THREE.Color(body.color)
+    });
+    spinMesh = new THREE.Mesh(geo, mat);
 
-    if (textureFile) {
-      // Use texture if available
-      mat = new THREE.MeshBasicMaterial({
-        map: textureLoader.load(`js/textures/${textureFile}`),
-      });
-    } else {
-      // Fallback to solid yellow
-      mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(body.color) });
-    }
-
-    mesh = new THREE.Mesh(geo, mat);
-
-    // Keep the glow sprite you already had
+    // Glow (Add to Root, not Spin, so it doesn't spin weirdly if not spherical)
     const spriteMat = new THREE.SpriteMaterial({
       map: createGlowTexture(),
-      color: 0xfff0c0,
-      transparent: true,
-      opacity: 0.4,
-      blending: THREE.AdditiveBlending,
+      color: 0xfff0c0, transparent: true, opacity: 0.2, 
+      blending: THREE.AdditiveBlending 
     });
     const glow = new THREE.Sprite(spriteMat);
-    glow.scale.set(radius * 4, radius * 4, 1);
-    mesh.add(glow);
-  } 
-  
-  // 2. PLANETS (Standard Material that reacts to light)
-  else {
-    const geo = new THREE.SphereGeometry(radius, 64, 64); // Increased segments for smoother textures
-    const matParams = {
-      roughness: 0.7,
-      metalness: 0.1,
-    };
-
-    if (textureFile) {
-      // Load texture
-      matParams.map = textureLoader.load(`js/textures/${textureFile}`);
-      matParams.color = 0xffffff; // Important! White base ensures texture colors assume their natural hue
-    } else {
-      // Fallback: Use the color from the API
-      matParams.color = new THREE.Color(body.color);
-      matParams.emissive = new THREE.Color(body.color);
-      matParams.emissiveIntensity = 0.05;
-    }
-
-    const mat = new THREE.MeshStandardMaterial(matParams);
-    mesh = new THREE.Mesh(geo, mat);
+    glow.scale.set(radius * 4.0, radius * 4.0, 1);
+    rootGroup.add(glow); 
   }
 
-  // 3. HITBOX (Invisible sphere for easier clicking)
-  const hitboxRadius = Math.max(radius * 3, 3.0); // Adjusted size
-  const hitboxGeo = new THREE.SphereGeometry(hitboxRadius, 16, 16);
-  const hitboxMat = new THREE.MeshBasicMaterial({ 
-    visible: false,
-    color: 0xff0000 
-  });
+  // ── B. EARTH (Clouds + Specular) ─────────────────────────────
+  else if (body.naif_id === 399) {
+    const geo = new THREE.SphereGeometry(radius, 64, 64);
+    const matParams = {
+      map: textureLoader.load(`js/textures/${textureFile}`),
+      roughness: 0.5, metalness: 0.1
+    };
+    if (TEXTURE_MAP['399_specular']) {
+       matParams.roughnessMap = textureLoader.load(`js/textures/${TEXTURE_MAP['399_specular']}`);
+    }
+    spinMesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial(matParams));
+
+    // Clouds (Child of SpinMesh, but rotates slightly faster in code)
+    if (TEXTURE_MAP['399_clouds']) {
+        const cloudGeo = new THREE.SphereGeometry(radius * 1.015, 64, 64);
+        const cloudMat = new THREE.MeshStandardMaterial({
+            map: textureLoader.load(`js/textures/${TEXTURE_MAP['399_clouds']}`),
+            transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, side: THREE.DoubleSide
+        });
+        const cloudMesh = new THREE.Mesh(cloudGeo, cloudMat);
+        spinMesh.add(cloudMesh);
+        spinMesh.userData.cloudMesh = cloudMesh; 
+    }
+  }
+
+  // ── C. STANDARD PLANETS (Saturn, etc) ────────────────────────
+  else {
+    const geo = new THREE.SphereGeometry(radius, 64, 64);
+    const mat = new THREE.MeshStandardMaterial({
+      map: textureFile ? textureLoader.load(`js/textures/${textureFile}`) : null,
+      color: textureFile ? 0xffffff : new THREE.Color(body.color),
+      roughness: 0.7, metalness: 0.1
+    });
+    spinMesh = new THREE.Mesh(geo, mat);
+  }
+
+  // Add SpinMesh to TiltGroup
+  tiltGroup.add(spinMesh);
   
-  const hitbox = new THREE.Mesh(hitboxGeo, hitboxMat);
+  // Store ref for animation loop
+  rootGroup.userData.spinMesh = spinMesh;
+
+  // ── RINGS (Saturn) ───────────────────────────────────────────
+  // Rings are attached to the SPIN MESH, so they tilt with the group
+  // and spin with the planet (though spinning a uniform ring isn't visible, it's physically correct)
+  if (body.naif_id === 699 && TEXTURE_MAP['699_ring']) {
+      const inner = radius * 1.3;
+      const outer = radius * 2.2;
+      const ringGeo = new THREE.RingGeometry(inner, outer, 64);
+      
+      // Fix UVs
+      const pos = ringGeo.attributes.position;
+      const v3 = new THREE.Vector3();
+      for (let i = 0; i < pos.count; i++){
+          v3.fromBufferAttribute(pos, i);
+          const len = v3.length(); 
+          ringGeo.attributes.uv.setXY(i, (len - inner) / (outer-inner), 0.5); 
+      }
+      
+      const ringMat = new THREE.MeshStandardMaterial({
+          map: textureLoader.load(`js/textures/${TEXTURE_MAP['699_ring']}`),
+          color: 0xdddddd, side: THREE.DoubleSide, transparent: true, opacity: 0.9
+      });
+      
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.rotation.x = -Math.PI / 2; // Flat relative to planet equator
+      ring.castShadow = true; 
+      ring.receiveShadow = true;
+      spinMesh.add(ring);
+  }
+
+  // ── EXTRAS (Hitbox & Labels - attached to ROOT so they don't spin/tilt weirdly) ──
+  const hitboxRadius = Math.max(radius * 3, 3.0);
+  const hitbox = new THREE.Mesh(
+    new THREE.SphereGeometry(hitboxRadius, 12, 12),
+    new THREE.MeshBasicMaterial({ visible: false })
+  );
   hitbox.userData = { isHitbox: true, parentBody: body };
-  mesh.add(hitbox);
+  rootGroup.add(hitbox);
 
-  // 4. LABEL
   const label = createCss2DLabel(body.name);
-  label.position.set(0, radius + (radius * 0.5) + 2, 0); // Position label roughly above current radius
-  mesh.add(label);
+  label.position.set(0, radius * 1.5 + 2, 0);
+  rootGroup.add(label); // Label stays upright regardless of planet tilt
 
-  mesh.userData = { body };
-  scene.add(mesh);
-  bodyMeshes[body.naif_id] = mesh;
-  return mesh;
+  scene.add(rootGroup);
+  bodyMeshes[body.naif_id] = rootGroup;
+  return rootGroup;
 }
-
 
 function createGlowTexture() {
   const size = 128;
@@ -1976,25 +2026,28 @@ function animate() {
     }
   }
 
-  // ── ROTATION LOGIC ───────────────────────────────────────────
-  for (const [id, mesh] of Object.entries(bodyMeshes)) {
-    // Rotation Period in Earth Days (default to 1.0 if missing)
-    // Make sure you added the ROTATION_PERIODS constant I gave you earlier!
-    const periodDays = (typeof ROTATION_PERIODS !== 'undefined' && ROTATION_PERIODS[id]) 
-                       ? ROTATION_PERIODS[id] 
-                       : 1.0; 
-    const visualSpeedFactor = 1; 
+    // ── ROTATION LOGIC ───────────────────────────────────────────
+  for (const [id, rootGroup] of Object.entries(bodyMeshes)) {
+    // 1. Calc Speed
+    const periodDays = (typeof ROTATION_PERIODS !== 'undefined' && ROTATION_PERIODS[id]) || 1.0; 
+    const visualSpeedFactor = 1.0; 
     const speed = simPaused ? 0.2 : Math.min(Math.abs(simSpeed), 20); 
-
     const rotationStep = (delta * speed * visualSpeedFactor) / Math.abs(periodDays);
 
-    if (mesh) {
-        mesh.rotation.y += rotationStep;
-    }
-  }
-  
-  if (document.getElementById('status-text').textContent !== "") {
-     // Trigger WS update logic here if needed, or rely on existing stream
+    // 2. Rotate the SPIN MESH (The Sphere inside the Tilt Group)
+    if (rootGroup.userData.spinMesh) {
+        const planet = rootGroup.userData.spinMesh;
+        
+        // This rotates the planet around its OWN local Y axis (which is tilted 26 deg).
+        // Because it's inside a tilted group, it spins perfectly "on axis".
+        planet.rotation.y += rotationStep;
+
+        // 3. Clouds (Child of SpinMesh)
+        // Clouds rotate slightly differently relative to the surface
+        if (planet.userData.cloudMesh) {
+             planet.userData.cloudMesh.rotation.y += (rotationStep * 0.15); // Extra speed
+        }
+    } 
   }
 
   // ── CAMERA LOGIC ────────────────────────────────────────────────

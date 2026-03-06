@@ -20,9 +20,13 @@ export const TEXTURE_MAP = {
   199: '2k_mercury.jpg',
   299: '2k_venus_surface.jpg',
   399: '2k_earth_daymap.jpg',
+  '399_clouds': '2k_earth_clouds.jpg',     // Cloud Map
+  '399_specular': '2k_earth_specular_map.tif', // Water reflection map (optional, uses .tif or .jpg)
+  '399_night': '2k_earth_nightmap.jpg',    // (Optional)
   499: '2k_mars.jpg',
   599: '2k_jupiter.jpg',
   699: '2k_saturn.jpg',
+  '699_ring': '2k_saturn_ring_alpha.png',  // Your ring texture
   799: '2k_uranus.jpg',
   899: '2k_neptune.jpg',
   999: '2k_pluto.jpg',
