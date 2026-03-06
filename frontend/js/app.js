@@ -8,6 +8,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { jdToIso, pointToUnixMs, findClosestIndexByTime } from './utils/dateUtils.js';
 import { Timer } from 'three/addons/misc/Timer.js'; 
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { PLANET_INFO, DISPLAY_RADIUS, TEXTURE_MAP, ROTATION_PERIODS } from './planetData.js';
 
 const API = 'http://localhost:8000';
 const WS = 'ws://localhost:8000';
@@ -65,73 +66,8 @@ let isFlyingToTarget = false; // Controls the transition animation
 let activeMission = null; // Object { mesh, pathPoints, startTime, durationMs }
 let spacecraftMesh = null;
 
-
-// Planet display radii (scene units) — exaggerated for visibility
-const DISPLAY_RADIUS = {
-  10: 6,       // Sun
-  199: 1.2,    // Mercury
-  299: 1.6,    // Venus
-  399: 1.8,    // Earth
-  499: 1.5,    // Mars
-  599: 4.0,    // Jupiter
-  699: 3.5,    // Saturn
-  799: 2.5,    // Uranus
-  899: 2.4,    // Neptune
-  999: 1.0,    // Pluto (Small)
-  2000001: 0.8 // Ceres (Smaller)
-};
-
-
-// ── Planet Data Dictionary ────────────────────────────────────────────────
-const PLANET_INFO = {
-  // ... (keep 10 to 899 as they are) ...
-  10:  { type: 'Star', radius: '696,340 km', day: '25 days', year: '230 M yr', temp: '5,500°C', desc: 'The star at the center of our Solar System.' },
-  199: { type: 'Planet', radius: '2,439 km', day: '59 days', year: '88 days', temp: '167°C', desc: 'The smallest planet in the Solar System and the closest to the Sun.' },
-  299: { type: 'Planet', radius: '6,051 km', day: '243 days', year: '225 days', temp: '464°C', desc: 'Second planet from the Sun. It has a thick atmosphere trapping heat.' },
-  399: { type: 'Planet', radius: '6,371 km', day: '24 hours', year: '365 days', temp: '15°C', desc: 'Our home. The only known planet to harbor life.' },
-  499: { type: 'Planet', radius: '3,389 km', day: '24h 37m', year: '687 days', temp: '-65°C', desc: 'The Red Planet. Dusty, cold, desert world with a very thin atmosphere.' },
-  599: { type: 'Gas Giant', radius: '69,911 km', day: '9h 56m', year: '12 years', temp: '-110°C', desc: 'The largest planet in the Solar System.' },
-  699: { type: 'Gas Giant', radius: '58,232 km', day: '10h 42m', year: '29 years', temp: '-140°C', desc: 'Adorned with a dazzling, complex system of icy rings.' },
-  799: { type: 'Ice Giant', radius: '25,362 km', day: '17h 14m', year: '84 years', temp: '-195°C', desc: 'Rotates at a nearly 90-degree angle from the plane of its orbit.' },
-  899: { type: 'Ice Giant', radius: '24,622 km', day: '16h 6m', year: '165 years', temp: '-200°C', desc: 'The most distant major planet, dark, cold, and whipped by supersonic winds.' },
-  999: { type: 'Dwarf Planet', radius: '1,188 km', day: '153 hours', year: '248 years', temp: '-225°C', desc: 'Once considered the ninth planet, it has a large heart-shaped glacier.' },
-  2000001: { type: 'Dwarf Planet', radius: '473 km', day: '9 hours', year: '4.6 years', temp: '-105°C', desc: 'The largest object in the asteroid belt between Mars and Jupiter.' }
-};
-
-
 // ── Textures ──────────────────────────────────────────────────────────────
 const textureLoader = new THREE.TextureLoader();
-
-// ── Textures ──────────────────────────────────────────────────────────────
-const TEXTURE_MAP = {
-  10:  '2k_sun.jpg',
-  199: '2k_mercury.jpg',
-  299: '2k_venus_surface.jpg',
-  399: '2k_earth_daymap.jpg',
-  499: '2k_mars.jpg',
-  599: '2k_jupiter.jpg',
-  699: '2k_saturn.jpg',
-  799: '2k_uranus.jpg',
-  899: '2k_neptune.jpg',
-  999: '2k_pluto.jpg',
-  2000001: '2k_ceres_fictional.jpg' 
-};
-
-
-// ── Rotation Periods (in Earth Days) ───────────────────────────────────────
-const ROTATION_PERIODS = {
-  10:  25.0,
-  199: 58.6,
-  299: -243.0,
-  399: 1.0,
-  499: 1.03,
-  599: 0.41,
-  699: 0.45,
-  799: 0.72,
-  899: 0.67,
-  999: 6.39,
-  2000001: 0.375
-};
 
 // ── Init ───────────────────────────────────────────────────────────────────
 async function init() {
@@ -709,38 +645,26 @@ function focusOnBody(naifId) {
 
   // 3. Update UI
   updatePlanetInfoPanel(naifId, mesh.userData.body);
-
-  const bodyData = mesh.userData.body;
-  const info = PLANET_INFO[naifId] || { 
-    type: 'Unknown', radius: '?', day: '?', year: '?', temp: '?', desc: 'No data available.' 
-  };
-  
-  // Populate UI
-  document.getElementById('pi-name').textContent = bodyData.name;
-  const swatch = document.getElementById('pi-color-swatch');
-  swatch.style.backgroundColor = bodyData.color || '#fff';
-  swatch.style.boxShadow = `0 0 15px ${bodyData.color || '#fff'}`;
-  
-  document.getElementById('pi-type').textContent = info.type;
-  document.getElementById('pi-radius').textContent = info.radius;
-  document.getElementById('pi-day').textContent = info.day;
-  document.getElementById('pi-year').textContent = info.year;
-  document.getElementById('pi-temp').textContent = info.temp;
-  document.getElementById('pi-desc').textContent = info.desc;
-
-  document.getElementById('planet-info-panel').classList.remove('hidden');
 }
 
 
 function updatePlanetInfoPanel(id, bodyData) {
   const panel = document.getElementById('planet-info-panel');
+  
+  // Get static info from our new imported dictionary
   const info = PLANET_INFO[id] || { 
-    type: 'Unknown', radius: '?', day: '?', year: '?', temp: '?', desc: 'No data available.' 
+    type: 'Unknown', radius: '?', day: '?', year: '?', temp: '?', 
+    gravity: '?', moons: '?', atm: '?', desc: 'No data available.' 
   };
 
-  // Populate fields
+  // 1. Update Header (Name & Color)
   document.getElementById('pi-name').textContent = bodyData.name;
-  document.getElementById('pi-color-swatch').style.backgroundColor = bodyData.color || '#fff';
+  
+  const swatch = document.getElementById('pi-color-swatch');
+  swatch.style.backgroundColor = bodyData.color || '#fff';
+  swatch.style.boxShadow = `0 0 15px ${bodyData.color || '#fff'}`; // Add glow
+
+  // 2. Update Stats (Existing)
   document.getElementById('pi-type').textContent = info.type;
   document.getElementById('pi-radius').textContent = info.radius;
   document.getElementById('pi-day').textContent = info.day;
@@ -748,9 +672,22 @@ function updatePlanetInfoPanel(id, bodyData) {
   document.getElementById('pi-temp').textContent = info.temp;
   document.getElementById('pi-desc').textContent = info.desc;
 
-  // Show panel
+  // 3. Update Stats (NEW FIELDS)
+  // These IDs must match what you added to index.html
+  const elGravity = document.getElementById('pi-gravity');
+  if(elGravity) elGravity.textContent = info.gravity || 'N/A';
+
+  const elMoons = document.getElementById('pi-moons');
+  if(elMoons) elMoons.textContent = info.moons || '0';
+
+  const elAtm = document.getElementById('pi-atm');
+  if(elAtm) elAtm.textContent = info.atm || 'None';
+
+  // 4. Show panel
   panel.classList.remove('hidden');
 }
+
+
 
 function onMouseMove(event) {
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
