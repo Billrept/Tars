@@ -9,6 +9,8 @@ import { jdToIso, pointToUnixMs, findClosestIndexByTime } from './utils/dateUtil
 import { Timer } from 'three/addons/misc/Timer.js'; 
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { PLANET_INFO, DISPLAY_RADIUS, TEXTURE_MAP, ROTATION_PERIODS } from './planetData.js';
+import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
+
 
 const API = 'http://localhost:8000';
 const WS = 'ws://localhost:8000';
@@ -169,6 +171,23 @@ function initScene() {
 
   // Sun point light
   const sunLight = new THREE.PointLight(0xfff8e7, 5.0, 0, 0); 
+  const textureLoader = new THREE.TextureLoader();
+  const textureFlare0 = textureLoader.load('js/textures/lensflare0.png'); // Bright center
+  const textureFlare3 = textureLoader.load('js/textures/lensflare3.png'); // Hexagon artifact
+
+  const lensflare = new Lensflare();
+
+  // Main Burst
+  lensflare.addElement(new LensflareElement(textureFlare0, 700, 0, sunLight.color));
+
+  // Artifacts extending outward
+  lensflare.addElement(new LensflareElement(textureFlare3, 60, 0.6));
+  lensflare.addElement(new LensflareElement(textureFlare3, 70, 0.7));
+  lensflare.addElement(new LensflareElement(textureFlare3, 120, 0.9));
+  lensflare.addElement(new LensflareElement(textureFlare3, 70, 1.0));
+
+  // Attach to light
+  sunLight.add(lensflare);
   sunLight.position.set(0, 0, 0);
   scene.add(sunLight);
 
@@ -277,7 +296,6 @@ function createUniverseBackground() {
   scene.add(skybox);
   return skybox;
 }
-
 
 // ── API ────────────────────────────────────────────────────────────────────
 async function fetchEpochRange() {
@@ -496,11 +514,11 @@ function ensureBodyMesh(body) {
     // Glow (Add to Root, not Spin, so it doesn't spin weirdly if not spherical)
     const spriteMat = new THREE.SpriteMaterial({
       map: createGlowTexture(),
-      color: 0xfff0c0, transparent: true, opacity: 0.2, 
+      color: 0xfff0c0, transparent: true, opacity: 0.4, 
       blending: THREE.AdditiveBlending 
     });
     const glow = new THREE.Sprite(spriteMat);
-    glow.scale.set(radius * 4.0, radius * 4.0, 1);
+    glow.scale.set(radius * 3.0, radius * 3.0, 1);
     rootGroup.add(glow); 
   }
 
@@ -576,7 +594,7 @@ function ensureBodyMesh(body) {
   }
 
   // ── EXTRAS (Hitbox & Labels - attached to ROOT so they don't spin/tilt weirdly) ──
-  const hitboxRadius = Math.max(radius * 3, 3.0);
+  const hitboxRadius = Math.max(radius * 2, 3.0);
   const hitbox = new THREE.Mesh(
     new THREE.SphereGeometry(hitboxRadius, 12, 12),
     new THREE.MeshBasicMaterial({ visible: false })
@@ -1461,6 +1479,20 @@ function bindEvents() {
     const menu = document.getElementById('ml-preset-menu');
     if (!menu.contains(e.target) && e.target.id !== 'btn-ml-preset') {
       menu.classList.add('hidden');
+    }
+  });
+
+  document.getElementById('btn-fullscreen').addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      // Enter Fullscreen
+      document.documentElement.requestFullscreen().catch(err => {
+        console.log(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      // Exit Fullscreen
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
     }
   });
 

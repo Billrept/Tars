@@ -268,6 +268,26 @@ html, body {
 #sidebar::-webkit-scrollbar { width: 4px; }
 #sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
+/* Webkit Browsers (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0b0b10; 
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334466; 
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4ea8de; /* Accent color on hover */
+}
+
+
 .panel {
   margin-bottom: 16px;
   padding: 12px;
@@ -796,4 +816,54 @@ button.secondary:hover { border-color: var(--accent); }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* Floating View Controls */
+.view-controls {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 100;
+}
+
+.control-btn {
+  background: rgba(20, 24, 35, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.control-btn:hover {
+  background: rgba(60, 70, 90, 0.8);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.control-btn:active {
+  transform: scale(0.95);
+}
+
+.control-btn svg {
+  opacity: 0.8;
+}
+
+.control-btn:hover svg {
+  opacity: 1;
+}
+
+/* Optional Divider */
+.view-controls .divider {
+  height: 4px; /* Spacer */
 }
