@@ -60,6 +60,14 @@ let isSimulationMaster = false; // TRUE = Frontend drives time (Mission), FALSE 
 let lastWsRequestTime = 0; // Throttling helper
 let orbitLines = {}; // Store the visual lines so we can toggle them if needed
 let isFlyingToTarget = false; // Controls the transition animation
+const maxParticles = 100;
+const particleGeometry = new THREE.SphereGeometry(0.6, 6, 6); // visual scale 
+const particleMaterial = new THREE.MeshBasicMaterial({ 
+    color: 0x00aaff, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending 
+});
+let particlePool = []; 
+let activeParticles = []; // { mesh, life }
+
 
 
 // ── Mission State ──────────────────────────────────────────────────────────
@@ -69,18 +77,59 @@ let spacecraftMesh = null;
 // ── Textures ──────────────────────────────────────────────────────────────
 const textureLoader = new THREE.TextureLoader();
 
-// ── Init ───────────────────────────────────────────────────────────────────
 async function init() {
+  // 1. Get Loading UI Elements
+  const loadingScreen = document.getElementById('loading-screen');
+  const loadingText = document.getElementById('loading-text');
+
+  // 2. Initialize 3D Engine
+  if (loadingText) loadingText.textContent = "Initializing 3D Universe...";
   initScene();
+
+  // Set Camera for "Overview" shot (High up looking down)
+  camera.position.set(0, 8000, 15000); 
+  controls.target.set(0, 0, 0);        
+  controls.update();
+
+  // 3. Fetch Data (Async)
+  if (loadingText) loadingText.textContent = "Downloading Planetary Data...";
   await fetchBodies();
+
+  if (loadingText) loadingText.textContent = "Synchronizing Mission Clock...";
   await fetchEpochRange();
+
+  // 4. Setup Logic
+  if (loadingText) loadingText.textContent = "Calculating Orbital Paths...";
   populateSelects();
   fetchOrbits();
   connectEphemeris();
   bindEvents();
   initSearchBar();
+
+  // 5. Start Animation Loop (rendering behind the loading screen)
   animate();
+
+  // 6. Transition: Hide Loader & Start Cinematic Intro
+  // We wait 1.5s to ensure textures are uploaded to GPU and scene is stable
+  setTimeout(() => {
+     // A. Fade out Loading Screen
+     if (loadingScreen) {
+         loadingScreen.classList.add('hidden'); // Triggers CSS opacity transition
+         
+         // Optional: Remove completely from DOM after animation (1s)
+         setTimeout(() => {
+             loadingScreen.style.display = 'none';
+         }, 1000);
+     }
+
+     // B. Start Cinematic Zoom to Sun
+     if (bodyMeshes[10]) {
+         console.log("Starting Cinematic Intro...");
+         focusOnBody(10); // Uses your new slow-zoom logic
+     }
+  }, 1500);
 }
+
 
 // ── Three.js Scene Setup ───────────────────────────────────────────────────
 function initScene() {
@@ -88,7 +137,7 @@ function initScene() {
   scene = new THREE.Scene();
 
   // Camera — looking down the ecliptic
-  camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100000);
+  camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 500000);
   camera.position.set(0, 1800, 2200);
   camera.lookAt(0, 0, 0);
 
@@ -124,7 +173,8 @@ function initScene() {
   scene.add(sunLight);
 
   // Starfield background
-  createStarfield();
+  // createStarfield();
+  createUniverseBackground();
 
   // Grid helper (ecliptic plane reference, very faint)
   const grid = new THREE.GridHelper(8000, 40, 0x1a1a3e, 0x111122);
@@ -206,6 +256,28 @@ function createStarfield() {
   const mat = new THREE.PointsMaterial({ size: 1.5, vertexColors: true, sizeAttenuation: false });
   scene.add(new THREE.Points(geo, mat));
 }
+
+function createUniverseBackground() {
+  // 1. Giant Sphere
+  const geometry = new THREE.SphereGeometry(90000, 64, 64);
+  
+  // 2. Load Texture (Ensure file exists in js/textures/)
+  // Use a dark background color as fallback
+  const material = new THREE.MeshBasicMaterial({
+    map: textureLoader.load('js/textures/8k_stars_milky_way.jpg'), 
+    side: THREE.BackSide, // Render on the INSIDE of the sphere
+    color: 0xffffff
+  });
+
+  const skybox = new THREE.Mesh(geometry, material);
+  
+  // 3. Rotate it slightly to match solar system obliquity
+  skybox.rotation.x = 60 * (Math.PI / 180); 
+  
+  scene.add(skybox);
+  return skybox;
+}
+
 
 // ── API ────────────────────────────────────────────────────────────────────
 async function fetchEpochRange() {
@@ -1824,7 +1896,60 @@ function createSpacecraftMesh() {
   glow.position.z = -3.5;
   group.add(glow);
 
+  group.scale.set(3, 3, 3); 
+
   return group;
+}
+
+function updateEngineTrail(delta) {
+  if (!activeMission || !activeMission.mesh) return;
+
+  // 1. Spawn a new particle at ship position
+  // Throttle: only spawn if we have pool space
+  if (activeParticles.length < maxParticles) {
+    let p = particlePool.pop();
+    if (!p) {
+        // Create new if pool empty
+        p = new THREE.Mesh(particleGeometry, particleMaterial.clone());
+        scene.add(p);
+    }
+    
+    // Reset state
+    p.material.opacity = 0.8;
+    p.scale.set(1,1,1);
+    
+    // Position at engine nozzle (local Z -3.5 relative to ship)
+    const enginePos = new THREE.Vector3(0, 0, -3.0); 
+    enginePos.applyMatrix4(activeMission.mesh.matrixWorld); // Convert to world space
+    
+    // Add some "jitter" for realism
+    enginePos.x += (Math.random() - 0.5) * 0.5;
+    enginePos.y += (Math.random() - 0.5) * 0.5;
+    enginePos.z += (Math.random() - 0.5) * 0.5;
+
+    p.position.copy(enginePos);
+    p.visible = true;
+
+    activeParticles.push({ mesh: p, life: 1.0 }); // Life 1.0 -> 0.0
+  }
+
+  // 2. Update existing particles
+  for (let i = activeParticles.length - 1; i >= 0; i--) {
+      const p = activeParticles[i];
+      p.life -= delta * 2.0; // Fade speed
+
+      if (p.life <= 0) {
+          // Dead -> Return to pool
+          p.mesh.visible = false;
+          activeParticles.splice(i, 1);
+          particlePool.push(p.mesh);
+      } else {
+          // Animate
+          p.mesh.material.opacity = p.life;
+          const s = 1.0 - (p.life * 0.5); // Grow slightly as it dissipates
+          p.mesh.scale.setScalar(s * 5.0); // Size multiplier
+      }
+  }
 }
 
 function startMissionSimulation(route) {
@@ -1988,6 +2113,9 @@ function animate() {
 
   // ── SPACECRAFT LOGIC (New!) ─────────────────────────────
   if (activeMission) {
+
+    updateEngineTrail(delta);
+
     const now = currentDate.getTime();
     const t = (now - activeMission.startTime) / activeMission.durationMs;
 
@@ -2066,32 +2194,33 @@ function animate() {
     camera.position.add(deltaMovement);
     controls.target.add(deltaMovement);
 
-    // 2. VISUAL ZOOMING ("The Animation")
+    // ── MODE A: FLYING ANIMATION (Transition) ──
     if (isFlyingToTarget) {
       
-      // A. Calculate Target Zoom Distance
       const visualSizeFactor = 10; 
       const rawRadius = (DISPLAY_RADIUS[focusedBodyId] || 1.0);
       const planetRadius = rawRadius * visualSizeFactor;
 
-      // Distance: 4x radius + 50 units buffer (prevents being too zoomed in)
-      const idealDist = (planetRadius * 4.0) + 50.0; 
+      // 1. DISTANCE CALCULATION
+      // larger buffer for Sun (ID 10) so we see the whole system
+      const buffer = (focusedBodyId === 10) ? 300.0 : 50.0;
+      const idealDist = (planetRadius * 4.0) + buffer; 
 
-      // B. Calculate where the camera SHOULD be relative to the moving planet
-      // Get vector from Planet -> Camera
+      // 2. TARGET POSITION
       const currentDir = new THREE.Vector3().subVectors(camera.position, currentBodyPosition).normalize();
       
       // Safety check
       if (currentDir.lengthSq() === 0) currentDir.set(0, 0, 1);
 
-      // The target is the Planet Position + (Direction * Distance)
       const targetPos = currentBodyPosition.clone().add(currentDir.multiplyScalar(idealDist));
       
-      // C. Smooth Move (Lerp)
-      // Since the camera is already moving WITH the planet (via Step 1), 
-      // this lerp just gently closes the gap.
-      camera.position.lerp(targetPos, 0.1); 
-      controls.target.lerp(currentBodyPosition, 0.1);
+      // 3. SMOOTH MOVE (Lerp)
+      // UNIFIED SLOW SPEED: 0.02 is very cinematic. 
+      // (Older value was 0.05 or 0.1)
+      const flySpeed = 0.02; 
+
+      camera.position.lerp(targetPos, flySpeed);
+      controls.target.lerp(currentBodyPosition, flySpeed);
 
       // D. Check Arrival
       if (camera.position.distanceTo(targetPos) < 2.0) {

@@ -743,3 +743,57 @@ button.secondary:hover { border-color: var(--accent); }
 #search-input::placeholder {
   color: rgba(255, 255, 255, 0.5);
 }
+
+/* Loading Overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: #000;
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 1s ease-out, visibility 1s;
+}
+
+.loading-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.loader-content {
+  text-align: center;
+  color: #fff;
+}
+
+.loader-content h1 {
+  font-size: 3rem;
+  letter-spacing: 0.5rem;
+  margin: 1rem 0;
+  font-weight: 300;
+  background: linear-gradient(90deg, #fff, #4ea8de);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.loader-content p {
+  color: #889;
+  font-family: monospace;
+}
+
+/* Spinner Animation */
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #4ea8de;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

@@ -16,7 +16,7 @@ export const DISPLAY_RADIUS = {
 };
 
 export const TEXTURE_MAP = {
-  10:  '2k_sun.jpg',
+  10:  '8k_sun.jpg',
   199: '2k_mercury.jpg',
   299: '2k_venus_surface.jpg',
   399: '2k_earth_daymap.jpg',
