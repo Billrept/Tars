@@ -84,56 +84,6 @@ MOON = CelestialBody(
     radius=1_737.4, color="#CCCCCC", horizons_id="301",
     parent_id=399,
 )
-PHOBOS = CelestialBody(
-    naif_id=401, name="Phobos", gm=7.087546066894452e-04,
-    radius=11.1, color="#917E6E", horizons_id="401",
-    parent_id=499,
-)
-DEIMOS = CelestialBody(
-    naif_id=402, name="Deimos", gm=9.615569648120313e-05,
-    radius=6.2, color="#B5A78C", horizons_id="402",
-    parent_id=499,
-)
-IO = CelestialBody(
-    naif_id=501, name="Io", gm=5.959916e3,
-    radius=1_821.6, color="#FFFF00", horizons_id="501",
-    parent_id=599,
-)
-EUROPA = CelestialBody(
-    naif_id=502, name="Europa", gm=3.202739e3,
-    radius=1_560.8, color="#B0A890", horizons_id="502",
-    parent_id=599,
-)
-GANYMEDE = CelestialBody(
-    naif_id=503, name="Ganymede", gm=9.887834e3,
-    radius=2_631.2, color="#8C7E6C", horizons_id="503",
-    parent_id=599,
-)
-CALLISTO = CelestialBody(
-    naif_id=504, name="Callisto", gm=7.179289e3,
-    radius=2_410.3, color="#707060", horizons_id="504",
-    parent_id=599,
-)
-TITAN = CelestialBody(
-    naif_id=606, name="Titan", gm=8.978138e3,
-    radius=2_574.7, color="#D4A017", horizons_id="606",
-    parent_id=699,
-)
-ENCELADUS = CelestialBody(
-    naif_id=602, name="Enceladus", gm=7.211454e0,
-    radius=252.1, color="#FFFFFF", horizons_id="602",
-    parent_id=699,
-)
-TRITON = CelestialBody(
-    naif_id=801, name="Triton", gm=1.427598e3,
-    radius=1_353.4, color="#B0C4DE", horizons_id="801",
-    parent_id=899,
-)
-CHARON = CelestialBody(
-    naif_id=901, name="Charon", gm=1.058799e2,
-    radius=606.0, color="#9B9B9B", horizons_id="901",
-    parent_id=999,
-)
 
 # --------------------------------------------------------------------------- #
 #  Lookup tables

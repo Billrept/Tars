@@ -153,6 +153,8 @@ class GreyWolfOptimizer:
 
         best_fit = alpha_fit
         best_result = results_full[sorted_idx[0]]
+        
+        self.initial_best = best_result
 
         yield self._make_progress(
             0, max_iter, best_result,
@@ -286,8 +288,8 @@ class GreyWolfOptimizer:
             self.cache, prograde=self.req.prograde,
         )
 
-    @staticmethod
     def _make_progress(
+        self,
         iteration: int,
         max_iter: int,
         result: dict,
@@ -296,19 +298,43 @@ class GreyWolfOptimizer:
         pareto_front: list[dict] | None = None,
         mode: str = "min_dv",
     ) -> OptimizationProgress:
+        insight = ""
+        if self.initial_best and iteration > 0 and result.get("converged"):
+            init_dv = self.initial_best.get("dv_total", float("inf"))
+            curr_dv = result.get("dv_total", float("inf"))
+            if curr_dv < init_dv and init_dv < 1e11:
+                saved = init_dv - curr_dv
+                insight = f"Optimized! Saved {saved:.2f} km/s. "
+                
+                # Check what changed to make it better
+                init_dep = self.initial_best.get("departure_jd", 0)
+                curr_dep = result.get("departure_jd", 0)
+                dep_shift = curr_dep - init_dep
+                
+                init_tof = self.initial_best.get("tof_days", 0)
+                curr_tof = result.get("tof_days", 0)
+                tof_shift = curr_tof - init_tof
+                
+                if abs(dep_shift) > 2.0:
+                    insight += f"Shifted launch by {dep_shift:+.1f} days. "
+                if abs(tof_shift) > 2.0:
+                    insight += f"Adjusted flight time by {tof_shift:+.1f} days to find a more optimal alignment."
+
         return OptimizationProgress(
             iteration=iteration,
             max_iterations=max_iter,
-            best_dv_total=result["dv_total"],
-            best_departure_jd=result["departure_jd"],
-            best_tof_days=result["tof_days"],
-            best_dv_departure=result["dv_departure"],
-            best_dv_arrival=result["dv_arrival"],
-            converged=result["converged"],
+            best_dv_total=result.get("dv_total", float("inf")),
+            best_departure_jd=result.get("departure_jd", 0.0),
+            best_tof_days=result.get("tof_days", 0.0),
+            best_dv_departure=result.get("dv_departure", float("inf")),
+            best_dv_arrival=result.get("dv_arrival", float("inf")),
+            converged=result.get("converged", False),
             population_best_dvs=top3,
             population_positions=population_positions or [],
             pareto_front=pareto_front or [],
             mode=mode,
+            insight=insight,
+            orbit_elements=result.get("orbit_elements"),
         )
 
 
@@ -412,6 +438,8 @@ class MultiLegGreyWolfOptimizer:
 
         best_fit = alpha_fit
         best_result = results_full[sorted_idx[0]]
+        
+        self.initial_best = best_result
 
         yield self._make_progress(
             0, max_iter, alpha_pos, best_result.get("dv_total", float("inf")),
@@ -578,11 +606,40 @@ class MultiLegGreyWolfOptimizer:
             dv_arrival = eval_result.get("arrival_dv_km_s", float("inf"))
             dv_flyby = eval_result.get("flyby_dv_km_s", 0.0)
             converged = True
+            
+            # Extract orbit elements for each leg
+            orbit_elements_list = []
+            if "legs" in eval_result:
+                for leg in eval_result["legs"]:
+                    # Depending on how legs are stored (dict or object)
+                    if hasattr(leg, "orbit_elements"):
+                        orbit_elements_list.append(leg.orbit_elements)
+                    elif isinstance(leg, dict):
+                        orbit_elements_list.append(leg.get("orbit_elements"))
         else:
             dv_departure = float("inf")
             dv_arrival = float("inf")
             dv_flyby = 0.0
             converged = False
+            orbit_elements_list = None
+
+        insight = ""
+        if self.initial_best and iteration > 0 and converged:
+            init_dv = self.initial_best.get("dv_total", float("inf"))
+            if dv_total < init_dv and init_dv < 1e11:
+                saved = init_dv - dv_total
+                insight = f"Optimized! Saved {saved:.2f} km/s. "
+                
+                init_dep = self.initial_best.get("departure_jd", 0)
+                dep_shift = dep_jd - init_dep
+                
+                init_tof = self.initial_best.get("total_tof_days", 0)
+                tof_shift = total_tof - init_tof
+                
+                if abs(dep_shift) > 2.0:
+                    insight += f"Shifted launch by {dep_shift:+.1f} days. "
+                if abs(tof_shift) > 2.0:
+                    insight += f"Adjusted total flight time by {tof_shift:+.1f} days to improve gravity assist alignment."
 
         return MultiLegOptimizationProgress(
             iteration=iteration,
@@ -600,4 +657,6 @@ class MultiLegGreyWolfOptimizer:
             population_positions=population_positions or [],
             pareto_front=pareto_front or [],
             mode=mode,
+            insight=insight,
+            orbit_elements_list=orbit_elements_list,
         )

@@ -194,7 +194,12 @@ def _solve_kepler_hyperbolic(M: float, ecc: float, tol: float = 1e-12) -> float:
 def propagate_kepler(r0: np.ndarray, v0: np.ndarray, dt: float, mu: float) -> tuple:
     """Propagate state vector (r0, v0) forward by dt seconds under two-body dynamics.
 
-    Uses universal variable formulation for robustness across orbit types.
+    This implementation converts the state to classical orbital elements,
+    advances elliptic or hyperbolic anomaly with the corresponding Kepler
+    equation, and converts back to Cartesian state.
+
+    Near-parabolic cases are handled with a small-eccentricity offset as a
+    numerical approximation.
 
     Returns (r, v) at time t0 + dt.
     """

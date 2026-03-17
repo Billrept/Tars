@@ -772,10 +772,9 @@ async def start_multileg_optimization(req: MultiLegOptimizeRequest, request: Req
     max_arr_jd = dep_end_jd + max_total_tof
 
     try:
-        first_body = _resolve_body(req.body_sequence[0])
-        last_body = _resolve_body(req.body_sequence[-1])
-        cache.validate_epoch_range(first_body.naif_id, dep_start_jd, dep_end_jd)
-        cache.validate_epoch(last_body.naif_id, max_arr_jd)
+        for b in req.body_sequence:
+            body = _resolve_body(b)
+            cache.validate_epoch_range(body.naif_id, dep_start_jd, max_arr_jd)
     except EphemerisRangeError as e:
         raise HTTPException(
             status_code=422,

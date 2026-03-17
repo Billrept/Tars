@@ -175,8 +175,43 @@ def compute_multileg_trajectory(
         r1, v1_planet = cache.get_state(origin.naif_id, current_jd)
         r2, v2_planet = cache.get_state(target.naif_id, arr_jd)
 
-        # Solve Lambert
-        result = compute_transfer_dv(r1, v1_planet, r2, v2_planet, tof_seconds, mu)
+        # Determine central body (Sun or a Planet) for Patched Conics
+        # If both bodies share a parent, or one is the parent of the other, use that parent.
+        if origin.parent_id is not None and origin.parent_id == target.parent_id:
+            # Moon-to-Moon (e.g., Io -> Europa)
+            central_body_id = origin.parent_id
+            central_mu = BODY_BY_ID[central_body_id].gm
+        elif origin.parent_id is not None and origin.parent_id == target.naif_id:
+            # Moon-to-Planet (e.g., Moon -> Earth)
+            central_body_id = target.naif_id
+            central_mu = target.gm
+        elif target.parent_id is not None and target.parent_id == origin.naif_id:
+            # Planet-to-Moon (e.g., Earth -> Moon)
+            central_body_id = origin.naif_id
+            central_mu = origin.gm
+        else:
+            # Interplanetary (orbits the Sun)
+            central_body_id = 10
+            central_mu = GM_SUN
+
+        # Frame shifting: If the central body is not the Sun, shift coordinates
+        # to be relative to the central body.
+        if central_body_id != 10:
+            r_center_start, v_center_start = cache.get_state(central_body_id, current_jd)
+            r_center_end, v_center_end = cache.get_state(central_body_id, arr_jd)
+            
+            r1_eval = r1 - r_center_start
+            v1_eval = v1_planet - v_center_start
+            r2_eval = r2 - r_center_end
+            v2_eval = v2_planet - v_center_end
+        else:
+            r1_eval = r1
+            v1_eval = v1_planet
+            r2_eval = r2
+            v2_eval = v2_planet
+
+        # Solve Lambert in the local frame
+        result = compute_transfer_dv(r1_eval, v1_eval, r2_eval, v2_eval, tof_seconds, central_mu)
 
         if not result["converged"]:
             logger.warning(
@@ -184,11 +219,28 @@ def compute_multileg_trajectory(
                 i, origin.name, target.name, tof_days,
             )
 
-        # Generate trajectory points for this leg (skip if not converged to avoid NaN)
+        # Generate trajectory points for this leg
         if result["converged"]:
-            traj_points = _generate_leg_trajectory(
-                r1, result["v1_transfer"], tof_seconds, current_jd, mu, n_traj_points,
+            # Propagate in the local frame
+            local_points = _generate_leg_trajectory(
+                r1_eval, result["v1_transfer"], tof_seconds, current_jd, central_mu, n_traj_points,
             )
+            
+            # Shift the points back to the global heliocentric frame for 3D visualization
+            traj_points = []
+            if central_body_id != 10:
+                for pt in local_points:
+                    epoch = pt["epoch_jd"]
+                    r_c, _ = cache.get_state(central_body_id, epoch)
+                    r_c_scene = km_to_scene(r_c)
+                    traj_points.append({
+                        "x": pt["x"] + float(r_c_scene[0]),
+                        "y": pt["y"] + float(r_c_scene[1]),
+                        "z": pt["z"] + float(r_c_scene[2]),
+                        "epoch_jd": epoch,
+                    })
+            else:
+                traj_points = local_points
         else:
             traj_points = []
 
@@ -309,19 +361,18 @@ def _compute_flyby(
     flyby_altitude = rp - body.radius
     feasible = flyby_altitude >= 0  # periapsis above surface
 
-    # Powered delta-v needed if not feasible
-    # This is the difference in v_inf magnitudes as a first-order estimate.
-    # A more accurate model would compute the powered flyby at the surface.
+    # Powered delta-v needed if not feasible.
+    # Use a periapsis-burn approximation instead of a deep-space turn estimate:
+    #   Vp,in  = sqrt(Vinf,in^2  + 2 mu / rp)
+    #   Vp,out = sqrt(Vinf,out^2 + 2 mu / rp)
+    #   dV     = |Vp,out - Vp,in|
+    # This captures the Oberth benefit of burning at periapsis.
     if not feasible:
-        # Compute max turning angle achievable at body surface
         rp_min = body.radius * 1.1  # 10% altitude margin
         if mu_body > 0 and v_inf_avg > 1e-10:
-            sin_max = 1.0 / (1.0 + rp_min * v_inf_avg ** 2 / mu_body)
-            max_turn = 2.0 * math.asin(min(1.0, sin_max))
-            # The remaining turn must come from a powered maneuver
-            remaining = turning_angle - max_turn
-            # Simple estimate: dv ~ v_inf * 2 * sin(remaining/2)
-            powered_dv = v_inf_avg * 2.0 * math.sin(remaining / 2.0) if remaining > 0 else 0.0
+            vp_in = math.sqrt(v_inf_in_mag * v_inf_in_mag + 2.0 * mu_body / rp_min)
+            vp_out = math.sqrt(v_inf_out_mag * v_inf_out_mag + 2.0 * mu_body / rp_min)
+            powered_dv = abs(vp_out - vp_in)
         else:
             powered_dv = abs(v_inf_out_mag - v_inf_in_mag)
     else:

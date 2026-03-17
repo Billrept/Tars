@@ -51,8 +51,39 @@ def delta_v_objective(
         r2, v2_planet = cache.get_state(target_id, arrival_jd)
     except (KeyError, EphemerisRangeError):
         return _inf_result(departure_jd, arrival_jd, tof_days)
+        
+    # Implement Patched Conics detection for single leg
+    from ephemeris.bodies import BODY_BY_ID
+    origin_body = BODY_BY_ID[origin_id]
+    target_body = BODY_BY_ID[target_id]
+    
+    if origin_body.parent_id is not None and origin_body.parent_id == target_body.parent_id:
+        central_body_id = origin_body.parent_id
+        central_mu = BODY_BY_ID[central_body_id].gm
+    elif origin_body.parent_id is not None and origin_body.parent_id == target_body.naif_id:
+        central_body_id = target_body.naif_id
+        central_mu = target_body.gm
+    elif target_body.parent_id is not None and target_body.parent_id == origin_body.naif_id:
+        central_body_id = origin_body.naif_id
+        central_mu = origin_body.gm
+    else:
+        central_body_id = 10
+        central_mu = mu
 
-    result = compute_transfer_dv(r1, v1_planet, r2, v2_planet, tof_seconds, mu, prograde)
+    if central_body_id != 10:
+        r_c1, v_c1 = cache.get_state(central_body_id, departure_jd)
+        r_c2, v_c2 = cache.get_state(central_body_id, arrival_jd)
+        r1_eval = r1 - r_c1
+        v1_eval = v1_planet - v_c1
+        r2_eval = r2 - r_c2
+        v2_eval = v2_planet - v_c2
+    else:
+        r1_eval = r1
+        v1_eval = v1_planet
+        r2_eval = r2
+        v2_eval = v2_planet
+
+    result = compute_transfer_dv(r1_eval, v1_eval, r2_eval, v2_eval, tof_seconds, central_mu, prograde)
 
     result["departure_jd"] = departure_jd
     result["arrival_jd"] = arrival_jd

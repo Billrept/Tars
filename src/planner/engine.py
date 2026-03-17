@@ -134,7 +134,9 @@ def _scan_for_windows(
                 dvs.append(res["dv_total"])
             else:
                 dvs.append(1e9)
-        except Exception:
+        except Exception as e:
+            import logging
+            logging.getLogger('tars.planner').debug('Scan window error: %s', e)
             dvs.append(1e9)
             
     dvs = np.array(dvs)
@@ -218,7 +220,9 @@ def _eval_direct(origin: str, target: str, dep_jd: float, tof: float, cache: Eph
                         "rating": _rate_dv(res["dv_total"]),
                         "mode": "planner"
                     }
-            except Exception:
+            except Exception as e:
+                import logging
+                logging.getLogger('tars.planner').debug('Direct eval error: %s', e)
                 pass
             
     return best_res
@@ -239,7 +243,9 @@ def _eval_multileg(sequence: list[str], dep_jd: float, leg_tofs: list[float], na
         d["rating"] = _rate_dv(res.total_dv_km_s)
         d["mode"] = "planner"
         return d
-    except Exception:
+    except Exception as e:
+        import logging
+        logging.getLogger('tars.planner').debug('Multileg eval error: %s', e)
         return None
 
 

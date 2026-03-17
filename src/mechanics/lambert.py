@@ -1,12 +1,12 @@
-"""Lambert solver — Izzo's algorithm (2015) with Numba JIT.
+"""Lambert solver — universal-variable BMW approach with Numba JIT.
 
 Solves the Lambert boundary value problem: given two position vectors
 r1, r2 and a time-of-flight tof, find the velocity vectors v1, v2
 that connect them under two-body dynamics.
 
 Reference:
-    Izzo, D. "Revisiting Lambert's problem."
-    Celestial Mechanics and Dynamical Astronomy, 121(1), 1-15, 2015.
+    Bate, R. R., Mueller, D. D., and White, J. E.
+    Fundamentals of Astrodynamics.
 
 All units: km, seconds, km^3/s^2.
 """
@@ -18,7 +18,6 @@ import math
 import numpy as np
 from numba import njit
 from mechanics.kepler import state_to_elements, compute_apsis_points
-
 
 # --------------------------------------------------------------------------- #
 #  Stumpff functions  c2(psi) and c3(psi)
@@ -239,7 +238,7 @@ def solve_lambert(
     mu: float = 1.32712440018e11,  # Sun GM
     prograde: bool = True,
 ) -> dict:
-    """Solve Lambert's problem.
+    """Solve the zero-revolution Lambert boundary value problem.
 
     Parameters
     ----------

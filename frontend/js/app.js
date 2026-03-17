@@ -1394,43 +1394,6 @@ function setStatus(state, text) {
   const txt = document.getElementById('status-text');
   dot.className = 'dot ' + state;
   txt.textContent = text;
-  txt.textContent = text;
-}
-
-// ── Presets ────────────────────────────────────────────────────────────────
-function loadPreset(name) {
-  const originSel = document.getElementById('plan-origin');
-  const targetSel = document.getElementById('plan-target');
-
-  // Simple mapping for now - just sets origin/target
-  // Complex multi-leg presets (vega, cassini) would need more UI support to show intermediate legs,
-  // but for now we'll just set the start/end points or defaults.
-
-  let origin = 'earth';
-  let target = 'mars';
-
-  switch (name) {
-    case 'earth-mars':
-      origin = 'earth'; target = 'mars';
-      break;
-    case 'vega':
-      origin = 'earth'; target = 'jupiter'; // Venus-Earth-Gravity-Assist
-      break;
-    case 'cassini':
-      origin = 'earth'; target = 'saturn';
-      break;
-    case 'messenger':
-      origin = 'earth'; target = 'mercury';
-      break;
-    case 'grand-tour':
-      origin = 'earth'; target = 'neptune';
-      break;
-  }
-
-  if (originSel) originSel.value = origin;
-  if (targetSel) targetSel.value = target;
-
-  console.log(`Loaded preset: ${name} (${origin} -> ${target})`);
 }
 
 // ── Event Bindings ─────────────────────────────────────────────────────────
@@ -1463,37 +1426,6 @@ function bindEvents() {
   const vizBtn = document.getElementById('btn-viz-window');
   if (vizBtn) vizBtn.addEventListener('click', visualizeWindows);
 
-  // Multi-leg preset button
-  const mlBtn = document.getElementById('btn-ml-preset');
-  if (mlBtn) {
-    mlBtn.addEventListener('click', (e) => {
-      const menu = document.getElementById('ml-preset-menu');
-      if (menu.classList.contains('hidden')) {
-        const rect = e.target.getBoundingClientRect();
-        menu.style.left = rect.left + 'px';
-        menu.style.top = (rect.bottom + 4) + 'px';
-        menu.classList.remove('hidden');
-      } else {
-        menu.classList.add('hidden');
-      }
-    });
-  }
-
-  // Preset items
-  document.querySelectorAll('.preset-item').forEach(item => {
-    item.addEventListener('click', () => {
-      loadPreset(item.dataset.preset);
-      document.getElementById('ml-preset-menu').classList.add('hidden');
-    });
-  });
-
-  // Close preset menu on click outside
-  document.addEventListener('click', (e) => {
-    const menu = document.getElementById('ml-preset-menu');
-    if (!menu.contains(e.target) && e.target.id !== 'btn-ml-preset') {
-      menu.classList.add('hidden');
-    }
-  });
 
   document.getElementById('btn-fullscreen').addEventListener('click', () => {
     if (!document.fullscreenElement) {
@@ -1522,9 +1454,6 @@ function bindEvents() {
 
   window.addEventListener('click', onMouseClick);
   window.addEventListener('mousemove', onMouseMove);
-
-  // Initialize default multi-leg sequence
-  loadPreset('earth-mars');
 }
 
 // ── Planner Logic ──────────────────────────────────────────────────────────
