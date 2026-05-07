@@ -12,8 +12,9 @@ import { PLANET_INFO, DISPLAY_RADIUS, TEXTURE_MAP, ROTATION_PERIODS } from './pl
 import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
 
 
-const API = 'http://localhost:8000';
-const WS = 'ws://localhost:8000';
+const TARS_CONFIG = window.TARS_CONFIG || {};
+const API = TARS_CONFIG.API_BASE_URL || 'http://localhost:8000';
+const WS = TARS_CONFIG.WS_BASE_URL || 'ws://localhost:8000';
 
 // ── Viridis colormap (reversed: low=yellow/bright, high=purple/dark) ──────
 const VIRIDIS = [

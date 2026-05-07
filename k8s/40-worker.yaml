@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tars-worker
+  namespace: tars
+  labels:
+    app.kubernetes.io/name: tars
+    app.kubernetes.io/component: worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tars
+      app.kubernetes.io/component: worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: tars
+        app.kubernetes.io/component: worker
+    spec:
+      containers:
+        - name: worker
+          image: tars-api:local
+          imagePullPolicy: IfNotPresent
+          command: ["arq", "workers.worker.WorkerSettings"]
+          envFrom:
+            - configMapRef:
+                name: tars-api-config
+          volumeMounts:
+            - name: ephemeris-cache
+              mountPath: /app/data/cache
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: "2"
+              memory: 2Gi
+      volumes:
+        - name: ephemeris-cache
+          emptyDir: {}

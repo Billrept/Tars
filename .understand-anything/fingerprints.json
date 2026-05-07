@@ -1,0 +1,3567 @@
+{
+  "version": "1.0.0",
+  "gitCommitHash": "8ade6c9d6c8a062ca6b83f4793db3f348bc9afef",
+  "generatedAt": "2026-05-07T12:39:15.517Z",
+  "files": {
+    ".env.example": {
+      "filePath": ".env.example",
+      "contentHash": "a1200d8ced0493c40ca5109e1c2dd406fdee2b252dad8afe8c52f7d545a0705a",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 17,
+      "hasStructuralAnalysis": true
+    },
+    "docker-compose.yml": {
+      "filePath": "docker-compose.yml",
+      "contentHash": "d43794bd6dc3f4e92de4d9a5ad4ea8af13ce6cac7591b28c53d3f9bf938a904b",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 56,
+      "hasStructuralAnalysis": false
+    },
+    "Dockerfile": {
+      "filePath": "Dockerfile",
+      "contentHash": "449f910f3e87adef285cab6f62adb003657ab5a07bfd2ebc1b5ac36c437987d6",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 34,
+      "hasStructuralAnalysis": true
+    },
+    "frontend/css/style.css": {
+      "filePath": "frontend/css/style.css",
+      "contentHash": "880e6a36a6b344881382747c4fc6fdbfca204904178aff2afa486c5b053a92ab",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 870,
+      "hasStructuralAnalysis": false
+    },
+    "frontend/index.html": {
+      "filePath": "frontend/index.html",
+      "contentHash": "be66faeb507ecc97b6245a5bde908ea95b8166ce57cd7977c8285e932f587684",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 159,
+      "hasStructuralAnalysis": false
+    },
+    "frontend/js/app.js": {
+      "filePath": "frontend/js/app.js",
+      "contentHash": "b624d62399c154b84fce8dfcef28131bd64c2ae530462ef14cf5f2128b8c39dc",
+      "functions": [
+        {
+          "name": "massEstimate",
+          "params": [
+            "dvKms"
+          ],
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "init",
+          "params": [],
+          "exported": false,
+          "lineCount": 52
+        },
+        {
+          "name": "initScene",
+          "params": [],
+          "exported": false,
+          "lineCount": 75
+        },
+        {
+          "name": "initSearchBar",
+          "params": [],
+          "exported": false,
+          "lineCount": 42
+        },
+        {
+          "name": "createStarfield",
+          "params": [],
+          "exported": false,
+          "lineCount": 22
+        },
+        {
+          "name": "createUniverseBackground",
+          "params": [],
+          "exported": false,
+          "lineCount": 20
+        },
+        {
+          "name": "fetchEpochRange",
+          "params": [],
+          "exported": false,
+          "lineCount": 10
+        },
+        {
+          "name": "fetchBodies",
+          "params": [],
+          "exported": false,
+          "lineCount": 10
+        },
+        {
+          "name": "getPlanets",
+          "params": [],
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "populateSelects",
+          "params": [],
+          "exported": false,
+          "lineCount": 21
+        },
+        {
+          "name": "fetchOrbits",
+          "params": [],
+          "exported": false,
+          "lineCount": 42
+        },
+        {
+          "name": "removePlanetTrail",
+          "params": [
+            "bodyNaifId"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "updatePlanetTrail",
+          "params": [
+            "body",
+            "worldPosVec3"
+          ],
+          "exported": false,
+          "lineCount": 62
+        },
+        {
+          "name": "createCss2DLabel",
+          "params": [
+            "text"
+          ],
+          "exported": false,
+          "lineCount": 9
+        },
+        {
+          "name": "ensureBodyMesh",
+          "params": [
+            "body"
+          ],
+          "exported": false,
+          "lineCount": 137
+        },
+        {
+          "name": "createGlowTexture",
+          "params": [],
+          "exported": false,
+          "lineCount": 14
+        },
+        {
+          "name": "createTextSprite",
+          "params": [
+            "text",
+            "color"
+          ],
+          "exported": false,
+          "lineCount": 16
+        },
+        {
+          "name": "connectEphemeris",
+          "params": [],
+          "exported": false,
+          "lineCount": 45
+        },
+        {
+          "name": "updatePlanetPositions",
+          "params": [
+            "snapshot"
+          ],
+          "exported": false,
+          "lineCount": 29
+        },
+        {
+          "name": "onMouseClick",
+          "params": [
+            "event"
+          ],
+          "exported": false,
+          "lineCount": 51
+        },
+        {
+          "name": "unlockCamera",
+          "params": [],
+          "exported": false,
+          "lineCount": 10
+        },
+        {
+          "name": "focusOnBody",
+          "params": [
+            "naifId"
+          ],
+          "exported": false,
+          "lineCount": 13
+        },
+        {
+          "name": "updatePlanetInfoPanel",
+          "params": [
+            "id",
+            "bodyData"
+          ],
+          "exported": false,
+          "lineCount": 38
+        },
+        {
+          "name": "onMouseMove",
+          "params": [
+            "event"
+          ],
+          "exported": false,
+          "lineCount": 46
+        },
+        {
+          "name": "resetHover",
+          "params": [],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "highlightBody",
+          "params": [
+            "naifId",
+            "isHovered"
+          ],
+          "exported": false,
+          "lineCount": 27
+        },
+        {
+          "name": "showTooltip",
+          "params": [
+            "event",
+            "text"
+          ],
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "updateTooltipPosition",
+          "params": [
+            "event"
+          ],
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "hideTooltip",
+          "params": [],
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "drawOptimalTransfer",
+          "params": [
+            "origin",
+            "target",
+            "depJd",
+            "tofDays"
+          ],
+          "exported": false,
+          "lineCount": 24
+        },
+        {
+          "name": "drawTransferArc",
+          "params": [
+            "points"
+          ],
+          "exported": false,
+          "lineCount": 31
+        },
+        {
+          "name": "drawOrbitPath",
+          "params": [
+            "bodyId",
+            "points"
+          ],
+          "exported": false,
+          "lineCount": 42
+        },
+        {
+          "name": "addMarker",
+          "params": [
+            "point",
+            "color",
+            "size"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "clearMarkers",
+          "params": [],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "clearMultiLegArcs",
+          "params": [],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "drawMultiLegArcs",
+          "params": [
+            "legs"
+          ],
+          "exported": false,
+          "lineCount": 43
+        },
+        {
+          "name": "generatePorkchop",
+          "params": [
+            "config"
+          ],
+          "exported": false,
+          "lineCount": 27
+        },
+        {
+          "name": "renderPorkchop",
+          "params": [
+            "data"
+          ],
+          "exported": false,
+          "lineCount": 95
+        },
+        {
+          "name": "dvColor",
+          "params": [
+            "t"
+          ],
+          "exported": false,
+          "lineCount": 12
+        },
+        {
+          "name": "runOptimizer",
+          "params": [
+            "config",
+            "onProgress",
+            "onComplete"
+          ],
+          "exported": false,
+          "lineCount": 47
+        },
+        {
+          "name": "runMultiLegOptimizer",
+          "params": [
+            "config",
+            "onProgress",
+            "onComplete"
+          ],
+          "exported": false,
+          "lineCount": 46
+        },
+        {
+          "name": "updateSimSpeed",
+          "params": [
+            "val"
+          ],
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "togglePause",
+          "params": [],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "setStatus",
+          "params": [
+            "state",
+            "text"
+          ],
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "bindEvents",
+          "params": [],
+          "exported": false,
+          "lineCount": 58
+        },
+        {
+          "name": "planRoute",
+          "params": [],
+          "exported": false,
+          "lineCount": 42
+        },
+        {
+          "name": "renderRouteCard",
+          "params": [
+            "route",
+            "index",
+            "container"
+          ],
+          "exported": false,
+          "lineCount": 59
+        },
+        {
+          "name": "showOrbitInsights",
+          "params": [
+            "msg"
+          ],
+          "exported": false,
+          "lineCount": 123
+        },
+        {
+          "name": "drawFullOrbit",
+          "params": [
+            "points",
+            "color"
+          ],
+          "exported": false,
+          "lineCount": 18
+        },
+        {
+          "name": "clearFullOrbits",
+          "params": [],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "viewRoute",
+          "params": [
+            "route"
+          ],
+          "exported": false,
+          "lineCount": 20
+        },
+        {
+          "name": "optimizeRoute",
+          "params": [
+            "route"
+          ],
+          "exported": false,
+          "lineCount": 112
+        },
+        {
+          "name": "createSpacecraftMesh",
+          "params": [],
+          "exported": false,
+          "lineCount": 33
+        },
+        {
+          "name": "updateEngineTrail",
+          "params": [
+            "delta"
+          ],
+          "exported": false,
+          "lineCount": 50
+        },
+        {
+          "name": "startMissionSimulation",
+          "params": [
+            "route"
+          ],
+          "exported": false,
+          "lineCount": 72
+        },
+        {
+          "name": "visualizeWindows",
+          "params": [],
+          "exported": false,
+          "lineCount": 23
+        },
+        {
+          "name": "fetchAndDrawOptimizedMultiLeg",
+          "params": [
+            "bodies",
+            "depJd",
+            "legTofs"
+          ],
+          "exported": false,
+          "lineCount": 17
+        },
+        {
+          "name": "animate",
+          "params": [],
+          "exported": false,
+          "lineCount": 164
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "three",
+          "specifiers": [
+            "* as THREE"
+          ]
+        },
+        {
+          "source": "three/addons/controls/OrbitControls.js",
+          "specifiers": [
+            "OrbitControls"
+          ]
+        },
+        {
+          "source": "./utils/dateUtils.js",
+          "specifiers": [
+            "jdToIso",
+            "pointToUnixMs",
+            "findClosestIndexByTime"
+          ]
+        },
+        {
+          "source": "three/addons/misc/Timer.js",
+          "specifiers": [
+            "Timer"
+          ]
+        },
+        {
+          "source": "three/addons/renderers/CSS2DRenderer.js",
+          "specifiers": [
+            "CSS2DRenderer",
+            "CSS2DObject"
+          ]
+        },
+        {
+          "source": "./planetData.js",
+          "specifiers": [
+            "PLANET_INFO",
+            "DISPLAY_RADIUS",
+            "TEXTURE_MAP",
+            "ROTATION_PERIODS"
+          ]
+        },
+        {
+          "source": "three/addons/objects/Lensflare.js",
+          "specifiers": [
+            "Lensflare",
+            "LensflareElement"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 2225,
+      "hasStructuralAnalysis": true
+    },
+    "frontend/js/planetData.js": {
+      "filePath": "frontend/js/planetData.js",
+      "contentHash": "fd8ec5658402ca117a985e763fced8dcd05174ad74ccd9a910a2c8df6db813c9",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [
+        "DISPLAY_RADIUS",
+        "TEXTURE_MAP",
+        "ROTATION_PERIODS",
+        "PLANET_INFO"
+      ],
+      "totalLines": 141,
+      "hasStructuralAnalysis": true
+    },
+    "frontend/js/utils/dateUtils.js": {
+      "filePath": "frontend/js/utils/dateUtils.js",
+      "contentHash": "303f286f7eb3773b699f26b94738b3daf173133346e1c2a0c19056a83c3298fd",
+      "functions": [
+        {
+          "name": "diffDays",
+          "params": [
+            "dateA",
+            "dateB"
+          ],
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "jdToIso",
+          "params": [
+            "jd"
+          ],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "isoToJd",
+          "params": [
+            "iso"
+          ],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "jdToUnixMs",
+          "params": [
+            "jd"
+          ],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "pointToUnixMs",
+          "params": [
+            "p"
+          ],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "findClosestIndexByTime",
+          "params": [
+            "points",
+            "targetMs"
+          ],
+          "exported": true,
+          "lineCount": 17
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "exports": [
+        "diffDays",
+        "jdToIso",
+        "isoToJd",
+        "jdToUnixMs",
+        "pointToUnixMs",
+        "findClosestIndexByTime"
+      ],
+      "totalLines": 46,
+      "hasStructuralAnalysis": true
+    },
+    "patch_engine.py": {
+      "filePath": "patch_engine.py",
+      "contentHash": "2ba83bdbed93912d9c2543f8a61f3f3c435a28b48b402c9bb43eab9c0aa5a75a",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "re",
+          "specifiers": [
+            "re"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 26,
+      "hasStructuralAnalysis": true
+    },
+    "patch_routes.py": {
+      "filePath": "patch_routes.py",
+      "contentHash": "35c578b48817a054b02802fd9a9ac2d00707e5f6e6fc4d2fd4473de5515ed30f",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 21,
+      "hasStructuralAnalysis": true
+    },
+    "proto/trajectory.proto": {
+      "filePath": "proto/trajectory.proto",
+      "contentHash": "0723763223c57f6fd6cf94ae9fc597733a026c06d2269e857756069be7ad06aa",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 97,
+      "hasStructuralAnalysis": true
+    },
+    "README.md": {
+      "filePath": "README.md",
+      "contentHash": "84838c0e96ac38ae86a25c6a6f215160ab11a544f586ed9833e4abd55e97ccf0",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 648,
+      "hasStructuralAnalysis": true
+    },
+    "requirements.txt": {
+      "filePath": "requirements.txt",
+      "contentHash": "fc63e80f6e1071e884960d10a5f62e3396d5ba5240f96ed392685d7b93991b80",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 22,
+      "hasStructuralAnalysis": false
+    },
+    "scripts/fetch_ephemeris.py": {
+      "filePath": "scripts/fetch_ephemeris.py",
+      "contentHash": "e93a3df223b5fd982bfe0e30819c1be195ca9b4bf915f4981fe40d7f4dde302b",
+      "functions": [
+        {
+          "name": "main",
+          "params": [
+            "start",
+            "end",
+            "step_days",
+            "planets_only"
+          ],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 20
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "argparse",
+          "specifiers": [
+            "argparse"
+          ]
+        },
+        {
+          "source": "asyncio",
+          "specifiers": [
+            "asyncio"
+          ]
+        },
+        {
+          "source": "logging",
+          "specifiers": [
+            "logging"
+          ]
+        },
+        {
+          "source": "sys",
+          "specifiers": [
+            "sys"
+          ]
+        },
+        {
+          "source": "time",
+          "specifiers": [
+            "time"
+          ]
+        },
+        {
+          "source": "config",
+          "specifiers": [
+            "settings"
+          ]
+        },
+        {
+          "source": "ephemeris.spline_cache",
+          "specifiers": [
+            "EphemerisCache"
+          ]
+        },
+        {
+          "source": "ephemeris.bodies",
+          "specifiers": [
+            "ALL_BODIES",
+            "PLANETS"
+          ]
+        }
+      ],
+      "exports": [
+        "main"
+      ],
+      "totalLines": 60,
+      "hasStructuralAnalysis": true
+    },
+    "src/__init__.py": {
+      "filePath": "src/__init__.py",
+      "contentHash": "e1ee5e97e2399f69a88b1e638a34c41e1fed90169307524f54509a8e98352aa8",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 2,
+      "hasStructuralAnalysis": true
+    },
+    "src/api/__init__.py": {
+      "filePath": "src/api/__init__.py",
+      "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 1,
+      "hasStructuralAnalysis": true
+    },
+    "src/api/routes_http.py": {
+      "filePath": "src/api/routes_http.py",
+      "contentHash": "e5166bd3e51ee18ee7fc6842676eb6f3316abe1ce115250e76547616737eb092",
+      "functions": [
+        {
+          "name": "_validate_iso_date",
+          "params": [
+            "v"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "_safe_iso_to_jd",
+          "params": [
+            "iso_date"
+          ],
+          "returnType": "float",
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "_resolve_body",
+          "params": [
+            "identifier"
+          ],
+          "returnType": "CelestialBody",
+          "exported": true,
+          "lineCount": 16
+        },
+        {
+          "name": "_get_cache",
+          "params": [
+            "request"
+          ],
+          "returnType": "EphemerisCache",
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "plan_mission",
+          "params": [
+            "req",
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 25
+        },
+        {
+          "name": "health",
+          "params": [],
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "epoch_range",
+          "params": [
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 14
+        },
+        {
+          "name": "list_bodies",
+          "params": [],
+          "exported": true,
+          "lineCount": 13
+        },
+        {
+          "name": "get_ephemeris",
+          "params": [
+            "identifier",
+            "request",
+            "start",
+            "end",
+            "step_days",
+            "scene_units"
+          ],
+          "exported": true,
+          "lineCount": 66
+        },
+        {
+          "name": "lambert_transfer",
+          "params": [
+            "req",
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 69
+        },
+        {
+          "name": "assess_launch_window",
+          "params": [
+            "req",
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 87
+        },
+        {
+          "name": "start_optimization",
+          "params": [
+            "req",
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 52
+        },
+        {
+          "name": "optimization_status",
+          "params": [
+            "job_id"
+          ],
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "compute_porkchop",
+          "params": [
+            "req",
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 64
+        },
+        {
+          "name": "multileg_transfer",
+          "params": [
+            "req",
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 36
+        },
+        {
+          "name": "start_multileg_optimization",
+          "params": [
+            "req",
+            "request"
+          ],
+          "exported": true,
+          "lineCount": 62
+        },
+        {
+          "name": "get_orbit_details",
+          "params": [
+            "req"
+          ],
+          "exported": true,
+          "lineCount": 41
+        }
+      ],
+      "classes": [
+        {
+          "name": "BodyOut",
+          "methods": [],
+          "properties": [
+            "naif_id",
+            "name",
+            "gm",
+            "radius",
+            "color",
+            "parent_id"
+          ],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "EphemerisQuery",
+          "methods": [
+            "check_iso_date"
+          ],
+          "properties": [
+            "start",
+            "end",
+            "step_days",
+            "scene_units"
+          ],
+          "exported": true,
+          "lineCount": 10
+        },
+        {
+          "name": "OptimizeRequest",
+          "methods": [
+            "check_iso_date",
+            "check_mode"
+          ],
+          "properties": [
+            "origin",
+            "target",
+            "dep_start",
+            "dep_end",
+            "tof_min_days",
+            "tof_max_days",
+            "population_size",
+            "max_iterations",
+            "mode"
+          ],
+          "exported": true,
+          "lineCount": 22
+        },
+        {
+          "name": "LambertRequest",
+          "methods": [
+            "check_iso_date"
+          ],
+          "properties": [
+            "origin",
+            "target",
+            "departure_date",
+            "tof_days"
+          ],
+          "exported": true,
+          "lineCount": 10
+        },
+        {
+          "name": "PorkchopQuery",
+          "methods": [
+            "check_iso_date"
+          ],
+          "properties": [
+            "origin",
+            "target",
+            "dep_start",
+            "dep_end",
+            "tof_min_days",
+            "tof_max_days",
+            "dep_steps",
+            "tof_steps",
+            "binary"
+          ],
+          "exported": true,
+          "lineCount": 15
+        },
+        {
+          "name": "MultiLegRequest",
+          "methods": [
+            "check_iso_date"
+          ],
+          "properties": [
+            "body_sequence",
+            "departure_date",
+            "leg_tof_days"
+          ],
+          "exported": true,
+          "lineCount": 15
+        },
+        {
+          "name": "MultiLegOptimizeRequest",
+          "methods": [
+            "check_iso_date",
+            "check_tof_bounds",
+            "check_mode"
+          ],
+          "properties": [
+            "body_sequence",
+            "dep_start",
+            "dep_end",
+            "leg_tof_bounds",
+            "population_size",
+            "max_iterations",
+            "max_c3",
+            "mode"
+          ],
+          "exported": true,
+          "lineCount": 37
+        },
+        {
+          "name": "PlanRequest",
+          "methods": [
+            "check_iso_date"
+          ],
+          "properties": [
+            "origin",
+            "target",
+            "mode",
+            "dep_start",
+            "dep_end"
+          ],
+          "exported": true,
+          "lineCount": 13
+        },
+        {
+          "name": "OrbitElementsRequest",
+          "methods": [],
+          "properties": [
+            "a_km",
+            "e",
+            "i_deg",
+            "raan_deg",
+            "arg_p_deg",
+            "mu"
+          ],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "AssessRequest",
+          "methods": [
+            "check_iso_date"
+          ],
+          "properties": [
+            "origin",
+            "target",
+            "departure_date",
+            "tof_days"
+          ],
+          "exported": true,
+          "lineCount": 10
+        }
+      ],
+      "imports": [
+        {
+          "source": "asyncio",
+          "specifiers": [
+            "asyncio"
+          ]
+        },
+        {
+          "source": "logging",
+          "specifiers": [
+            "logging"
+          ]
+        },
+        {
+          "source": "math",
+          "specifiers": [
+            "math"
+          ]
+        },
+        {
+          "source": "datetime",
+          "specifiers": [
+            "datetime"
+          ]
+        },
+        {
+          "source": "numpy",
+          "specifiers": [
+            "np"
+          ]
+        },
+        {
+          "source": "fastapi",
+          "specifiers": [
+            "APIRouter",
+            "HTTPException",
+            "Query",
+            "Request",
+            "Response"
+          ]
+        },
+        {
+          "source": "pydantic",
+          "specifiers": [
+            "BaseModel",
+            "Field",
+            "field_validator"
+          ]
+        },
+        {
+          "source": "ephemeris.bodies",
+          "specifiers": [
+            "ALL_BODIES",
+            "BODY_BY_ID",
+            "BODY_BY_NAME",
+            "CelestialBody",
+            "GM_SUN"
+          ]
+        },
+        {
+          "source": "ephemeris.spline_cache",
+          "specifiers": [
+            "EphemerisCache",
+            "EphemerisRangeError"
+          ]
+        },
+        {
+          "source": "mechanics.lambert",
+          "specifiers": [
+            "compute_transfer_dv",
+            "solve_lambert"
+          ]
+        },
+        {
+          "source": "mechanics.kepler",
+          "specifiers": [
+            "compute_apsis_points",
+            "elements_to_state",
+            "generate_full_orbit_points"
+          ]
+        },
+        {
+          "source": "mechanics.multileg",
+          "specifiers": [
+            "compute_multileg_trajectory",
+            "multileg_result_to_dict"
+          ]
+        },
+        {
+          "source": "mechanics.transforms",
+          "specifiers": [
+            "iso_to_jd",
+            "jd_to_iso",
+            "km_to_scene",
+            "positions_to_scene",
+            "sample_trajectory_adaptive"
+          ]
+        },
+        {
+          "source": "optimizer.dispatcher",
+          "specifiers": [
+            "get_job_status",
+            "submit_optimization",
+            "submit_multileg_optimization"
+          ]
+        },
+        {
+          "source": "optimizer.gmpa",
+          "specifiers": [
+            "OptimizationRequest",
+            "MultiLegOptimizationRequest"
+          ]
+        },
+        {
+          "source": "optimizer.objective",
+          "specifiers": [
+            "delta_v_objective",
+            "porkchop_grid"
+          ]
+        },
+        {
+          "source": "serialization.encoder",
+          "specifiers": [
+            "encode_porkchop"
+          ]
+        },
+        {
+          "source": "planner.engine",
+          "specifiers": [
+            "plan_routes"
+          ]
+        }
+      ],
+      "exports": [
+        "_validate_iso_date",
+        "_safe_iso_to_jd",
+        "BodyOut",
+        "EphemerisQuery",
+        "OptimizeRequest",
+        "LambertRequest",
+        "PorkchopQuery",
+        "MultiLegRequest",
+        "MultiLegOptimizeRequest",
+        "PlanRequest",
+        "OrbitElementsRequest",
+        "_resolve_body",
+        "_get_cache",
+        "plan_mission",
+        "health",
+        "epoch_range",
+        "list_bodies",
+        "get_ephemeris",
+        "lambert_transfer",
+        "AssessRequest",
+        "assess_launch_window",
+        "start_optimization",
+        "optimization_status",
+        "compute_porkchop",
+        "multileg_transfer",
+        "start_multileg_optimization",
+        "get_orbit_details"
+      ],
+      "totalLines": 848,
+      "hasStructuralAnalysis": true
+    },
+    "src/api/routes_ws.py": {
+      "filePath": "src/api/routes_ws.py",
+      "contentHash": "08097e59e4525c0f2e4f103a374fb0342ec0c895ca510c9f624648f79b3a024d",
+      "functions": [
+        {
+          "name": "ws_trajectory_stream",
+          "params": [
+            "websocket",
+            "job_id"
+          ],
+          "exported": true,
+          "lineCount": 33
+        },
+        {
+          "name": "ws_ephemeris_stream",
+          "params": [
+            "websocket"
+          ],
+          "exported": true,
+          "lineCount": 137
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "asyncio",
+          "specifiers": [
+            "asyncio"
+          ]
+        },
+        {
+          "source": "json",
+          "specifiers": [
+            "json"
+          ]
+        },
+        {
+          "source": "logging",
+          "specifiers": [
+            "logging"
+          ]
+        },
+        {
+          "source": "fastapi",
+          "specifiers": [
+            "APIRouter",
+            "WebSocket",
+            "WebSocketDisconnect"
+          ]
+        },
+        {
+          "source": "ephemeris.bodies",
+          "specifiers": [
+            "ALL_BODIES",
+            "BODY_BY_ID"
+          ]
+        },
+        {
+          "source": "ephemeris.spline_cache",
+          "specifiers": [
+            "EphemerisCache"
+          ]
+        },
+        {
+          "source": "mechanics.transforms",
+          "specifiers": [
+            "iso_to_jd",
+            "jd_to_iso",
+            "positions_to_scene",
+            "km_to_scene"
+          ]
+        },
+        {
+          "source": "optimizer.dispatcher",
+          "specifiers": [
+            "stream_progress"
+          ]
+        },
+        {
+          "source": "serialization.encoder",
+          "specifiers": [
+            "encode_planetary_snapshot"
+          ]
+        }
+      ],
+      "exports": [
+        "ws_trajectory_stream",
+        "ws_ephemeris_stream"
+      ],
+      "totalLines": 199,
+      "hasStructuralAnalysis": true
+    },
+    "src/config.py": {
+      "filePath": "src/config.py",
+      "contentHash": "71ad068d7cdf93eed4e0c537fae0970e6a26b55f07cf88678751fe962f8f2742",
+      "functions": [],
+      "classes": [
+        {
+          "name": "Settings",
+          "methods": [],
+          "properties": [
+            "redis_url",
+            "ephemeris_start",
+            "ephemeris_end",
+            "ephemeris_step_days",
+            "ephemeris_cache_dir",
+            "scene_scale_au",
+            "host",
+            "port",
+            "reload"
+          ],
+          "exported": true,
+          "lineCount": 19
+        }
+      ],
+      "imports": [
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "pydantic_settings",
+          "specifiers": [
+            "BaseSettings"
+          ]
+        }
+      ],
+      "exports": [
+        "Settings"
+      ],
+      "totalLines": 33,
+      "hasStructuralAnalysis": true
+    },
+    "src/ephemeris/__init__.py": {
+      "filePath": "src/ephemeris/__init__.py",
+      "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 1,
+      "hasStructuralAnalysis": true
+    },
+    "src/ephemeris/bodies.py": {
+      "filePath": "src/ephemeris/bodies.py",
+      "contentHash": "2464cc9b18cd22a4171f242604fedddad6d1d06e6403fafc685b4cf67382a858",
+      "functions": [],
+      "classes": [
+        {
+          "name": "CelestialBody",
+          "methods": [],
+          "properties": [
+            "naif_id",
+            "name",
+            "gm",
+            "radius",
+            "color",
+            "horizons_id",
+            "parent_id"
+          ],
+          "exported": true,
+          "lineCount": 8
+        }
+      ],
+      "imports": [
+        {
+          "source": "dataclasses",
+          "specifiers": [
+            "dataclass"
+          ]
+        }
+      ],
+      "exports": [
+        "CelestialBody"
+      ],
+      "totalLines": 111,
+      "hasStructuralAnalysis": true
+    },
+    "src/ephemeris/horizons_client.py": {
+      "filePath": "src/ephemeris/horizons_client.py",
+      "contentHash": "d2c20fa6a3f6ee5f218875c0342c205dafb040727ce884338d4a761e1a983d05",
+      "functions": [
+        {
+          "name": "fetch_state_vectors",
+          "params": [
+            "horizons_id",
+            "start",
+            "stop",
+            "step_days",
+            "center"
+          ],
+          "returnType": "dict",
+          "exported": true,
+          "lineCount": 55
+        },
+        {
+          "name": "_parse_horizons_response",
+          "params": [
+            "text"
+          ],
+          "returnType": "dict",
+          "exported": true,
+          "lineCount": 73
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "logging",
+          "specifiers": [
+            "logging"
+          ]
+        },
+        {
+          "source": "httpx",
+          "specifiers": [
+            "httpx"
+          ]
+        },
+        {
+          "source": "numpy",
+          "specifiers": [
+            "np"
+          ]
+        }
+      ],
+      "exports": [
+        "fetch_state_vectors",
+        "_parse_horizons_response"
+      ],
+      "totalLines": 158,
+      "hasStructuralAnalysis": true
+    },
+    "src/ephemeris/spline_cache.py": {
+      "filePath": "src/ephemeris/spline_cache.py",
+      "contentHash": "34b3f2289261cf03a48629fbab257d377f36b647d23414e71b5731bb67aeb1f3",
+      "functions": [],
+      "classes": [
+        {
+          "name": "EphemerisRangeError",
+          "methods": [
+            "__init__"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 12
+        },
+        {
+          "name": "BodySpline",
+          "methods": [],
+          "properties": [
+            "body",
+            "epoch_start",
+            "epoch_end",
+            "pos_splines",
+            "vel_splines"
+          ],
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "EphemerisCache",
+          "methods": [
+            "__init__",
+            "__len__",
+            "__contains__",
+            "warm",
+            "_fit_and_store",
+            "_save_to_disk",
+            "_load_from_disk",
+            "validate_epoch",
+            "validate_epoch_range",
+            "get_position",
+            "get_velocity",
+            "get_state",
+            "get_positions_batch",
+            "get_epoch_range",
+            "available_bodies"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 194
+        }
+      ],
+      "imports": [
+        {
+          "source": "logging",
+          "specifiers": [
+            "logging"
+          ]
+        },
+        {
+          "source": "pickle",
+          "specifiers": [
+            "pickle"
+          ]
+        },
+        {
+          "source": "dataclasses",
+          "specifiers": [
+            "dataclass",
+            "field"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "numpy",
+          "specifiers": [
+            "np"
+          ]
+        },
+        {
+          "source": "scipy.interpolate",
+          "specifiers": [
+            "CubicSpline"
+          ]
+        },
+        {
+          "source": "config",
+          "specifiers": [
+            "settings"
+          ]
+        },
+        {
+          "source": "ephemeris.bodies",
+          "specifiers": [
+            "ALL_BODIES",
+            "CelestialBody"
+          ]
+        },
+        {
+          "source": "ephemeris.horizons_client",
+          "specifiers": [
+            "fetch_state_vectors"
+          ]
+        }
+      ],
+      "exports": [
+        "EphemerisRangeError",
+        "BodySpline",
+        "EphemerisCache"
+      ],
+      "totalLines": 247,
+      "hasStructuralAnalysis": true
+    },
+    "src/main.py": {
+      "filePath": "src/main.py",
+      "contentHash": "36b1e9f294285173e49a0bf4e746bf5f7b2254f5916377fbf68897cc60ccff5e",
+      "functions": [
+        {
+          "name": "lifespan",
+          "params": [
+            "app"
+          ],
+          "exported": true,
+          "lineCount": 12
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "logging",
+          "specifiers": [
+            "logging"
+          ]
+        },
+        {
+          "source": "contextlib",
+          "specifiers": [
+            "asynccontextmanager"
+          ]
+        },
+        {
+          "source": "fastapi",
+          "specifiers": [
+            "FastAPI"
+          ]
+        },
+        {
+          "source": "fastapi.middleware.cors",
+          "specifiers": [
+            "CORSMiddleware"
+          ]
+        },
+        {
+          "source": "config",
+          "specifiers": [
+            "settings"
+          ]
+        },
+        {
+          "source": "api.routes_http",
+          "specifiers": [
+            "http_router"
+          ]
+        },
+        {
+          "source": "api.routes_ws",
+          "specifiers": [
+            "ws_router"
+          ]
+        },
+        {
+          "source": "ephemeris.spline_cache",
+          "specifiers": [
+            "EphemerisCache"
+          ]
+        }
+      ],
+      "exports": [
+        "lifespan"
+      ],
+      "totalLines": 52,
+      "hasStructuralAnalysis": true
+    },
+    "src/mechanics/__init__.py": {
+      "filePath": "src/mechanics/__init__.py",
+      "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 1,
+      "hasStructuralAnalysis": true
+    },
+    "src/mechanics/kepler.py": {
+      "filePath": "src/mechanics/kepler.py",
+      "contentHash": "40a887743dc1574835f3302e6f2d2af0f20c4d69b0169e726324dc17fd899bc8",
+      "functions": [
+        {
+          "name": "state_to_elements",
+          "params": [
+            "r",
+            "v",
+            "mu"
+          ],
+          "returnType": "tuple",
+          "exported": true,
+          "lineCount": 80
+        },
+        {
+          "name": "elements_to_state",
+          "params": [
+            "a",
+            "ecc",
+            "inc",
+            "raan",
+            "argp",
+            "nu",
+            "mu"
+          ],
+          "returnType": "tuple",
+          "exported": true,
+          "lineCount": 51
+        },
+        {
+          "name": "_solve_kepler_elliptic",
+          "params": [
+            "M",
+            "ecc",
+            "tol"
+          ],
+          "returnType": "float",
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "_solve_kepler_hyperbolic",
+          "params": [
+            "M",
+            "ecc",
+            "tol"
+          ],
+          "returnType": "float",
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "propagate_kepler",
+          "params": [
+            "r0",
+            "v0",
+            "dt",
+            "mu"
+          ],
+          "returnType": "tuple",
+          "exported": true,
+          "lineCount": 96
+        },
+        {
+          "name": "compute_apsis_points",
+          "params": [
+            "a",
+            "ecc",
+            "inc",
+            "raan",
+            "argp",
+            "mu"
+          ],
+          "returnType": "tuple[np.ndarray, np.ndarray]",
+          "exported": true,
+          "lineCount": 16
+        },
+        {
+          "name": "generate_full_orbit_points",
+          "params": [
+            "a",
+            "ecc",
+            "inc",
+            "raan",
+            "argp",
+            "mu",
+            "n_points"
+          ],
+          "returnType": "np.ndarray",
+          "exported": true,
+          "lineCount": 22
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "math",
+          "specifiers": [
+            "math"
+          ]
+        },
+        {
+          "source": "numpy",
+          "specifiers": [
+            "np"
+          ]
+        },
+        {
+          "source": "numba",
+          "specifiers": [
+            "njit"
+          ]
+        },
+        {
+          "source": "ephemeris.bodies",
+          "specifiers": [
+            "GM_SUN"
+          ]
+        }
+      ],
+      "exports": [
+        "state_to_elements",
+        "elements_to_state",
+        "_solve_kepler_elliptic",
+        "_solve_kepler_hyperbolic",
+        "propagate_kepler",
+        "compute_apsis_points",
+        "generate_full_orbit_points"
+      ],
+      "totalLines": 334,
+      "hasStructuralAnalysis": true
+    },
+    "src/mechanics/lambert.py": {
+      "filePath": "src/mechanics/lambert.py",
+      "contentHash": "f891eeb4dccbe7c9c0f1be6b91f3204888a0a45270006c52965c43825b273fae",
+      "functions": [
+        {
+          "name": "_stumpff_c2",
+          "params": [
+            "psi"
+          ],
+          "returnType": "float",
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "_stumpff_c3",
+          "params": [
+            "psi"
+          ],
+          "returnType": "float",
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "_stumpff_dc2",
+          "params": [
+            "psi",
+            "c2",
+            "c3"
+          ],
+          "returnType": "float",
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "_stumpff_dc3",
+          "params": [
+            "psi",
+            "c2",
+            "c3"
+          ],
+          "returnType": "float",
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "_solve_lambert_uv",
+          "params": [
+            "r1",
+            "r2",
+            "tof",
+            "mu",
+            "prograde",
+            "max_iter",
+            "tol"
+          ],
+          "returnType": "tuple",
+          "exported": true,
+          "lineCount": 159
+        },
+        {
+          "name": "solve_lambert",
+          "params": [
+            "r1",
+            "r2",
+            "tof",
+            "mu",
+            "prograde"
+          ],
+          "returnType": "dict",
+          "exported": true,
+          "lineCount": 29
+        },
+        {
+          "name": "compute_transfer_dv",
+          "params": [
+            "r1",
+            "v1_planet",
+            "r2",
+            "v2_planet",
+            "tof",
+            "mu",
+            "prograde"
+          ],
+          "returnType": "dict",
+          "exported": true,
+          "lineCount": 73
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "math",
+          "specifiers": [
+            "math"
+          ]
+        },
+        {
+          "source": "numpy",
+          "specifiers": [
+            "np"
+          ]
+        },
+        {
+          "source": "numba",
+          "specifiers": [
+            "njit"
+          ]
+        },
+        {
+          "source": "mechanics.kepler",
+          "specifiers": [
+            "state_to_elements",
+            "compute_apsis_points"
+          ]
+        }
+      ],
+      "exports": [
+        "_stumpff_c2",
+        "_stumpff_c3",
+        "_stumpff_dc2",
+        "_stumpff_dc3",
+        "_solve_lambert_uv",
+        "solve_lambert",
+        "compute_transfer_dv"
+      ],
+      "totalLines": 338,
+      "hasStructuralAnalysis": true
+    },
+    "src/mechanics/multileg.py": {
+      "filePath": "src/mechanics/multileg.py",
+      "contentHash": "ce338db946797d02a2cfc5dd65c645de0d54cf9cef5f71494119332eaf48ecac",
+      "functions": [
+        {
+          "name": "compute_multileg_trajectory",
+          "params": [
+            "body_names",
+            "departure_jd",
+            "leg_tof_days",
+            "cache",
+            "mu",
+            "n_traj_points"
+          ],
+          "returnType": "MultiLegResult",
+          "exported": true,
+          "lineCount": 199
+        },
+        {
+          "name": "_compute_flyby",
+          "params": [
+            "body",
+            "epoch_jd",
+            "v_in_transfer",
+            "v_out_transfer",
+            "v_planet"
+          ],
+          "returnType": "FlybyInfo",
+          "exported": true,
+          "lineCount": 83
+        },
+        {
+          "name": "_generate_leg_trajectory",
+          "params": [
+            "r0",
+            "v0",
+            "tof_seconds",
+            "departure_jd",
+            "mu",
+            "n_points"
+          ],
+          "returnType": "list[dict]",
+          "exported": true,
+          "lineCount": 26
+        },
+        {
+          "name": "multileg_result_to_dict",
+          "params": [
+            "result"
+          ],
+          "returnType": "dict",
+          "exported": true,
+          "lineCount": 51
+        }
+      ],
+      "classes": [
+        {
+          "name": "FlybyInfo",
+          "methods": [],
+          "properties": [
+            "body_name",
+            "body_naif_id",
+            "epoch_jd",
+            "epoch_iso",
+            "v_inf_in_km_s",
+            "v_inf_out_km_s",
+            "turning_angle_deg",
+            "flyby_periapsis_km",
+            "flyby_altitude_km",
+            "powered_dv_km_s",
+            "feasible_unpowered"
+          ],
+          "exported": true,
+          "lineCount": 25
+        },
+        {
+          "name": "LegResult",
+          "methods": [],
+          "properties": [
+            "leg_index",
+            "origin_name",
+            "target_name",
+            "departure_jd",
+            "arrival_jd",
+            "departure_iso",
+            "arrival_iso",
+            "tof_days",
+            "dv_departure_km_s",
+            "dv_arrival_km_s",
+            "v1_transfer",
+            "v2_transfer",
+            "v1_planet",
+            "v2_planet",
+            "orbit_elements",
+            "trajectory_points",
+            "converged"
+          ],
+          "exported": true,
+          "lineCount": 30
+        },
+        {
+          "name": "MultiLegResult",
+          "methods": [],
+          "properties": [
+            "body_sequence",
+            "legs",
+            "flybys",
+            "total_dv_km_s",
+            "departure_dv_km_s",
+            "arrival_dv_km_s",
+            "flyby_dv_km_s",
+            "total_tof_days",
+            "departure_jd",
+            "arrival_jd"
+          ],
+          "exported": true,
+          "lineCount": 15
+        }
+      ],
+      "imports": [
+        {
+          "source": "math",
+          "specifiers": [
+            "math"
+          ]
+        },
+        {
+          "source": "logging",
+          "specifiers": [
+            "logging"
+          ]
+        },
+        {
+          "source": "dataclasses",
+          "specifiers": [
+            "dataclass",
+            "field"
+          ]
+        },
+        {
+          "source": "numpy",
+          "specifiers": [
+            "np"
+          ]
+        },
+        {
+          "source": "ephemeris.bodies",
+          "specifiers": [
+            "GM_SUN",
+            "BODY_BY_ID",
+            "BODY_BY_NAME",
+            "CelestialBody"
+          ]
+        },
+        {
+          "source": "ephemeris.spline_cache",
+          "specifiers": [
+            "EphemerisCache",
+            "EphemerisRangeError"
+          ]
+        },
+        {
+          "source": "mechanics.lambert",
+          "specifiers": [
+            "compute_transfer_dv"
+          ]
+        },
+        {
+          "source": "mechanics.kepler",
+          "specifiers": [
+            "propagate_kepler"
+          ]
+        },
+        {
+          "source": "mechanics.transforms",
+          "specifiers": [
+            "km_to_scene",
+            "jd_to_iso"
+          ]
+        }
+      ],
+      "exports": [
+        "FlybyInfo",
+        "LegResult",
+        "MultiLegResult",
+        "compute_multileg_trajectory",
+        "_compute_flyby",
+        "_generate_leg_trajectory",
+        "multileg_result_to_dict"
+      ],
+      "totalLines": 475,
+      "hasStructuralAnalysis": true
+    },
+    "src/mechanics/transforms.py": {
+      "filePath": "src/mechanics/transforms.py",
+      "contentHash": "f75ae0173a474cd30db590e995d2a3532f80e94eba4b1fe6a963dbc5bd56bdbe",
+      "functions": [
+        {
+          "name": "km_to_scene",
+          "params": [
+            "pos_km"
+          ],
+          "returnType": "np.ndarray",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "km_to_au",
+          "params": [
+            "pos_km"
+          ],
+          "returnType": "np.ndarray",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "jd_to_datetime",
+          "params": [
+            "jd"
+          ],
+          "returnType": "datetime",
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "datetime_to_jd",
+          "params": [
+            "dt"
+          ],
+          "returnType": "float",
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "iso_to_jd",
+          "params": [
+            "iso_str"
+          ],
+          "returnType": "float",
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "jd_to_iso",
+          "params": [
+            "jd"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "sample_trajectory_adaptive",
+          "params": [
+            "positions",
+            "epochs",
+            "angle_threshold_deg",
+            "min_points",
+            "max_points"
+          ],
+          "returnType": "tuple[np.ndarray, np.ndarray]",
+          "exported": true,
+          "lineCount": 62
+        },
+        {
+          "name": "positions_to_scene",
+          "params": [
+            "positions_km"
+          ],
+          "returnType": "np.ndarray",
+          "exported": true,
+          "lineCount": 3
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "math",
+          "specifiers": [
+            "math"
+          ]
+        },
+        {
+          "source": "datetime",
+          "specifiers": [
+            "datetime",
+            "timedelta"
+          ]
+        },
+        {
+          "source": "numpy",
+          "specifiers": [
+            "np"
+          ]
+        },
+        {
+          "source": "numba",
+          "specifiers": [
+            "njit"
+          ]
+        },
+        {
+          "source": "config",
+          "specifiers": [
+            "settings"
+          ]
+        },
+        {
+          "source": "ephemeris.bodies",
+          "specifiers": [
+            "AU_KM"
+          ]
+        }
+      ],
+      "exports": [
+        "km_to_scene",
+        "km_to_au",
+        "jd_to_datetime",
+        "datetime_to_jd",
+        "iso_to_jd",
+        "jd_to_iso",
+        "sample_trajectory_adaptive",
+        "positions_to_scene"
+      ],
+      "totalLines": 156,
+      "hasStructuralAnalysis": true
+    },
+    "src/optimizer/__init__.py": {
+      "filePath": "src/optimizer/__init__.py",
+      "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 1,
+      "hasStructuralAnalysis": true
+    },
+    "src/optimizer/dispatcher.py": {
+      "filePath": "src/optimizer/dispatcher.py",
+      "contentHash": "e0605c2b583b2d1ba6a49e0ffeb8891b49d24197e60d40a2be0e5c270d7f51b5",
+      "functions": [
+        {
+          "name": "_redis_settings",
+          "params": [],
+          "returnType": "RedisSettings",
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "get_arq_pool",
+          "params": [],
+          "returnType": "ArqRedis",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "get_redis",
+          "params": [],
+          "returnType": "aioredis.Redis",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "submit_optimization",
+          "params": [
+            "request"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 46
+        },
+        {
+          "name": "get_job_status",
+          "params": [
+            "job_id"
+          ],
+          "returnType": "dict",
+          "exported": true,
+          "lineCount": 22
+        },
+        {
+          "name": "stream_progress",
+          "params": [
+            "job_id"
+          ],
+          "returnType": "AsyncGenerator[dict, None]",
+          "exported": true,
+          "lineCount": 33
+        },
+        {
+          "name": "publish_progress",
+          "params": [
+            "job_id",
+            "progress",
+            "status"
+          ],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 27
+        },
+        {
+          "name": "_progress_to_dict",
+          "params": [
+            "p"
+          ],
+          "returnType": "dict",
+          "exported": true,
+          "lineCount": 20
+        },
+        {
+          "name": "submit_multileg_optimization",
+          "params": [
+            "request"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 44
+        },
+        {
+          "name": "publish_multileg_progress",
+          "params": [
+            "job_id",
+            "progress",
+            "status"
+          ],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 24
+        },
+        {
+          "name": "_multileg_progress_to_dict",
+          "params": [
+            "p"
+          ],
+          "returnType": "dict",
+          "exported": true,
+          "lineCount": 27
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "json",
+          "specifiers": [
+            "json"
+          ]
+        },
+        {
+          "source": "logging",
+          "specifiers": [
+            "logging"
+          ]
+        },
+        {
+          "source": "uuid",
+          "specifiers": [
+            "uuid"
+          ]
+        },
+        {
+          "source": "typing",
+          "specifiers": [
+            "AsyncGenerator"
+          ]
+        },
+        {
+          "source": "redis.asyncio",
+          "specifiers": [
+            "aioredis"
+          ]
+        },
+        {
+          "source": "arq",
+          "specifiers": [
+            "create_pool"
+          ]
+        },
+        {
+          "source": "arq.connections",
+          "specifiers": [
+            "RedisSettings",
+            "ArqRedis"
+          ]
+        },
+        {
+          "source": "config",
+          "specifiers": [
+            "settings"
+          ]
+        },
+        {
+          "source": "optimizer.gmpa",
+          "specifiers": [
+            "OptimizationProgress",
+            "OptimizationRequest",
+            "MultiLegOptimizationProgress",
+            "MultiLegOptimizationRequest"
+          ]
+        }
+      ],
+      "exports": [
+        "_redis_settings",
+        "get_arq_pool",
+        "get_redis",
+        "submit_optimization",
+        "get_job_status",
+        "stream_progress",
+        "publish_progress",
+        "_progress_to_dict",
+        "submit_multileg_optimization",
+        "publish_multileg_progress",
+        "_multileg_progress_to_dict"
+      ],
+      "totalLines": 315,
+      "hasStructuralAnalysis": true
+    },
+    "src/optimizer/gmpa.py": {
+      "filePath": "src/optimizer/gmpa.py",
+      "contentHash": "7877f304714c885552c04e74cadde84813bbeefac1324d535976d0840123b106",
+      "functions": [],
+      "classes": [
+        {
+          "name": "OptimizationProgress",
+          "methods": [],
+          "properties": [
+            "iteration",
+            "max_iterations",
+            "best_dv_total",
+            "best_departure_jd",
+            "best_tof_days",
+            "best_dv_departure",
+            "best_dv_arrival",
+            "converged",
+            "population_best_dvs",
+            "population_positions",
+            "pareto_front",
+            "mode",
+            "insight",
+            "orbit_elements"
+          ],
+          "exported": true,
+          "lineCount": 16
+        },
+        {
+          "name": "OptimizationRequest",
+          "methods": [],
+          "properties": [
+            "origin_id",
+            "target_id",
+            "dep_start_jd",
+            "dep_end_jd",
+            "tof_min_days",
+            "tof_max_days",
+            "population_size",
+            "max_iterations",
+            "prograde",
+            "mode"
+          ],
+          "exported": true,
+          "lineCount": 12
+        },
+        {
+          "name": "ParetoArchive",
+          "methods": [
+            "__init__",
+            "add",
+            "to_list"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 41
+        },
+        {
+          "name": "GreyWolfOptimizer",
+          "methods": [
+            "__init__",
+            "run",
+            "_get_fitness",
+            "_evaluate_full",
+            "_make_progress"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 232
+        },
+        {
+          "name": "MultiLegOptimizationProgress",
+          "methods": [],
+          "properties": [
+            "iteration",
+            "max_iterations",
+            "best_dv_total",
+            "best_departure_jd",
+            "best_leg_tof_days",
+            "best_total_tof_days",
+            "best_dv_departure",
+            "best_dv_arrival",
+            "best_dv_flyby",
+            "converged",
+            "body_sequence",
+            "population_best_dvs",
+            "population_positions",
+            "pareto_front",
+            "mode",
+            "insight",
+            "orbit_elements_list"
+          ],
+          "exported": true,
+          "lineCount": 19
+        },
+        {
+          "name": "MultiLegOptimizationRequest",
+          "methods": [],
+          "properties": [
+            "body_names",
+            "dep_start_jd",
+            "dep_end_jd",
+            "leg_tof_bounds",
+            "population_size",
+            "max_iterations",
+            "max_c3",
+            "mode"
+          ],
+          "exported": true,
+          "lineCount": 15
+        },
+        {
+          "name": "MultiLegGreyWolfOptimizer",
+          "methods": [
+            "__init__",
+            "run",
+            "_get_fitness",
+            "_evaluate_full",
+            "_make_progress"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 277
+        }
+      ],
+      "imports": [
+        {
+          "source": "logging",
+          "specifiers": [
+            "logging"
+          ]
+        },
+        {
+          "source": "dataclasses",
+          "specifiers": [
+            "dataclass",
+            "field"
+          ]
+        },
+        {
+          "source": "typing",
+          "specifiers": [
+            "Generator"
+          ]
+        },
+        {
+          "source": "numpy",
+          "specifiers": [
+            "np"
+          ]
+        },
+        {
+          "source": "ephemeris.spline_cache",
+          "specifiers": [
+            "EphemerisCache"
+          ]
+        },
+        {
+          "source": "optimizer.objective",
+          "specifiers": [
+            "delta_v_objective"
+          ]
+        },
+        {
+          "source": "optimizer.multileg_objective",
+          "specifiers": [
+            "multileg_objective",
+            "multileg_objective_full"
+          ]
+        }
+      ],
+      "exports": [
+        "OptimizationProgress",
+        "OptimizationRequest",
+        "ParetoArchive",
+        "GreyWolfOptimizer",
+        "MultiLegOptimizationProgress",
+        "MultiLegOptimizationRequest",
+        "MultiLegGreyWolfOptimizer"
+      ],
+      "totalLines": 663,
+      "hasStructuralAnalysis": true
+    },
+    "src/optimizer/multileg_objective.py": {
+      "filePath": "src/optimizer/multileg_objective.py",
+      "contentHash": "6a5699a85b8b5ca07eaa45adfa76ce49e307b1c61bc1c7ace614e421fe0aabfe",
+      "functions": [
+        {
+          "name": "multileg_objective",
+          "params": [
+            "x",
+            "body_names",
+            "cache",
+            "max_c3"
+          ],
+          "returnType": "float",
+          "exported": true,
+          "lineCount": 61
+        },
+        {
+          "name": "multileg_objective_full",
+          "params": [
+            "x",
+            "body_names",
+            "cache",
+            "n_traj_points"
+          ],
+          "returnType": "MultiLegResult | None",
+          "exported": true,
+          "lineCount": 35
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "logging",
+          "specifiers": [
+            "logging"
+          ]
+        },
+        {
+          "source": "numpy",
+          "specifiers": [
+            "np"
+          ]
+        },
+        {
+          "source": "ephemeris.spline_cache",
+          "specifiers": [
+            "EphemerisCache",
+            "EphemerisRangeError"
+          ]
+        },
+        {
+          "source": "mechanics.multileg",
+          "specifiers": [
+            "compute_multileg_trajectory",
+            "MultiLegResult"
+          ]
+        }
+      ],
+      "exports": [
+        "multileg_objective",
+        "multileg_objective_full"
+      ],
+      "totalLines": 121,
+      "hasStructuralAnalysis": true
+    },
+    "src/optimizer/nsga2.py": {
+      "filePath": "src/optimizer/nsga2.py",
+      "contentHash": "9fd6161573b494849bcbd9b7b614c0a98146c865643ad37e26ba36d28a028d80",
+      "functions": [
+        {
+          "name": "fast_non_dominated_sort",
+          "params": [
+            "fitnesses"
+          ],
+          "returnType": "list[list[int]]",
+          "exported": true,
+          "lineCount": 32
+        },
+        {
+          "name": "calculate_crowding_distance",
+          "params": [
+            "fitnesses",
+            "front"
+          ],
+          "returnType": "np.ndarray",
+          "exported": true,
+          "lineCount": 28
+        },
+        {
+          "name": "sbx_crossover",
+          "params": [
+            "p1",
+            "p2",
+            "lb",
+            "ub",
+            "eta_c"
+          ],
+          "returnType": "tuple[np.ndarray, np.ndarray]",
+          "exported": true,
+          "lineCount": 12
+        },
+        {
+          "name": "polynomial_mutation",
+          "params": [
+            "p",
+            "lb",
+            "ub",
+            "eta_m",
+            "prob"
+          ],
+          "returnType": "np.ndarray",
+          "exported": true,
+          "lineCount": 17
+        }
+      ],
+      "classes": [
+        {
+          "name": "NSGA2Optimizer",
+          "methods": [
+            "__init__",
+            "_get_fitness",
+            "_evaluate_full",
+            "_generate_insight",
+            "run",
+            "_make_progress"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 165
+        },
+        {
+          "name": "MultiLegNSGA2Optimizer",
+          "methods": [
+            "__init__",
+            "_get_fitness",
+            "_evaluate_full",
+            "_generate_insight",
+            "run",
+            "_make_progress"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 191
+        }
+      ],
+      "imports": [
+        {
+          "source": "logging",
+          "specifiers": [
+            "logging"
+          ]
+        },
+        {
+          "source": "typing",
+          "specifiers": [
+            "Generator"
+          ]
+        },
+        {
+          "source": "numpy",
+          "specifiers": [
+            "np"
+          ]
+        },
+        {
+          "source": "ephemeris.spline_cache",
+          "specifiers": [
+            "EphemerisCache"
+          ]
+        },
+        {
+          "source": "optimizer.gmpa",
+          "specifiers": [
+            "OptimizationProgress",
+            "OptimizationRequest",
+            "MultiLegOptimizationProgress",
+            "MultiLegOptimizationRequest",
+            "ParetoArchive"
+          ]
+        },
+        {
+          "source": "optimizer.objective",
+          "specifiers": [
+            "delta_v_objective"
+          ]
+        },
+        {
+          "source": "optimizer.multileg_objective",
+          "specifiers": [
+            "multileg_objective_full"
+          ]
+        }
+      ],
+      "exports": [
+        "fast_non_dominated_sort",
+        "calculate_crowding_distance",
+        "sbx_crossover",
+        "polynomial_mutation",
+        "NSGA2Optimizer",
+        "MultiLegNSGA2Optimizer"
+      ],
+      "totalLines": 480,
+      "hasStructuralAnalysis": true
+    },
+    "src/optimizer/objective.py": {
+      "filePath": "src/optimizer/objective.py",
+      "contentHash": "aa997a9f3c746b55c1daf8173c23b0246e1f6b8f5b002220a2347b52d162afc8",
+      "functions": [
+        {
+          "name": "delta_v_objective",
+          "params": [
+            "departure_jd",
+            "tof_days",
+            "origin_id",
+            "target_id",
+            "cache",
+            "mu",
+            "prograde"
+          ],
+          "returnType": "dict",
+          "exported": true,
+          "lineCount": 76
+        },
+        {
+          "name": "_inf_result",
+          "params": [
+            "dep",
+            "arr",
+            "tof"
+          ],
+          "returnType": "dict",
+          "exported": true,
+          "lineCount": 13
+        },
+        {
+          "name": "porkchop_grid",
+          "params": [
+            "origin_id",
+            "target_id",
+            "dep_start_jd",
+            "dep_end_jd",
+            "tof_min_days",
+            "tof_max_days",
+            "cache",
+            "dep_steps",
+            "tof_steps",
+            "mu"
+          ],
+          "returnType": "dict",
+          "exported": true,
+          "lineCount": 39
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "numpy",
+          "specifiers": [
+            "np"
+          ]
+        },
+        {
+          "source": "ephemeris.bodies",
+          "specifiers": [
+            "GM_SUN"
+          ]
+        },
+        {
+          "source": "ephemeris.spline_cache",
+          "specifiers": [
+            "EphemerisCache",
+            "EphemerisRangeError"
+          ]
+        },
+        {
+          "source": "mechanics.lambert",
+          "specifiers": [
+            "compute_transfer_dv"
+          ]
+        }
+      ],
+      "exports": [
+        "delta_v_objective",
+        "_inf_result",
+        "porkchop_grid"
+      ],
+      "totalLines": 148,
+      "hasStructuralAnalysis": true
+    },
+    "src/planner/__init__.py": {
+      "filePath": "src/planner/__init__.py",
+      "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 1,
+      "hasStructuralAnalysis": true
+    },
+    "src/planner/catalog.py": {
+      "filePath": "src/planner/catalog.py",
+      "contentHash": "3e55474c7dbd79c53a2094219adabe68dc09ae1b0fe4e50cbf77a989e701e2c0",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 84,
+      "hasStructuralAnalysis": true
+    },
+    "src/planner/engine.py": {
+      "filePath": "src/planner/engine.py",
+      "contentHash": "448fb1ebaf8dcb5dac1cd16b3151fc0b8c1152bcf5c62818325f594dc8fb9253",
+      "functions": [
+        {
+          "name": "plan_routes",
+          "params": [
+            "origin",
+            "target",
+            "mode",
+            "dep_start_iso",
+            "dep_end_iso",
+            "cache"
+          ],
+          "returnType": "list[dict]",
+          "exported": true,
+          "lineCount": 95
+        },
+        {
+          "name": "_scan_for_windows",
+          "params": [
+            "origin",
+            "target",
+            "start_jd",
+            "end_jd",
+            "tof",
+            "step",
+            "cache"
+          ],
+          "returnType": "list[float]",
+          "exported": true,
+          "lineCount": 38
+        },
+        {
+          "name": "_estimate_tof",
+          "params": [
+            "origin",
+            "target"
+          ],
+          "returnType": "float",
+          "exported": true,
+          "lineCount": 12
+        },
+        {
+          "name": "_eval_direct",
+          "params": [
+            "origin",
+            "target",
+            "dep_jd",
+            "tof",
+            "cache"
+          ],
+          "returnType": "dict | None",
+          "exported": true,
+          "lineCount": 60
+        },
+        {
+          "name": "_eval_multileg",
+          "params": [
+            "sequence",
+            "dep_jd",
+            "leg_tofs",
+            "name",
+            "cache"
+          ],
+          "returnType": "dict | None",
+          "exported": true,
+          "lineCount": 19
+        },
+        {
+          "name": "_rate_dv",
+          "params": [
+            "dv"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 6
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "math",
+          "specifiers": [
+            "math"
+          ]
+        },
+        {
+          "source": "datetime",
+          "specifiers": [
+            "datetime",
+            "timedelta"
+          ]
+        },
+        {
+          "source": "numpy",
+          "specifiers": [
+            "np"
+          ]
+        },
+        {
+          "source": "ephemeris.bodies",
+          "specifiers": [
+            "BODY_BY_NAME",
+            "GM_SUN"
+          ]
+        },
+        {
+          "source": "ephemeris.spline_cache",
+          "specifiers": [
+            "EphemerisCache"
+          ]
+        },
+        {
+          "source": "mechanics.lambert",
+          "specifiers": [
+            "compute_transfer_dv"
+          ]
+        },
+        {
+          "source": "mechanics.multileg",
+          "specifiers": [
+            "compute_multileg_trajectory",
+            "multileg_result_to_dict"
+          ]
+        },
+        {
+          "source": "mechanics.transforms",
+          "specifiers": [
+            "jd_to_iso",
+            "iso_to_jd"
+          ]
+        },
+        {
+          "source": "planner.catalog",
+          "specifiers": [
+            "GA_CATALOG",
+            "ORBITAL_PERIODS_DAYS"
+          ]
+        }
+      ],
+      "exports": [
+        "plan_routes",
+        "_scan_for_windows",
+        "_estimate_tof",
+        "_eval_direct",
+        "_eval_multileg",
+        "_rate_dv"
+      ],
+      "totalLines": 258,
+      "hasStructuralAnalysis": true
+    },
+    "src/serialization/__init__.py": {
+      "filePath": "src/serialization/__init__.py",
+      "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 1,
+      "hasStructuralAnalysis": true
+    },
+    "src/serialization/encoder.py": {
+      "filePath": "src/serialization/encoder.py",
+      "contentHash": "d71abc2b41a80ae033850bb727a685efa92b7f37da80768b0c38b3ae193a76a4",
+      "functions": [
+        {
+          "name": "encode_planetary_snapshot",
+          "params": [
+            "epoch_jd",
+            "bodies"
+          ],
+          "returnType": "bytes",
+          "exported": true,
+          "lineCount": 23
+        },
+        {
+          "name": "encode_trajectory",
+          "params": [
+            "segments",
+            "total_dv",
+            "departure_jd",
+            "arrival_jd",
+            "tof_days"
+          ],
+          "returnType": "bytes",
+          "exported": true,
+          "lineCount": 42
+        },
+        {
+          "name": "encode_porkchop",
+          "params": [
+            "departure_jds",
+            "tof_days",
+            "dv_grid"
+          ],
+          "returnType": "bytes",
+          "exported": true,
+          "lineCount": 19
+        },
+        {
+          "name": "_encode_snapshot_binary",
+          "params": [
+            "epoch_jd",
+            "bodies"
+          ],
+          "returnType": "bytes",
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "_encode_trajectory_binary",
+          "params": [
+            "segments",
+            "total_dv",
+            "departure_jd",
+            "arrival_jd",
+            "tof_days"
+          ],
+          "returnType": "bytes",
+          "exported": true,
+          "lineCount": 19
+        },
+        {
+          "name": "_encode_porkchop_binary",
+          "params": [
+            "departure_jds",
+            "tof_days",
+            "dv_grid"
+          ],
+          "returnType": "bytes",
+          "exported": true,
+          "lineCount": 12
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "logging",
+          "specifiers": [
+            "logging"
+          ]
+        },
+        {
+          "source": "struct",
+          "specifiers": [
+            "struct"
+          ]
+        },
+        {
+          "source": "typing",
+          "specifiers": [
+            "Any"
+          ]
+        },
+        {
+          "source": "numpy",
+          "specifiers": [
+            "np"
+          ]
+        }
+      ],
+      "exports": [
+        "encode_planetary_snapshot",
+        "encode_trajectory",
+        "encode_porkchop",
+        "_encode_snapshot_binary",
+        "_encode_trajectory_binary",
+        "_encode_porkchop_binary"
+      ],
+      "totalLines": 176,
+      "hasStructuralAnalysis": true
+    },
+    "src/workers/__init__.py": {
+      "filePath": "src/workers/__init__.py",
+      "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 1,
+      "hasStructuralAnalysis": true
+    },
+    "src/workers/worker.py": {
+      "filePath": "src/workers/worker.py",
+      "contentHash": "f5f1290c2379cab4c4a13d41f47eab8ecb3c01dba214029a7a2e3f86fcdfee43",
+      "functions": [
+        {
+          "name": "startup",
+          "params": [
+            "ctx"
+          ],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 12
+        },
+        {
+          "name": "shutdown",
+          "params": [
+            "ctx"
+          ],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "run_optimization",
+          "params": [
+            "ctx",
+            "job_id",
+            "request_data"
+          ],
+          "returnType": "dict",
+          "exported": true,
+          "lineCount": 68
+        },
+        {
+          "name": "run_multileg_optimization",
+          "params": [
+            "ctx",
+            "job_id",
+            "request_data"
+          ],
+          "returnType": "dict",
+          "exported": true,
+          "lineCount": 58
+        }
+      ],
+      "classes": [
+        {
+          "name": "WorkerSettings",
+          "methods": [],
+          "properties": [],
+          "exported": true,
+          "lineCount": 8
+        }
+      ],
+      "imports": [
+        {
+          "source": "asyncio",
+          "specifiers": [
+            "asyncio"
+          ]
+        },
+        {
+          "source": "json",
+          "specifiers": [
+            "json"
+          ]
+        },
+        {
+          "source": "logging",
+          "specifiers": [
+            "logging"
+          ]
+        },
+        {
+          "source": "arq.connections",
+          "specifiers": [
+            "RedisSettings"
+          ]
+        },
+        {
+          "source": "config",
+          "specifiers": [
+            "settings"
+          ]
+        },
+        {
+          "source": "ephemeris.spline_cache",
+          "specifiers": [
+            "EphemerisCache"
+          ]
+        },
+        {
+          "source": "optimizer.dispatcher",
+          "specifiers": [
+            "publish_progress",
+            "publish_multileg_progress",
+            "JOB_PREFIX",
+            "get_redis",
+            "_redis_settings"
+          ]
+        },
+        {
+          "source": "optimizer.gmpa",
+          "specifiers": [
+            "OptimizationRequest",
+            "MultiLegOptimizationRequest"
+          ]
+        },
+        {
+          "source": "optimizer.nsga2",
+          "specifiers": [
+            "NSGA2Optimizer",
+            "MultiLegNSGA2Optimizer"
+          ]
+        }
+      ],
+      "exports": [
+        "startup",
+        "shutdown",
+        "run_optimization",
+        "run_multileg_optimization",
+        "WorkerSettings"
+      ],
+      "totalLines": 190,
+      "hasStructuralAnalysis": true
+    },
+    "tests/test_api.py": {
+      "filePath": "tests/test_api.py",
+      "contentHash": "5fda093b64f03100d8421c9621360bc63768e5f52fcd7680000dd54f2c3961c0",
+      "functions": [
+        {
+          "name": "log",
+          "params": [
+            "test_name",
+            "passed",
+            "detail"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "request",
+          "params": [
+            "endpoint",
+            "method",
+            "data"
+          ],
+          "returnType": "tuple[int, dict | None]",
+          "exported": true,
+          "lineCount": 24
+        },
+        {
+          "name": "test_health",
+          "params": [],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "test_bodies",
+          "params": [],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "test_epoch_range",
+          "params": [],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "test_ephemeris",
+          "params": [],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "test_lambert",
+          "params": [],
+          "exported": true,
+          "lineCount": 13
+        },
+        {
+          "name": "test_lambert_validation",
+          "params": [],
+          "exported": true,
+          "lineCount": 17
+        },
+        {
+          "name": "test_assess",
+          "params": [],
+          "exported": true,
+          "lineCount": 17
+        },
+        {
+          "name": "test_assess_good_date",
+          "params": [],
+          "exported": true,
+          "lineCount": 11
+        },
+        {
+          "name": "test_optimize_modes",
+          "params": [],
+          "exported": true,
+          "lineCount": 25
+        },
+        {
+          "name": "test_optimize_validation",
+          "params": [],
+          "exported": true,
+          "lineCount": 19
+        },
+        {
+          "name": "test_porkchop",
+          "params": [],
+          "exported": true,
+          "lineCount": 17
+        },
+        {
+          "name": "test_multileg",
+          "params": [],
+          "exported": true,
+          "lineCount": 13
+        },
+        {
+          "name": "test_multileg_optimize",
+          "params": [],
+          "exported": true,
+          "lineCount": 17
+        },
+        {
+          "name": "test_job_status",
+          "params": [],
+          "exported": true,
+          "lineCount": 17
+        },
+        {
+          "name": "test_websocket",
+          "params": [],
+          "exported": true,
+          "lineCount": 47
+        },
+        {
+          "name": "test_errors",
+          "params": [],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "main",
+          "params": [],
+          "exported": true,
+          "lineCount": 27
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "asyncio",
+          "specifiers": [
+            "asyncio"
+          ]
+        },
+        {
+          "source": "json",
+          "specifiers": [
+            "json"
+          ]
+        },
+        {
+          "source": "sys",
+          "specifiers": [
+            "sys"
+          ]
+        },
+        {
+          "source": "time",
+          "specifiers": [
+            "time"
+          ]
+        },
+        {
+          "source": "typing",
+          "specifiers": [
+            "Any"
+          ]
+        },
+        {
+          "source": "websockets",
+          "specifiers": [
+            "websockets"
+          ]
+        }
+      ],
+      "exports": [
+        "log",
+        "request",
+        "test_health",
+        "test_bodies",
+        "test_epoch_range",
+        "test_ephemeris",
+        "test_lambert",
+        "test_lambert_validation",
+        "test_assess",
+        "test_assess_good_date",
+        "test_optimize_modes",
+        "test_optimize_validation",
+        "test_porkchop",
+        "test_multileg",
+        "test_multileg_optimize",
+        "test_job_status",
+        "test_websocket",
+        "test_errors",
+        "main"
+      ],
+      "totalLines": 406,
+      "hasStructuralAnalysis": true
+    }
+  }
+}

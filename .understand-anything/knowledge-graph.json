@@ -1,0 +1,6056 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "Tars",
+    "languages": [
+      "config",
+      "css",
+      "dockerfile",
+      "html",
+      "javascript",
+      "markdown",
+      "protobuf",
+      "python",
+      "yaml"
+    ],
+    "frameworks": [
+      "ARQ",
+      "Docker",
+      "Docker Compose",
+      "FastAPI",
+      "NumPy",
+      "Numba",
+      "Pydantic",
+      "Redis",
+      "SciPy",
+      "Three.js",
+      "Uvicorn"
+    ],
+    "description": "Interactive 3D multi-leg gravity-assist trajectory optimizer for a space science course.",
+    "analyzedAt": "2026-05-07T12:39:15.386Z",
+    "gitCommitHash": "8ade6c9d6c8a062ca6b83f4793db3f348bc9afef"
+  },
+  "nodes": [
+    {
+      "id": "config:.env.example",
+      "type": "config",
+      "name": ".env.example",
+      "filePath": ".env.example",
+      "summary": "Documents the environment variables used by the API, worker, Redis connection, ephemeris cache, scene scaling, and server runtime.",
+      "tags": [
+        "configuration",
+        "environment",
+        "runtime-settings"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "service:docker-compose.yml",
+      "type": "service",
+      "name": "docker-compose.yml",
+      "filePath": "docker-compose.yml",
+      "summary": "Orchestrates Redis, the FastAPI API service, the ARQ worker, and an nginx-hosted frontend with shared ephemeris cache volumes.",
+      "tags": [
+        "orchestration",
+        "infrastructure",
+        "redis"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "service:Dockerfile",
+      "type": "service",
+      "name": "Dockerfile",
+      "filePath": "Dockerfile",
+      "summary": "Builds the Python API container, installs scientific and web dependencies, compiles the trajectory protobuf schema, and starts the FastAPI server with uvicorn.",
+      "tags": [
+        "containerization",
+        "infrastructure",
+        "deployment"
+      ],
+      "complexity": "simple",
+      "languageNotes": "The image compiles protobuf stubs during build and sets PYTHONPATH so top-level src imports work."
+    },
+    {
+      "id": "file:frontend/css/style.css",
+      "type": "file",
+      "name": "style.css",
+      "filePath": "frontend/css/style.css",
+      "summary": "Defines the dark space-themed frontend layout, controls, panels, and animation styling for the Three.js trajectory interface.",
+      "tags": [
+        "frontend",
+        "styling",
+        "user-interface"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:frontend/index.html",
+      "type": "file",
+      "name": "index.html",
+      "filePath": "frontend/index.html",
+      "summary": "Provides the browser UI shell, controls, status panels, and script imports for the Three.js trajectory optimizer frontend.",
+      "tags": [
+        "frontend",
+        "three-js",
+        "user-interface"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/js/app.js",
+      "type": "file",
+      "name": "app.js",
+      "filePath": "frontend/js/app.js",
+      "summary": "Implements the interactive Three.js solar-system scene, API calls, WebSocket streaming, route planning, trajectory optimization, and mission visualization workflows.",
+      "tags": [
+        "frontend",
+        "three-js",
+        "user-interface"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Browser ES modules coordinate Three.js rendering with REST and WebSocket APIs."
+    },
+    {
+      "id": "file:frontend/js/planetData.js",
+      "type": "file",
+      "name": "planetData.js",
+      "filePath": "frontend/js/planetData.js",
+      "summary": "Provides frontend metadata for body display, texture mapping, rotation periods, visual radii, and descriptive planet information.",
+      "tags": [
+        "frontend",
+        "three-js",
+        "user-interface"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/js/utils/dateUtils.js",
+      "type": "file",
+      "name": "dateUtils.js",
+      "filePath": "frontend/js/utils/dateUtils.js",
+      "summary": "Provides Julian-date, Unix-time, and nearest-sample helpers used by the frontend timeline and ephemeris interpolation code.",
+      "tags": [
+        "frontend",
+        "three-js",
+        "user-interface"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:patch_engine.py",
+      "type": "file",
+      "name": "patch_engine.py",
+      "filePath": "patch_engine.py",
+      "summary": "Applies source patch operations through a small regex-based patch helper.",
+      "tags": [
+        "utility",
+        "code",
+        "python"
+      ],
+      "complexity": "simple",
+      "languageNotes": "Python modules use FastAPI, async I/O, NumPy/SciPy, and Numba where performance matters."
+    },
+    {
+      "id": "file:patch_routes.py",
+      "type": "file",
+      "name": "patch_routes.py",
+      "filePath": "patch_routes.py",
+      "summary": "Contains route patching support used to adjust API route definitions.",
+      "tags": [
+        "utility",
+        "code",
+        "python"
+      ],
+      "complexity": "simple",
+      "languageNotes": "Python modules use FastAPI, async I/O, NumPy/SciPy, and Numba where performance matters."
+    },
+    {
+      "id": "schema:proto/trajectory.proto",
+      "type": "schema",
+      "name": "trajectory.proto",
+      "filePath": "proto/trajectory.proto",
+      "summary": "Defines protobuf messages for vectors, trajectories, planetary snapshots, optimization progress updates, and porkchop plot payloads.",
+      "tags": [
+        "schema-definition",
+        "serialization",
+        "data-contract"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "The protobuf schema is the cross-language binary contract for trajectory and streaming payloads."
+    },
+    {
+      "id": "document:README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "README.md",
+      "summary": "Introduces the interplanetary trajectory optimizer, its Docker-based startup flow, three-layer architecture, optimizer behavior, scene coordinate mapping, and API reference.",
+      "tags": [
+        "documentation",
+        "overview",
+        "api-reference"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "config:requirements.txt",
+      "type": "config",
+      "name": "requirements.txt",
+      "filePath": "requirements.txt",
+      "summary": "Lists runtime Python dependencies for the FastAPI service, scientific optimization stack, async HTTP client, Redis task queue, and protobuf serialization.",
+      "tags": [
+        "configuration",
+        "dependencies",
+        "python"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/fetch_ephemeris.py",
+      "type": "file",
+      "name": "fetch_ephemeris.py",
+      "filePath": "scripts/fetch_ephemeris.py",
+      "summary": "Provides a command-line utility that prewarms or refreshes the ephemeris spline cache from JPL Horizons data.",
+      "tags": [
+        "script",
+        "ephemeris",
+        "cache"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Python modules use FastAPI, async I/O, NumPy/SciPy, and Numba where performance matters."
+    },
+    {
+      "id": "file:src/__init__.py",
+      "type": "file",
+      "name": "__init__.py",
+      "filePath": "src/__init__.py",
+      "summary": "Marks the source directory as a Python package for application modules.",
+      "tags": [
+        "package",
+        "entry-point",
+        "python"
+      ],
+      "complexity": "simple",
+      "languageNotes": "Python modules use FastAPI, async I/O, NumPy/SciPy, and Numba where performance matters."
+    },
+    {
+      "id": "file:src/api/__init__.py",
+      "type": "file",
+      "name": "__init__.py",
+      "filePath": "src/api/__init__.py",
+      "summary": "Marks the API routes directory as a Python package.",
+      "tags": [
+        "api-handler",
+        "fastapi",
+        "validation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/api/routes_http.py",
+      "type": "file",
+      "name": "routes_http.py",
+      "filePath": "src/api/routes_http.py",
+      "summary": "Defines HTTP endpoints, request and response models, validation, ephemeris queries, Lambert transfers, porkchop data, optimization job submission, and route planning.",
+      "tags": [
+        "api-handler",
+        "fastapi",
+        "validation"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Python modules use FastAPI, async I/O, NumPy/SciPy, and Numba where performance matters."
+    },
+    {
+      "id": "file:src/api/routes_ws.py",
+      "type": "file",
+      "name": "routes_ws.py",
+      "filePath": "src/api/routes_ws.py",
+      "summary": "Defines WebSocket endpoints for optimization progress streaming and live ephemeris snapshots.",
+      "tags": [
+        "api-handler",
+        "fastapi",
+        "validation"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Python modules use FastAPI, async I/O, NumPy/SciPy, and Numba where performance matters."
+    },
+    {
+      "id": "file:src/config.py",
+      "type": "file",
+      "name": "config.py",
+      "filePath": "src/config.py",
+      "summary": "Centralizes runtime settings for Redis, ephemeris cache range, scene scaling, and server host configuration.",
+      "tags": [
+        "utility",
+        "code",
+        "python"
+      ],
+      "complexity": "simple",
+      "languageNotes": "Python modules use FastAPI, async I/O, NumPy/SciPy, and Numba where performance matters."
+    },
+    {
+      "id": "file:src/ephemeris/__init__.py",
+      "type": "file",
+      "name": "__init__.py",
+      "filePath": "src/ephemeris/__init__.py",
+      "summary": "Marks the ephemeris package containing body metadata, Horizons access, and spline caching.",
+      "tags": [
+        "ephemeris",
+        "data-cache",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/ephemeris/bodies.py",
+      "type": "file",
+      "name": "bodies.py",
+      "filePath": "src/ephemeris/bodies.py",
+      "summary": "Defines celestial body constants, NAIF identifiers, gravitational parameters, visual metadata, and lookup maps for planets, moons, and dwarf bodies.",
+      "tags": [
+        "ephemeris",
+        "data-cache",
+        "service"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Python modules use FastAPI, async I/O, NumPy/SciPy, and Numba where performance matters."
+    },
+    {
+      "id": "file:src/ephemeris/horizons_client.py",
+      "type": "file",
+      "name": "horizons_client.py",
+      "filePath": "src/ephemeris/horizons_client.py",
+      "summary": "Fetches and parses vector ephemeris data from the JPL Horizons API using async HTTP requests.",
+      "tags": [
+        "ephemeris",
+        "data-cache",
+        "service"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Python modules use FastAPI, async I/O, NumPy/SciPy, and Numba where performance matters."
+    },
+    {
+      "id": "file:src/ephemeris/spline_cache.py",
+      "type": "file",
+      "name": "spline_cache.py",
+      "filePath": "src/ephemeris/spline_cache.py",
+      "summary": "Builds and serves an in-memory cubic-spline ephemeris cache, including persistence, parent-relative moon handling, and date-range validation.",
+      "tags": [
+        "ephemeris",
+        "data-cache",
+        "service"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Python modules use FastAPI, async I/O, NumPy/SciPy, and Numba where performance matters."
+    },
+    {
+      "id": "file:src/main.py",
+      "type": "file",
+      "name": "main.py",
+      "filePath": "src/main.py",
+      "summary": "Creates the FastAPI application, configures CORS, warms the ephemeris cache during lifespan startup, and mounts HTTP and WebSocket routers.",
+      "tags": [
+        "utility",
+        "code",
+        "python"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Python modules use FastAPI, async I/O, NumPy/SciPy, and Numba where performance matters."
+    },
+    {
+      "id": "file:src/mechanics/__init__.py",
+      "type": "file",
+      "name": "__init__.py",
+      "filePath": "src/mechanics/__init__.py",
+      "summary": "Marks the mechanics package containing orbital mechanics, Lambert solving, transforms, and multi-leg trajectory routines.",
+      "tags": [
+        "orbital-mechanics",
+        "scientific-computing",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/mechanics/kepler.py",
+      "type": "file",
+      "name": "kepler.py",
+      "filePath": "src/mechanics/kepler.py",
+      "summary": "Implements Keplerian element conversion, orbit geometry, and propagation routines used to render and compare orbital paths.",
+      "tags": [
+        "orbital-mechanics",
+        "scientific-computing",
+        "utility"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Python modules use FastAPI, async I/O, NumPy/SciPy, and Numba where performance matters."
+    },
+    {
+      "id": "file:src/mechanics/lambert.py",
+      "type": "file",
+      "name": "lambert.py",
+      "filePath": "src/mechanics/lambert.py",
+      "summary": "Implements a universal-variable Lambert solver and transfer delta-v calculation for two-body transfer arcs.",
+      "tags": [
+        "orbital-mechanics",
+        "scientific-computing",
+        "utility"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Python modules use FastAPI, async I/O, NumPy/SciPy, and Numba where performance matters."
+    },
+    {
+      "id": "file:src/mechanics/multileg.py",
+      "type": "file",
+      "name": "multileg.py",
+      "filePath": "src/mechanics/multileg.py",
+      "summary": "Computes chained multi-leg trajectories with Lambert arcs, flyby geometry, timing, C3 constraints, and serialization helpers.",
+      "tags": [
+        "orbital-mechanics",
+        "scientific-computing",
+        "utility"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Python modules use FastAPI, async I/O, NumPy/SciPy, and Numba where performance matters."
+    },
+    {
+      "id": "file:src/mechanics/transforms.py",
+      "type": "file",
+      "name": "transforms.py",
+      "filePath": "src/mechanics/transforms.py",
+      "summary": "Provides Julian-date conversion, distance scaling, coordinate transforms, and ecliptic-to-scene mapping helpers.",
+      "tags": [
+        "orbital-mechanics",
+        "scientific-computing",
+        "utility"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Python modules use FastAPI, async I/O, NumPy/SciPy, and Numba where performance matters."
+    },
+    {
+      "id": "file:src/optimizer/__init__.py",
+      "type": "file",
+      "name": "__init__.py",
+      "filePath": "src/optimizer/__init__.py",
+      "summary": "Marks the optimizer package containing job dispatch and evolutionary trajectory optimizers.",
+      "tags": [
+        "optimization",
+        "trajectory-search",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/optimizer/dispatcher.py",
+      "type": "file",
+      "name": "dispatcher.py",
+      "filePath": "src/optimizer/dispatcher.py",
+      "summary": "Submits optimization jobs to ARQ, tracks Redis job status, publishes progress, and streams job updates over pub/sub.",
+      "tags": [
+        "optimization",
+        "trajectory-search",
+        "service"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Python modules use FastAPI, async I/O, NumPy/SciPy, and Numba where performance matters."
+    },
+    {
+      "id": "file:src/optimizer/gmpa.py",
+      "type": "file",
+      "name": "gmpa.py",
+      "filePath": "src/optimizer/gmpa.py",
+      "summary": "Implements gravity-assist mission candidate generation and optimization request structures for single- and multi-leg searches.",
+      "tags": [
+        "optimization",
+        "trajectory-search",
+        "service"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Python modules use FastAPI, async I/O, NumPy/SciPy, and Numba where performance matters."
+    },
+    {
+      "id": "file:src/optimizer/multileg_objective.py",
+      "type": "file",
+      "name": "multileg_objective.py",
+      "filePath": "src/optimizer/multileg_objective.py",
+      "summary": "Evaluates multi-leg trajectory objective values against the ephemeris cache and orbital mechanics solver.",
+      "tags": [
+        "optimization",
+        "trajectory-search",
+        "service"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Python modules use FastAPI, async I/O, NumPy/SciPy, and Numba where performance matters."
+    },
+    {
+      "id": "file:src/optimizer/nsga2.py",
+      "type": "file",
+      "name": "nsga2.py",
+      "filePath": "src/optimizer/nsga2.py",
+      "summary": "Implements NSGA-II multi-objective evolutionary optimization for transfer time and delta-v tradeoffs.",
+      "tags": [
+        "optimization",
+        "trajectory-search",
+        "service"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Python modules use FastAPI, async I/O, NumPy/SciPy, and Numba where performance matters."
+    },
+    {
+      "id": "file:src/optimizer/objective.py",
+      "type": "file",
+      "name": "objective.py",
+      "filePath": "src/optimizer/objective.py",
+      "summary": "Computes single-leg delta-v objectives and porkchop grid values using ephemeris states and Lambert transfers.",
+      "tags": [
+        "optimization",
+        "trajectory-search",
+        "service"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Python modules use FastAPI, async I/O, NumPy/SciPy, and Numba where performance matters."
+    },
+    {
+      "id": "file:src/planner/__init__.py",
+      "type": "file",
+      "name": "__init__.py",
+      "filePath": "src/planner/__init__.py",
+      "summary": "Marks the route planner package.",
+      "tags": [
+        "route-planning",
+        "heuristics",
+        "service"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/planner/catalog.py",
+      "type": "file",
+      "name": "catalog.py",
+      "filePath": "src/planner/catalog.py",
+      "summary": "Defines supported gravity-assist body sequences and nominal orbital periods for planner heuristics.",
+      "tags": [
+        "route-planning",
+        "heuristics",
+        "service"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Python modules use FastAPI, async I/O, NumPy/SciPy, and Numba where performance matters."
+    },
+    {
+      "id": "file:src/planner/engine.py",
+      "type": "file",
+      "name": "engine.py",
+      "filePath": "src/planner/engine.py",
+      "summary": "Generates candidate interplanetary routes from catalog sequences, launch windows, ephemeris data, and transfer scoring.",
+      "tags": [
+        "route-planning",
+        "heuristics",
+        "service"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Python modules use FastAPI, async I/O, NumPy/SciPy, and Numba where performance matters."
+    },
+    {
+      "id": "file:src/serialization/__init__.py",
+      "type": "file",
+      "name": "__init__.py",
+      "filePath": "src/serialization/__init__.py",
+      "summary": "Marks the serialization package for binary response encoding.",
+      "tags": [
+        "serialization",
+        "protobuf",
+        "binary-encoding"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/serialization/encoder.py",
+      "type": "file",
+      "name": "encoder.py",
+      "filePath": "src/serialization/encoder.py",
+      "summary": "Encodes porkchop grids, planetary snapshots, and trajectory responses to protobuf when available, with a manual binary fallback.",
+      "tags": [
+        "serialization",
+        "protobuf",
+        "binary-encoding"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Python modules use FastAPI, async I/O, NumPy/SciPy, and Numba where performance matters."
+    },
+    {
+      "id": "file:src/workers/__init__.py",
+      "type": "file",
+      "name": "__init__.py",
+      "filePath": "src/workers/__init__.py",
+      "summary": "Marks the ARQ workers package.",
+      "tags": [
+        "worker",
+        "background-jobs",
+        "redis"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/workers/worker.py",
+      "type": "file",
+      "name": "worker.py",
+      "filePath": "src/workers/worker.py",
+      "summary": "Runs background single- and multi-leg optimization jobs, emits progress, and exposes ARQ worker settings.",
+      "tags": [
+        "worker",
+        "background-jobs",
+        "redis"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Python modules use FastAPI, async I/O, NumPy/SciPy, and Numba where performance matters."
+    },
+    {
+      "id": "file:tests/test_api.py",
+      "type": "file",
+      "name": "test_api.py",
+      "filePath": "tests/test_api.py",
+      "summary": "Provides integration-style API and WebSocket checks covering health, body data, ephemeris, Lambert solving, porkchop, optimization jobs, and live streams.",
+      "tags": [
+        "test",
+        "api",
+        "integration"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Python modules use FastAPI, async I/O, NumPy/SciPy, and Numba where performance matters."
+    },
+    {
+      "id": "function:frontend/js/app.js:init",
+      "type": "function",
+      "name": "init",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        84,
+        135
+      ],
+      "summary": "init implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:frontend/js/app.js:initScene",
+      "type": "function",
+      "name": "initScene",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        139,
+        213
+      ],
+      "summary": "initScene implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:frontend/js/app.js:initSearchBar",
+      "type": "function",
+      "name": "initSearchBar",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        215,
+        256
+      ],
+      "summary": "initSearchBar implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:createStarfield",
+      "type": "function",
+      "name": "createStarfield",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        258,
+        279
+      ],
+      "summary": "createStarfield implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:createUniverseBackground",
+      "type": "function",
+      "name": "createUniverseBackground",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        281,
+        300
+      ],
+      "summary": "createUniverseBackground implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:fetchEpochRange",
+      "type": "function",
+      "name": "fetchEpochRange",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        303,
+        312
+      ],
+      "summary": "fetchEpochRange implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:fetchBodies",
+      "type": "function",
+      "name": "fetchBodies",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        314,
+        323
+      ],
+      "summary": "fetchBodies implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:populateSelects",
+      "type": "function",
+      "name": "populateSelects",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        330,
+        350
+      ],
+      "summary": "populateSelects implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:fetchOrbits",
+      "type": "function",
+      "name": "fetchOrbits",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        352,
+        393
+      ],
+      "summary": "fetchOrbits implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:updatePlanetTrail",
+      "type": "function",
+      "name": "updatePlanetTrail",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        405,
+        466
+      ],
+      "summary": "updatePlanetTrail implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:frontend/js/app.js:ensureBodyMesh",
+      "type": "function",
+      "name": "ensureBodyMesh",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        478,
+        614
+      ],
+      "summary": "ensureBodyMesh implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:frontend/js/app.js:createGlowTexture",
+      "type": "function",
+      "name": "createGlowTexture",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        616,
+        629
+      ],
+      "summary": "createGlowTexture implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:createTextSprite",
+      "type": "function",
+      "name": "createTextSprite",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        631,
+        646
+      ],
+      "summary": "createTextSprite implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:connectEphemeris",
+      "type": "function",
+      "name": "connectEphemeris",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        649,
+        693
+      ],
+      "summary": "connectEphemeris implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:updatePlanetPositions",
+      "type": "function",
+      "name": "updatePlanetPositions",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        695,
+        723
+      ],
+      "summary": "updatePlanetPositions implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:onMouseClick",
+      "type": "function",
+      "name": "onMouseClick",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        725,
+        775
+      ],
+      "summary": "onMouseClick implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:frontend/js/app.js:unlockCamera",
+      "type": "function",
+      "name": "unlockCamera",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        778,
+        787
+      ],
+      "summary": "unlockCamera implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:focusOnBody",
+      "type": "function",
+      "name": "focusOnBody",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        792,
+        804
+      ],
+      "summary": "focusOnBody implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:updatePlanetInfoPanel",
+      "type": "function",
+      "name": "updatePlanetInfoPanel",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        807,
+        844
+      ],
+      "summary": "updatePlanetInfoPanel implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:onMouseMove",
+      "type": "function",
+      "name": "onMouseMove",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        848,
+        893
+      ],
+      "summary": "onMouseMove implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:highlightBody",
+      "type": "function",
+      "name": "highlightBody",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        905,
+        931
+      ],
+      "summary": "highlightBody implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:drawOptimalTransfer",
+      "type": "function",
+      "name": "drawOptimalTransfer",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        958,
+        981
+      ],
+      "summary": "drawOptimalTransfer implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:drawTransferArc",
+      "type": "function",
+      "name": "drawTransferArc",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        983,
+        1013
+      ],
+      "summary": "drawTransferArc implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:drawOrbitPath",
+      "type": "function",
+      "name": "drawOrbitPath",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        1016,
+        1057
+      ],
+      "summary": "drawOrbitPath implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:drawMultiLegArcs",
+      "type": "function",
+      "name": "drawMultiLegArcs",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        1092,
+        1134
+      ],
+      "summary": "drawMultiLegArcs implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:generatePorkchop",
+      "type": "function",
+      "name": "generatePorkchop",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        1137,
+        1163
+      ],
+      "summary": "generatePorkchop implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:renderPorkchop",
+      "type": "function",
+      "name": "renderPorkchop",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        1165,
+        1259
+      ],
+      "summary": "renderPorkchop implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:frontend/js/app.js:dvColor",
+      "type": "function",
+      "name": "dvColor",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        1261,
+        1272
+      ],
+      "summary": "dvColor implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:runOptimizer",
+      "type": "function",
+      "name": "runOptimizer",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        1275,
+        1321
+      ],
+      "summary": "runOptimizer implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:runMultiLegOptimizer",
+      "type": "function",
+      "name": "runMultiLegOptimizer",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        1324,
+        1369
+      ],
+      "summary": "runMultiLegOptimizer implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:bindEvents",
+      "type": "function",
+      "name": "bindEvents",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        1400,
+        1457
+      ],
+      "summary": "bindEvents implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:frontend/js/app.js:planRoute",
+      "type": "function",
+      "name": "planRoute",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        1460,
+        1501
+      ],
+      "summary": "planRoute implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:renderRouteCard",
+      "type": "function",
+      "name": "renderRouteCard",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        1503,
+        1561
+      ],
+      "summary": "renderRouteCard implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:frontend/js/app.js:showOrbitInsights",
+      "type": "function",
+      "name": "showOrbitInsights",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        1563,
+        1685
+      ],
+      "summary": "showOrbitInsights implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:frontend/js/app.js:drawFullOrbit",
+      "type": "function",
+      "name": "drawFullOrbit",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        1688,
+        1705
+      ],
+      "summary": "drawFullOrbit implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:viewRoute",
+      "type": "function",
+      "name": "viewRoute",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        1716,
+        1735
+      ],
+      "summary": "viewRoute implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:optimizeRoute",
+      "type": "function",
+      "name": "optimizeRoute",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        1737,
+        1848
+      ],
+      "summary": "optimizeRoute implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:frontend/js/app.js:createSpacecraftMesh",
+      "type": "function",
+      "name": "createSpacecraftMesh",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        1850,
+        1882
+      ],
+      "summary": "createSpacecraftMesh implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:updateEngineTrail",
+      "type": "function",
+      "name": "updateEngineTrail",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        1884,
+        1933
+      ],
+      "summary": "updateEngineTrail implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:frontend/js/app.js:startMissionSimulation",
+      "type": "function",
+      "name": "startMissionSimulation",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        1935,
+        2006
+      ],
+      "summary": "startMissionSimulation implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:frontend/js/app.js:visualizeWindows",
+      "type": "function",
+      "name": "visualizeWindows",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        2008,
+        2030
+      ],
+      "summary": "visualizeWindows implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:fetchAndDrawOptimizedMultiLeg",
+      "type": "function",
+      "name": "fetchAndDrawOptimizedMultiLeg",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        2039,
+        2055
+      ],
+      "summary": "fetchAndDrawOptimizedMultiLeg implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/app.js:animate",
+      "type": "function",
+      "name": "animate",
+      "filePath": "frontend/js/app.js",
+      "lineRange": [
+        2057,
+        2220
+      ],
+      "summary": "animate implements a significant part of app.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:frontend/js/utils/dateUtils.js:diffDays",
+      "type": "function",
+      "name": "diffDays",
+      "filePath": "frontend/js/utils/dateUtils.js",
+      "lineRange": [
+        1,
+        6
+      ],
+      "summary": "diffDays implements a significant part of dateUtils.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/utils/dateUtils.js:jdToIso",
+      "type": "function",
+      "name": "jdToIso",
+      "filePath": "frontend/js/utils/dateUtils.js",
+      "lineRange": [
+        8,
+        11
+      ],
+      "summary": "jdToIso implements a significant part of dateUtils.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/utils/dateUtils.js:isoToJd",
+      "type": "function",
+      "name": "isoToJd",
+      "filePath": "frontend/js/utils/dateUtils.js",
+      "lineRange": [
+        13,
+        16
+      ],
+      "summary": "isoToJd implements a significant part of dateUtils.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/utils/dateUtils.js:jdToUnixMs",
+      "type": "function",
+      "name": "jdToUnixMs",
+      "filePath": "frontend/js/utils/dateUtils.js",
+      "lineRange": [
+        18,
+        21
+      ],
+      "summary": "jdToUnixMs implements a significant part of dateUtils.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/utils/dateUtils.js:pointToUnixMs",
+      "type": "function",
+      "name": "pointToUnixMs",
+      "filePath": "frontend/js/utils/dateUtils.js",
+      "lineRange": [
+        23,
+        27
+      ],
+      "summary": "pointToUnixMs implements a significant part of dateUtils.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:frontend/js/utils/dateUtils.js:findClosestIndexByTime",
+      "type": "function",
+      "name": "findClosestIndexByTime",
+      "filePath": "frontend/js/utils/dateUtils.js",
+      "lineRange": [
+        29,
+        45
+      ],
+      "summary": "findClosestIndexByTime implements a significant part of dateUtils.js's frontend behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/fetch_ephemeris.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "scripts/fetch_ephemeris.py",
+      "lineRange": [
+        28,
+        47
+      ],
+      "summary": "main implements a significant part of fetch_ephemeris.py's script behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/api/routes_http.py:_validate_iso_date",
+      "type": "function",
+      "name": "_validate_iso_date",
+      "filePath": "src/api/routes_http.py",
+      "lineRange": [
+        52,
+        58
+      ],
+      "summary": "_validate_iso_date implements a significant part of routes_http.py's api handler behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/api/routes_http.py:_safe_iso_to_jd",
+      "type": "function",
+      "name": "_safe_iso_to_jd",
+      "filePath": "src/api/routes_http.py",
+      "lineRange": [
+        61,
+        69
+      ],
+      "summary": "_safe_iso_to_jd implements a significant part of routes_http.py's api handler behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/api/routes_http.py:_resolve_body",
+      "type": "function",
+      "name": "_resolve_body",
+      "filePath": "src/api/routes_http.py",
+      "lineRange": [
+        234,
+        249
+      ],
+      "summary": "_resolve_body implements a significant part of routes_http.py's api handler behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/api/routes_http.py:_get_cache",
+      "type": "function",
+      "name": "_get_cache",
+      "filePath": "src/api/routes_http.py",
+      "lineRange": [
+        252,
+        255
+      ],
+      "summary": "_get_cache implements a significant part of routes_http.py's api handler behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/api/routes_http.py:plan_mission",
+      "type": "function",
+      "name": "plan_mission",
+      "filePath": "src/api/routes_http.py",
+      "lineRange": [
+        263,
+        287
+      ],
+      "summary": "plan_mission implements a significant part of routes_http.py's api handler behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/api/routes_http.py:health",
+      "type": "function",
+      "name": "health",
+      "filePath": "src/api/routes_http.py",
+      "lineRange": [
+        291,
+        292
+      ],
+      "summary": "health implements a significant part of routes_http.py's api handler behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/api/routes_http.py:epoch_range",
+      "type": "function",
+      "name": "epoch_range",
+      "filePath": "src/api/routes_http.py",
+      "lineRange": [
+        296,
+        309
+      ],
+      "summary": "epoch_range implements a significant part of routes_http.py's api handler behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/api/routes_http.py:list_bodies",
+      "type": "function",
+      "name": "list_bodies",
+      "filePath": "src/api/routes_http.py",
+      "lineRange": [
+        313,
+        325
+      ],
+      "summary": "list_bodies implements a significant part of routes_http.py's api handler behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/api/routes_http.py:get_ephemeris",
+      "type": "function",
+      "name": "get_ephemeris",
+      "filePath": "src/api/routes_http.py",
+      "lineRange": [
+        329,
+        394
+      ],
+      "summary": "get_ephemeris implements a significant part of routes_http.py's api handler behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/api/routes_http.py:lambert_transfer",
+      "type": "function",
+      "name": "lambert_transfer",
+      "filePath": "src/api/routes_http.py",
+      "lineRange": [
+        398,
+        466
+      ],
+      "summary": "lambert_transfer implements a significant part of routes_http.py's api handler behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/api/routes_http.py:assess_launch_window",
+      "type": "function",
+      "name": "assess_launch_window",
+      "filePath": "src/api/routes_http.py",
+      "lineRange": [
+        482,
+        568
+      ],
+      "summary": "assess_launch_window implements a significant part of routes_http.py's api handler behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/api/routes_http.py:start_optimization",
+      "type": "function",
+      "name": "start_optimization",
+      "filePath": "src/api/routes_http.py",
+      "lineRange": [
+        572,
+        623
+      ],
+      "summary": "start_optimization implements a significant part of routes_http.py's api handler behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/api/routes_http.py:optimization_status",
+      "type": "function",
+      "name": "optimization_status",
+      "filePath": "src/api/routes_http.py",
+      "lineRange": [
+        627,
+        632
+      ],
+      "summary": "optimization_status implements a significant part of routes_http.py's api handler behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/api/routes_http.py:compute_porkchop",
+      "type": "function",
+      "name": "compute_porkchop",
+      "filePath": "src/api/routes_http.py",
+      "lineRange": [
+        636,
+        699
+      ],
+      "summary": "compute_porkchop implements a significant part of routes_http.py's api handler behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/api/routes_http.py:multileg_transfer",
+      "type": "function",
+      "name": "multileg_transfer",
+      "filePath": "src/api/routes_http.py",
+      "lineRange": [
+        703,
+        738
+      ],
+      "summary": "multileg_transfer implements a significant part of routes_http.py's api handler behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/api/routes_http.py:start_multileg_optimization",
+      "type": "function",
+      "name": "start_multileg_optimization",
+      "filePath": "src/api/routes_http.py",
+      "lineRange": [
+        742,
+        803
+      ],
+      "summary": "start_multileg_optimization implements a significant part of routes_http.py's api handler behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/api/routes_http.py:get_orbit_details",
+      "type": "function",
+      "name": "get_orbit_details",
+      "filePath": "src/api/routes_http.py",
+      "lineRange": [
+        807,
+        847
+      ],
+      "summary": "get_orbit_details implements a significant part of routes_http.py's api handler behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:src/api/routes_http.py:OptimizeRequest",
+      "type": "class",
+      "name": "OptimizeRequest",
+      "filePath": "src/api/routes_http.py",
+      "lineRange": [
+        97,
+        118
+      ],
+      "summary": "OptimizeRequest groups related data and behavior used by routes_http.py.",
+      "tags": [
+        "class",
+        "data-model",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:src/api/routes_http.py:MultiLegOptimizeRequest",
+      "type": "class",
+      "name": "MultiLegOptimizeRequest",
+      "filePath": "src/api/routes_http.py",
+      "lineRange": [
+        167,
+        203
+      ],
+      "summary": "MultiLegOptimizeRequest groups related data and behavior used by routes_http.py.",
+      "tags": [
+        "class",
+        "data-model",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/api/routes_ws.py:ws_trajectory_stream",
+      "type": "function",
+      "name": "ws_trajectory_stream",
+      "filePath": "src/api/routes_ws.py",
+      "lineRange": [
+        26,
+        58
+      ],
+      "summary": "ws_trajectory_stream implements a significant part of routes_ws.py's api handler behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/api/routes_ws.py:ws_ephemeris_stream",
+      "type": "function",
+      "name": "ws_ephemeris_stream",
+      "filePath": "src/api/routes_ws.py",
+      "lineRange": [
+        62,
+        198
+      ],
+      "summary": "ws_ephemeris_stream implements a significant part of routes_ws.py's api handler behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/ephemeris/horizons_client.py:fetch_state_vectors",
+      "type": "function",
+      "name": "fetch_state_vectors",
+      "filePath": "src/ephemeris/horizons_client.py",
+      "lineRange": [
+        28,
+        82
+      ],
+      "summary": "fetch_state_vectors implements a significant part of horizons_client.py's ephemeris behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/ephemeris/horizons_client.py:_parse_horizons_response",
+      "type": "function",
+      "name": "_parse_horizons_response",
+      "filePath": "src/ephemeris/horizons_client.py",
+      "lineRange": [
+        85,
+        157
+      ],
+      "summary": "_parse_horizons_response implements a significant part of horizons_client.py's ephemeris behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:src/ephemeris/spline_cache.py:EphemerisCache",
+      "type": "class",
+      "name": "EphemerisCache",
+      "filePath": "src/ephemeris/spline_cache.py",
+      "lineRange": [
+        53,
+        246
+      ],
+      "summary": "EphemerisCache groups related data and behavior used by spline_cache.py.",
+      "tags": [
+        "class",
+        "data-model",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/main.py:lifespan",
+      "type": "function",
+      "name": "lifespan",
+      "filePath": "src/main.py",
+      "lineRange": [
+        22,
+        33
+      ],
+      "summary": "lifespan implements a significant part of main.py's utility behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/mechanics/kepler.py:state_to_elements",
+      "type": "function",
+      "name": "state_to_elements",
+      "filePath": "src/mechanics/kepler.py",
+      "lineRange": [
+        27,
+        106
+      ],
+      "summary": "state_to_elements implements a significant part of kepler.py's orbital mechanics behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/mechanics/kepler.py:elements_to_state",
+      "type": "function",
+      "name": "elements_to_state",
+      "filePath": "src/mechanics/kepler.py",
+      "lineRange": [
+        110,
+        160
+      ],
+      "summary": "elements_to_state implements a significant part of kepler.py's orbital mechanics behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/mechanics/kepler.py:_solve_kepler_elliptic",
+      "type": "function",
+      "name": "_solve_kepler_elliptic",
+      "filePath": "src/mechanics/kepler.py",
+      "lineRange": [
+        167,
+        175
+      ],
+      "summary": "_solve_kepler_elliptic implements a significant part of kepler.py's orbital mechanics behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/mechanics/kepler.py:_solve_kepler_hyperbolic",
+      "type": "function",
+      "name": "_solve_kepler_hyperbolic",
+      "filePath": "src/mechanics/kepler.py",
+      "lineRange": [
+        179,
+        187
+      ],
+      "summary": "_solve_kepler_hyperbolic implements a significant part of kepler.py's orbital mechanics behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/mechanics/kepler.py:propagate_kepler",
+      "type": "function",
+      "name": "propagate_kepler",
+      "filePath": "src/mechanics/kepler.py",
+      "lineRange": [
+        194,
+        289
+      ],
+      "summary": "propagate_kepler implements a significant part of kepler.py's orbital mechanics behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/mechanics/kepler.py:compute_apsis_points",
+      "type": "function",
+      "name": "compute_apsis_points",
+      "filePath": "src/mechanics/kepler.py",
+      "lineRange": [
+        293,
+        308
+      ],
+      "summary": "compute_apsis_points implements a significant part of kepler.py's orbital mechanics behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/mechanics/kepler.py:generate_full_orbit_points",
+      "type": "function",
+      "name": "generate_full_orbit_points",
+      "filePath": "src/mechanics/kepler.py",
+      "lineRange": [
+        312,
+        333
+      ],
+      "summary": "generate_full_orbit_points implements a significant part of kepler.py's orbital mechanics behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/mechanics/lambert.py:_stumpff_c2",
+      "type": "function",
+      "name": "_stumpff_c2",
+      "filePath": "src/mechanics/lambert.py",
+      "lineRange": [
+        26,
+        34
+      ],
+      "summary": "_stumpff_c2 implements a significant part of lambert.py's orbital mechanics behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/mechanics/lambert.py:_stumpff_c3",
+      "type": "function",
+      "name": "_stumpff_c3",
+      "filePath": "src/mechanics/lambert.py",
+      "lineRange": [
+        38,
+        46
+      ],
+      "summary": "_stumpff_c3 implements a significant part of lambert.py's orbital mechanics behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/mechanics/lambert.py:_stumpff_dc2",
+      "type": "function",
+      "name": "_stumpff_dc2",
+      "filePath": "src/mechanics/lambert.py",
+      "lineRange": [
+        54,
+        58
+      ],
+      "summary": "_stumpff_dc2 implements a significant part of lambert.py's orbital mechanics behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/mechanics/lambert.py:_stumpff_dc3",
+      "type": "function",
+      "name": "_stumpff_dc3",
+      "filePath": "src/mechanics/lambert.py",
+      "lineRange": [
+        62,
+        66
+      ],
+      "summary": "_stumpff_dc3 implements a significant part of lambert.py's orbital mechanics behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/mechanics/lambert.py:_solve_lambert_uv",
+      "type": "function",
+      "name": "_solve_lambert_uv",
+      "filePath": "src/mechanics/lambert.py",
+      "lineRange": [
+        70,
+        228
+      ],
+      "summary": "_solve_lambert_uv implements a significant part of lambert.py's orbital mechanics behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/mechanics/lambert.py:solve_lambert",
+      "type": "function",
+      "name": "solve_lambert",
+      "filePath": "src/mechanics/lambert.py",
+      "lineRange": [
+        234,
+        262
+      ],
+      "summary": "solve_lambert implements a significant part of lambert.py's orbital mechanics behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/mechanics/lambert.py:compute_transfer_dv",
+      "type": "function",
+      "name": "compute_transfer_dv",
+      "filePath": "src/mechanics/lambert.py",
+      "lineRange": [
+        265,
+        337
+      ],
+      "summary": "compute_transfer_dv implements a significant part of lambert.py's orbital mechanics behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/mechanics/multileg.py:compute_multileg_trajectory",
+      "type": "function",
+      "name": "compute_multileg_trajectory",
+      "filePath": "src/mechanics/multileg.py",
+      "lineRange": [
+        110,
+        308
+      ],
+      "summary": "compute_multileg_trajectory implements a significant part of multileg.py's orbital mechanics behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/mechanics/multileg.py:_compute_flyby",
+      "type": "function",
+      "name": "_compute_flyby",
+      "filePath": "src/mechanics/multileg.py",
+      "lineRange": [
+        311,
+        393
+      ],
+      "summary": "_compute_flyby implements a significant part of multileg.py's orbital mechanics behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/mechanics/multileg.py:_generate_leg_trajectory",
+      "type": "function",
+      "name": "_generate_leg_trajectory",
+      "filePath": "src/mechanics/multileg.py",
+      "lineRange": [
+        396,
+        421
+      ],
+      "summary": "_generate_leg_trajectory implements a significant part of multileg.py's orbital mechanics behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/mechanics/multileg.py:multileg_result_to_dict",
+      "type": "function",
+      "name": "multileg_result_to_dict",
+      "filePath": "src/mechanics/multileg.py",
+      "lineRange": [
+        424,
+        474
+      ],
+      "summary": "multileg_result_to_dict implements a significant part of multileg.py's orbital mechanics behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:src/mechanics/multileg.py:FlybyInfo",
+      "type": "class",
+      "name": "FlybyInfo",
+      "filePath": "src/mechanics/multileg.py",
+      "lineRange": [
+        32,
+        56
+      ],
+      "summary": "FlybyInfo groups related data and behavior used by multileg.py.",
+      "tags": [
+        "class",
+        "data-model",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:src/mechanics/multileg.py:LegResult",
+      "type": "class",
+      "name": "LegResult",
+      "filePath": "src/mechanics/multileg.py",
+      "lineRange": [
+        60,
+        89
+      ],
+      "summary": "LegResult groups related data and behavior used by multileg.py.",
+      "tags": [
+        "class",
+        "data-model",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/mechanics/transforms.py:km_to_scene",
+      "type": "function",
+      "name": "km_to_scene",
+      "filePath": "src/mechanics/transforms.py",
+      "lineRange": [
+        27,
+        29
+      ],
+      "summary": "km_to_scene implements a significant part of transforms.py's orbital mechanics behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/mechanics/transforms.py:km_to_au",
+      "type": "function",
+      "name": "km_to_au",
+      "filePath": "src/mechanics/transforms.py",
+      "lineRange": [
+        32,
+        34
+      ],
+      "summary": "km_to_au implements a significant part of transforms.py's orbital mechanics behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/mechanics/transforms.py:jd_to_datetime",
+      "type": "function",
+      "name": "jd_to_datetime",
+      "filePath": "src/mechanics/transforms.py",
+      "lineRange": [
+        44,
+        47
+      ],
+      "summary": "jd_to_datetime implements a significant part of transforms.py's orbital mechanics behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/mechanics/transforms.py:datetime_to_jd",
+      "type": "function",
+      "name": "datetime_to_jd",
+      "filePath": "src/mechanics/transforms.py",
+      "lineRange": [
+        50,
+        53
+      ],
+      "summary": "datetime_to_jd implements a significant part of transforms.py's orbital mechanics behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/mechanics/transforms.py:iso_to_jd",
+      "type": "function",
+      "name": "iso_to_jd",
+      "filePath": "src/mechanics/transforms.py",
+      "lineRange": [
+        56,
+        59
+      ],
+      "summary": "iso_to_jd implements a significant part of transforms.py's orbital mechanics behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/mechanics/transforms.py:jd_to_iso",
+      "type": "function",
+      "name": "jd_to_iso",
+      "filePath": "src/mechanics/transforms.py",
+      "lineRange": [
+        62,
+        64
+      ],
+      "summary": "jd_to_iso implements a significant part of transforms.py's orbital mechanics behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/mechanics/transforms.py:sample_trajectory_adaptive",
+      "type": "function",
+      "name": "sample_trajectory_adaptive",
+      "filePath": "src/mechanics/transforms.py",
+      "lineRange": [
+        89,
+        150
+      ],
+      "summary": "sample_trajectory_adaptive implements a significant part of transforms.py's orbital mechanics behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/mechanics/transforms.py:positions_to_scene",
+      "type": "function",
+      "name": "positions_to_scene",
+      "filePath": "src/mechanics/transforms.py",
+      "lineRange": [
+        153,
+        155
+      ],
+      "summary": "positions_to_scene implements a significant part of transforms.py's orbital mechanics behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/optimizer/dispatcher.py:_redis_settings",
+      "type": "function",
+      "name": "_redis_settings",
+      "filePath": "src/optimizer/dispatcher.py",
+      "lineRange": [
+        33,
+        40
+      ],
+      "summary": "_redis_settings implements a significant part of dispatcher.py's optimization behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/optimizer/dispatcher.py:get_arq_pool",
+      "type": "function",
+      "name": "get_arq_pool",
+      "filePath": "src/optimizer/dispatcher.py",
+      "lineRange": [
+        43,
+        45
+      ],
+      "summary": "get_arq_pool implements a significant part of dispatcher.py's optimization behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/optimizer/dispatcher.py:get_redis",
+      "type": "function",
+      "name": "get_redis",
+      "filePath": "src/optimizer/dispatcher.py",
+      "lineRange": [
+        48,
+        50
+      ],
+      "summary": "get_redis implements a significant part of dispatcher.py's optimization behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/optimizer/dispatcher.py:submit_optimization",
+      "type": "function",
+      "name": "submit_optimization",
+      "filePath": "src/optimizer/dispatcher.py",
+      "lineRange": [
+        53,
+        98
+      ],
+      "summary": "submit_optimization implements a significant part of dispatcher.py's optimization behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/optimizer/dispatcher.py:get_job_status",
+      "type": "function",
+      "name": "get_job_status",
+      "filePath": "src/optimizer/dispatcher.py",
+      "lineRange": [
+        101,
+        122
+      ],
+      "summary": "get_job_status implements a significant part of dispatcher.py's optimization behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/optimizer/dispatcher.py:stream_progress",
+      "type": "function",
+      "name": "stream_progress",
+      "filePath": "src/optimizer/dispatcher.py",
+      "lineRange": [
+        125,
+        157
+      ],
+      "summary": "stream_progress implements a significant part of dispatcher.py's optimization behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/optimizer/dispatcher.py:publish_progress",
+      "type": "function",
+      "name": "publish_progress",
+      "filePath": "src/optimizer/dispatcher.py",
+      "lineRange": [
+        160,
+        186
+      ],
+      "summary": "publish_progress implements a significant part of dispatcher.py's optimization behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/optimizer/dispatcher.py:_progress_to_dict",
+      "type": "function",
+      "name": "_progress_to_dict",
+      "filePath": "src/optimizer/dispatcher.py",
+      "lineRange": [
+        189,
+        208
+      ],
+      "summary": "_progress_to_dict implements a significant part of dispatcher.py's optimization behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/optimizer/dispatcher.py:submit_multileg_optimization",
+      "type": "function",
+      "name": "submit_multileg_optimization",
+      "filePath": "src/optimizer/dispatcher.py",
+      "lineRange": [
+        216,
+        259
+      ],
+      "summary": "submit_multileg_optimization implements a significant part of dispatcher.py's optimization behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/optimizer/dispatcher.py:publish_multileg_progress",
+      "type": "function",
+      "name": "publish_multileg_progress",
+      "filePath": "src/optimizer/dispatcher.py",
+      "lineRange": [
+        262,
+        285
+      ],
+      "summary": "publish_multileg_progress implements a significant part of dispatcher.py's optimization behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/optimizer/dispatcher.py:_multileg_progress_to_dict",
+      "type": "function",
+      "name": "_multileg_progress_to_dict",
+      "filePath": "src/optimizer/dispatcher.py",
+      "lineRange": [
+        288,
+        314
+      ],
+      "summary": "_multileg_progress_to_dict implements a significant part of dispatcher.py's optimization behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:src/optimizer/gmpa.py:ParetoArchive",
+      "type": "class",
+      "name": "ParetoArchive",
+      "filePath": "src/optimizer/gmpa.py",
+      "lineRange": [
+        64,
+        104
+      ],
+      "summary": "ParetoArchive groups related data and behavior used by gmpa.py.",
+      "tags": [
+        "class",
+        "data-model",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:src/optimizer/gmpa.py:GreyWolfOptimizer",
+      "type": "class",
+      "name": "GreyWolfOptimizer",
+      "filePath": "src/optimizer/gmpa.py",
+      "lineRange": [
+        107,
+        338
+      ],
+      "summary": "GreyWolfOptimizer groups related data and behavior used by gmpa.py.",
+      "tags": [
+        "class",
+        "data-model",
+        "project-logic"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:src/optimizer/gmpa.py:MultiLegGreyWolfOptimizer",
+      "type": "class",
+      "name": "MultiLegGreyWolfOptimizer",
+      "filePath": "src/optimizer/gmpa.py",
+      "lineRange": [
+        386,
+        662
+      ],
+      "summary": "MultiLegGreyWolfOptimizer groups related data and behavior used by gmpa.py.",
+      "tags": [
+        "class",
+        "data-model",
+        "project-logic"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/optimizer/multileg_objective.py:multileg_objective",
+      "type": "function",
+      "name": "multileg_objective",
+      "filePath": "src/optimizer/multileg_objective.py",
+      "lineRange": [
+        24,
+        84
+      ],
+      "summary": "multileg_objective implements a significant part of multileg_objective.py's optimization behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/optimizer/multileg_objective.py:multileg_objective_full",
+      "type": "function",
+      "name": "multileg_objective_full",
+      "filePath": "src/optimizer/multileg_objective.py",
+      "lineRange": [
+        87,
+        121
+      ],
+      "summary": "multileg_objective_full implements a significant part of multileg_objective.py's optimization behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/optimizer/nsga2.py:fast_non_dominated_sort",
+      "type": "function",
+      "name": "fast_non_dominated_sort",
+      "filePath": "src/optimizer/nsga2.py",
+      "lineRange": [
+        28,
+        59
+      ],
+      "summary": "fast_non_dominated_sort implements a significant part of nsga2.py's optimization behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/optimizer/nsga2.py:calculate_crowding_distance",
+      "type": "function",
+      "name": "calculate_crowding_distance",
+      "filePath": "src/optimizer/nsga2.py",
+      "lineRange": [
+        61,
+        88
+      ],
+      "summary": "calculate_crowding_distance implements a significant part of nsga2.py's optimization behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/optimizer/nsga2.py:sbx_crossover",
+      "type": "function",
+      "name": "sbx_crossover",
+      "filePath": "src/optimizer/nsga2.py",
+      "lineRange": [
+        90,
+        101
+      ],
+      "summary": "sbx_crossover implements a significant part of nsga2.py's optimization behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/optimizer/nsga2.py:polynomial_mutation",
+      "type": "function",
+      "name": "polynomial_mutation",
+      "filePath": "src/optimizer/nsga2.py",
+      "lineRange": [
+        103,
+        119
+      ],
+      "summary": "polynomial_mutation implements a significant part of nsga2.py's optimization behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:src/optimizer/nsga2.py:NSGA2Optimizer",
+      "type": "class",
+      "name": "NSGA2Optimizer",
+      "filePath": "src/optimizer/nsga2.py",
+      "lineRange": [
+        122,
+        286
+      ],
+      "summary": "NSGA2Optimizer groups related data and behavior used by nsga2.py.",
+      "tags": [
+        "class",
+        "data-model",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:src/optimizer/nsga2.py:MultiLegNSGA2Optimizer",
+      "type": "class",
+      "name": "MultiLegNSGA2Optimizer",
+      "filePath": "src/optimizer/nsga2.py",
+      "lineRange": [
+        289,
+        479
+      ],
+      "summary": "MultiLegNSGA2Optimizer groups related data and behavior used by nsga2.py.",
+      "tags": [
+        "class",
+        "data-model",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/optimizer/objective.py:delta_v_objective",
+      "type": "function",
+      "name": "delta_v_objective",
+      "filePath": "src/optimizer/objective.py",
+      "lineRange": [
+        16,
+        91
+      ],
+      "summary": "delta_v_objective implements a significant part of objective.py's optimization behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/optimizer/objective.py:_inf_result",
+      "type": "function",
+      "name": "_inf_result",
+      "filePath": "src/optimizer/objective.py",
+      "lineRange": [
+        94,
+        106
+      ],
+      "summary": "_inf_result implements a significant part of objective.py's optimization behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/optimizer/objective.py:porkchop_grid",
+      "type": "function",
+      "name": "porkchop_grid",
+      "filePath": "src/optimizer/objective.py",
+      "lineRange": [
+        109,
+        147
+      ],
+      "summary": "porkchop_grid implements a significant part of objective.py's optimization behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/planner/engine.py:plan_routes",
+      "type": "function",
+      "name": "plan_routes",
+      "filePath": "src/planner/engine.py",
+      "lineRange": [
+        18,
+        112
+      ],
+      "summary": "plan_routes implements a significant part of engine.py's route planning behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/planner/engine.py:_scan_for_windows",
+      "type": "function",
+      "name": "_scan_for_windows",
+      "filePath": "src/planner/engine.py",
+      "lineRange": [
+        115,
+        152
+      ],
+      "summary": "_scan_for_windows implements a significant part of engine.py's route planning behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/planner/engine.py:_estimate_tof",
+      "type": "function",
+      "name": "_estimate_tof",
+      "filePath": "src/planner/engine.py",
+      "lineRange": [
+        155,
+        166
+      ],
+      "summary": "_estimate_tof implements a significant part of engine.py's route planning behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/planner/engine.py:_eval_direct",
+      "type": "function",
+      "name": "_eval_direct",
+      "filePath": "src/planner/engine.py",
+      "lineRange": [
+        169,
+        228
+      ],
+      "summary": "_eval_direct implements a significant part of engine.py's route planning behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/planner/engine.py:_eval_multileg",
+      "type": "function",
+      "name": "_eval_multileg",
+      "filePath": "src/planner/engine.py",
+      "lineRange": [
+        231,
+        249
+      ],
+      "summary": "_eval_multileg implements a significant part of engine.py's route planning behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/planner/engine.py:_rate_dv",
+      "type": "function",
+      "name": "_rate_dv",
+      "filePath": "src/planner/engine.py",
+      "lineRange": [
+        252,
+        257
+      ],
+      "summary": "_rate_dv implements a significant part of engine.py's route planning behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/serialization/encoder.py:encode_planetary_snapshot",
+      "type": "function",
+      "name": "encode_planetary_snapshot",
+      "filePath": "src/serialization/encoder.py",
+      "lineRange": [
+        37,
+        59
+      ],
+      "summary": "encode_planetary_snapshot implements a significant part of encoder.py's serialization behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/serialization/encoder.py:encode_trajectory",
+      "type": "function",
+      "name": "encode_trajectory",
+      "filePath": "src/serialization/encoder.py",
+      "lineRange": [
+        62,
+        103
+      ],
+      "summary": "encode_trajectory implements a significant part of encoder.py's serialization behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/serialization/encoder.py:encode_porkchop",
+      "type": "function",
+      "name": "encode_porkchop",
+      "filePath": "src/serialization/encoder.py",
+      "lineRange": [
+        106,
+        124
+      ],
+      "summary": "encode_porkchop implements a significant part of encoder.py's serialization behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/serialization/encoder.py:_encode_snapshot_binary",
+      "type": "function",
+      "name": "_encode_snapshot_binary",
+      "filePath": "src/serialization/encoder.py",
+      "lineRange": [
+        133,
+        140
+      ],
+      "summary": "_encode_snapshot_binary implements a significant part of encoder.py's serialization behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/serialization/encoder.py:_encode_trajectory_binary",
+      "type": "function",
+      "name": "_encode_trajectory_binary",
+      "filePath": "src/serialization/encoder.py",
+      "lineRange": [
+        143,
+        161
+      ],
+      "summary": "_encode_trajectory_binary implements a significant part of encoder.py's serialization behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/serialization/encoder.py:_encode_porkchop_binary",
+      "type": "function",
+      "name": "_encode_porkchop_binary",
+      "filePath": "src/serialization/encoder.py",
+      "lineRange": [
+        164,
+        175
+      ],
+      "summary": "_encode_porkchop_binary implements a significant part of encoder.py's serialization behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/workers/worker.py:startup",
+      "type": "function",
+      "name": "startup",
+      "filePath": "src/workers/worker.py",
+      "lineRange": [
+        33,
+        44
+      ],
+      "summary": "startup implements a significant part of worker.py's worker behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/workers/worker.py:shutdown",
+      "type": "function",
+      "name": "shutdown",
+      "filePath": "src/workers/worker.py",
+      "lineRange": [
+        47,
+        49
+      ],
+      "summary": "shutdown implements a significant part of worker.py's worker behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/workers/worker.py:run_optimization",
+      "type": "function",
+      "name": "run_optimization",
+      "filePath": "src/workers/worker.py",
+      "lineRange": [
+        52,
+        119
+      ],
+      "summary": "run_optimization implements a significant part of worker.py's worker behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/workers/worker.py:run_multileg_optimization",
+      "type": "function",
+      "name": "run_multileg_optimization",
+      "filePath": "src/workers/worker.py",
+      "lineRange": [
+        122,
+        179
+      ],
+      "summary": "run_multileg_optimization implements a significant part of worker.py's worker behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:tests/test_api.py:log",
+      "type": "function",
+      "name": "log",
+      "filePath": "tests/test_api.py",
+      "lineRange": [
+        28,
+        30
+      ],
+      "summary": "log implements a significant part of test_api.py's test behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:tests/test_api.py:request",
+      "type": "function",
+      "name": "request",
+      "filePath": "tests/test_api.py",
+      "lineRange": [
+        33,
+        56
+      ],
+      "summary": "request implements a significant part of test_api.py's test behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:tests/test_api.py:test_health",
+      "type": "function",
+      "name": "test_health",
+      "filePath": "tests/test_api.py",
+      "lineRange": [
+        63,
+        66
+      ],
+      "summary": "test_health implements a significant part of test_api.py's test behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:tests/test_api.py:test_bodies",
+      "type": "function",
+      "name": "test_bodies",
+      "filePath": "tests/test_api.py",
+      "lineRange": [
+        69,
+        75
+      ],
+      "summary": "test_bodies implements a significant part of test_api.py's test behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:tests/test_api.py:test_epoch_range",
+      "type": "function",
+      "name": "test_epoch_range",
+      "filePath": "tests/test_api.py",
+      "lineRange": [
+        78,
+        84
+      ],
+      "summary": "test_epoch_range implements a significant part of test_api.py's test behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:tests/test_api.py:test_ephemeris",
+      "type": "function",
+      "name": "test_ephemeris",
+      "filePath": "tests/test_api.py",
+      "lineRange": [
+        91,
+        95
+      ],
+      "summary": "test_ephemeris implements a significant part of test_api.py's test behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:tests/test_api.py:test_lambert",
+      "type": "function",
+      "name": "test_lambert",
+      "filePath": "tests/test_api.py",
+      "lineRange": [
+        102,
+        114
+      ],
+      "summary": "test_lambert implements a significant part of test_api.py's test behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:tests/test_api.py:test_lambert_validation",
+      "type": "function",
+      "name": "test_lambert_validation",
+      "filePath": "tests/test_api.py",
+      "lineRange": [
+        117,
+        133
+      ],
+      "summary": "test_lambert_validation implements a significant part of test_api.py's test behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:tests/test_api.py:test_assess",
+      "type": "function",
+      "name": "test_assess",
+      "filePath": "tests/test_api.py",
+      "lineRange": [
+        140,
+        156
+      ],
+      "summary": "test_assess implements a significant part of test_api.py's test behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:tests/test_api.py:test_assess_good_date",
+      "type": "function",
+      "name": "test_assess_good_date",
+      "filePath": "tests/test_api.py",
+      "lineRange": [
+        159,
+        169
+      ],
+      "summary": "test_assess_good_date implements a significant part of test_api.py's test behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:tests/test_api.py:test_optimize_modes",
+      "type": "function",
+      "name": "test_optimize_modes",
+      "filePath": "tests/test_api.py",
+      "lineRange": [
+        176,
+        200
+      ],
+      "summary": "test_optimize_modes implements a significant part of test_api.py's test behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:tests/test_api.py:test_optimize_validation",
+      "type": "function",
+      "name": "test_optimize_validation",
+      "filePath": "tests/test_api.py",
+      "lineRange": [
+        203,
+        221
+      ],
+      "summary": "test_optimize_validation implements a significant part of test_api.py's test behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:tests/test_api.py:test_porkchop",
+      "type": "function",
+      "name": "test_porkchop",
+      "filePath": "tests/test_api.py",
+      "lineRange": [
+        228,
+        244
+      ],
+      "summary": "test_porkchop implements a significant part of test_api.py's test behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:tests/test_api.py:test_multileg",
+      "type": "function",
+      "name": "test_multileg",
+      "filePath": "tests/test_api.py",
+      "lineRange": [
+        250,
+        262
+      ],
+      "summary": "test_multileg implements a significant part of test_api.py's test behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:tests/test_api.py:test_multileg_optimize",
+      "type": "function",
+      "name": "test_multileg_optimize",
+      "filePath": "tests/test_api.py",
+      "lineRange": [
+        265,
+        281
+      ],
+      "summary": "test_multileg_optimize implements a significant part of test_api.py's test behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:tests/test_api.py:test_job_status",
+      "type": "function",
+      "name": "test_job_status",
+      "filePath": "tests/test_api.py",
+      "lineRange": [
+        288,
+        304
+      ],
+      "summary": "test_job_status implements a significant part of test_api.py's test behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:tests/test_api.py:test_websocket",
+      "type": "function",
+      "name": "test_websocket",
+      "filePath": "tests/test_api.py",
+      "lineRange": [
+        311,
+        357
+      ],
+      "summary": "test_websocket implements a significant part of test_api.py's test behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:tests/test_api.py:test_errors",
+      "type": "function",
+      "name": "test_errors",
+      "filePath": "tests/test_api.py",
+      "lineRange": [
+        364,
+        370
+      ],
+      "summary": "test_errors implements a significant part of test_api.py's test behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:tests/test_api.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "tests/test_api.py",
+      "lineRange": [
+        377,
+        403
+      ],
+      "summary": "main implements a significant part of test_api.py's test behavior.",
+      "tags": [
+        "function",
+        "implementation",
+        "project-logic"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "file:frontend/js/planetData.js",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "file:frontend/js/utils/dateUtils.js",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:scripts/fetch_ephemeris.py",
+      "target": "file:src/config.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:scripts/fetch_ephemeris.py",
+      "target": "file:src/ephemeris/bodies.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:scripts/fetch_ephemeris.py",
+      "target": "file:src/ephemeris/spline_cache.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "file:src/ephemeris/bodies.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "file:src/ephemeris/spline_cache.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "file:src/mechanics/kepler.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "file:src/mechanics/lambert.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "file:src/mechanics/multileg.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "file:src/optimizer/dispatcher.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "file:src/optimizer/gmpa.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "file:src/optimizer/objective.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "file:src/planner/engine.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "file:src/serialization/encoder.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/api/routes_ws.py",
+      "target": "file:src/ephemeris/bodies.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/api/routes_ws.py",
+      "target": "file:src/ephemeris/spline_cache.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/api/routes_ws.py",
+      "target": "file:src/mechanics/transforms.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/api/routes_ws.py",
+      "target": "file:src/optimizer/dispatcher.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/api/routes_ws.py",
+      "target": "file:src/serialization/encoder.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/ephemeris/spline_cache.py",
+      "target": "file:src/config.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/ephemeris/spline_cache.py",
+      "target": "file:src/ephemeris/bodies.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/ephemeris/spline_cache.py",
+      "target": "file:src/ephemeris/horizons_client.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/ephemeris/spline_cache.py",
+      "target": "file:src/mechanics/transforms.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/main.py",
+      "target": "file:src/api/routes_http.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/main.py",
+      "target": "file:src/api/routes_ws.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/main.py",
+      "target": "file:src/config.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/main.py",
+      "target": "file:src/ephemeris/spline_cache.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/mechanics/kepler.py",
+      "target": "file:src/ephemeris/bodies.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/mechanics/lambert.py",
+      "target": "file:src/mechanics/kepler.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/mechanics/lambert.py",
+      "target": "file:src/mechanics/transforms.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/mechanics/multileg.py",
+      "target": "file:src/ephemeris/bodies.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/mechanics/multileg.py",
+      "target": "file:src/ephemeris/spline_cache.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/mechanics/multileg.py",
+      "target": "file:src/mechanics/kepler.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/mechanics/multileg.py",
+      "target": "file:src/mechanics/lambert.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/mechanics/multileg.py",
+      "target": "file:src/mechanics/transforms.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/mechanics/transforms.py",
+      "target": "file:src/config.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/mechanics/transforms.py",
+      "target": "file:src/ephemeris/bodies.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/optimizer/dispatcher.py",
+      "target": "file:src/config.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/optimizer/gmpa.py",
+      "target": "file:src/ephemeris/spline_cache.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/optimizer/gmpa.py",
+      "target": "file:src/optimizer/multileg_objective.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/optimizer/gmpa.py",
+      "target": "file:src/optimizer/objective.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/optimizer/multileg_objective.py",
+      "target": "file:src/ephemeris/spline_cache.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/optimizer/multileg_objective.py",
+      "target": "file:src/mechanics/multileg.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/optimizer/nsga2.py",
+      "target": "file:src/ephemeris/spline_cache.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/optimizer/nsga2.py",
+      "target": "file:src/optimizer/multileg_objective.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/optimizer/nsga2.py",
+      "target": "file:src/optimizer/objective.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/optimizer/objective.py",
+      "target": "file:src/ephemeris/bodies.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/optimizer/objective.py",
+      "target": "file:src/ephemeris/spline_cache.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/optimizer/objective.py",
+      "target": "file:src/mechanics/lambert.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/planner/engine.py",
+      "target": "file:src/ephemeris/bodies.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/planner/engine.py",
+      "target": "file:src/ephemeris/spline_cache.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/planner/engine.py",
+      "target": "file:src/mechanics/kepler.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/planner/engine.py",
+      "target": "file:src/mechanics/lambert.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/planner/engine.py",
+      "target": "file:src/mechanics/multileg.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/planner/engine.py",
+      "target": "file:src/mechanics/transforms.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/planner/engine.py",
+      "target": "file:src/planner/catalog.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/workers/worker.py",
+      "target": "file:src/config.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/workers/worker.py",
+      "target": "file:src/ephemeris/spline_cache.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/workers/worker.py",
+      "target": "file:src/optimizer/dispatcher.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:src/main.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:src/api/routes_http.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:src/api/routes_ws.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:src/optimizer/nsga2.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:frontend/js/app.js",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "service:Dockerfile",
+      "target": "file:src/main.py",
+      "type": "deploys",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "service:Dockerfile",
+      "target": "schema:proto/trajectory.proto",
+      "type": "defines_schema",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "service:docker-compose.yml",
+      "target": "service:Dockerfile",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "service:docker-compose.yml",
+      "target": "file:src/main.py",
+      "type": "deploys",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "service:docker-compose.yml",
+      "target": "file:src/workers/worker.py",
+      "type": "deploys",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "service:docker-compose.yml",
+      "target": "file:frontend/index.html",
+      "type": "serves",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:.env.example",
+      "target": "config:requirements.txt",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:.env.example",
+      "target": "file:src/config.py",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:requirements.txt",
+      "target": "file:src/main.py",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "schema:proto/trajectory.proto",
+      "target": "file:src/serialization/encoder.py",
+      "type": "defines_schema",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:frontend/index.html",
+      "target": "file:frontend/js/app.js",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:frontend/index.html",
+      "target": "file:frontend/css/style.css",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "file:src/main.py",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/main.py",
+      "target": "file:src/api/routes_http.py",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:src/main.py",
+      "target": "file:src/api/routes_ws.py",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:init",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:initScene",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:initSearchBar",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:createStarfield",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:createUniverseBackground",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:fetchEpochRange",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:fetchBodies",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:populateSelects",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:fetchOrbits",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:updatePlanetTrail",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:ensureBodyMesh",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:createGlowTexture",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:createTextSprite",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:connectEphemeris",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:updatePlanetPositions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:onMouseClick",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:unlockCamera",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:focusOnBody",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:updatePlanetInfoPanel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:onMouseMove",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:highlightBody",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:drawOptimalTransfer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:drawTransferArc",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:drawOrbitPath",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:drawMultiLegArcs",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:generatePorkchop",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:renderPorkchop",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:dvColor",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:runOptimizer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:runMultiLegOptimizer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:bindEvents",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:planRoute",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:renderRouteCard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:showOrbitInsights",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:drawFullOrbit",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:viewRoute",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:optimizeRoute",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:createSpacecraftMesh",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:updateEngineTrail",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:startMissionSimulation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:visualizeWindows",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:fetchAndDrawOptimizedMultiLeg",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/app.js",
+      "target": "function:frontend/js/app.js:animate",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/utils/dateUtils.js",
+      "target": "function:frontend/js/utils/dateUtils.js:diffDays",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/utils/dateUtils.js",
+      "target": "function:frontend/js/utils/dateUtils.js:diffDays",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:frontend/js/utils/dateUtils.js",
+      "target": "function:frontend/js/utils/dateUtils.js:jdToIso",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/utils/dateUtils.js",
+      "target": "function:frontend/js/utils/dateUtils.js:jdToIso",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:frontend/js/utils/dateUtils.js",
+      "target": "function:frontend/js/utils/dateUtils.js:isoToJd",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/utils/dateUtils.js",
+      "target": "function:frontend/js/utils/dateUtils.js:isoToJd",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:frontend/js/utils/dateUtils.js",
+      "target": "function:frontend/js/utils/dateUtils.js:jdToUnixMs",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/utils/dateUtils.js",
+      "target": "function:frontend/js/utils/dateUtils.js:jdToUnixMs",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:frontend/js/utils/dateUtils.js",
+      "target": "function:frontend/js/utils/dateUtils.js:pointToUnixMs",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/utils/dateUtils.js",
+      "target": "function:frontend/js/utils/dateUtils.js:pointToUnixMs",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:frontend/js/utils/dateUtils.js",
+      "target": "function:frontend/js/utils/dateUtils.js:findClosestIndexByTime",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:frontend/js/utils/dateUtils.js",
+      "target": "function:frontend/js/utils/dateUtils.js:findClosestIndexByTime",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/fetch_ephemeris.py",
+      "target": "function:scripts/fetch_ephemeris.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:scripts/fetch_ephemeris.py",
+      "target": "function:scripts/fetch_ephemeris.py:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:_validate_iso_date",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:_validate_iso_date",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:_safe_iso_to_jd",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:_safe_iso_to_jd",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:_resolve_body",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:_resolve_body",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:_get_cache",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:_get_cache",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:plan_mission",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:plan_mission",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:health",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:health",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:epoch_range",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:epoch_range",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:list_bodies",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:list_bodies",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:get_ephemeris",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:get_ephemeris",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:lambert_transfer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:lambert_transfer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:assess_launch_window",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:assess_launch_window",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:start_optimization",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:start_optimization",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:optimization_status",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:optimization_status",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:compute_porkchop",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:compute_porkchop",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:multileg_transfer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:multileg_transfer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:start_multileg_optimization",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:start_multileg_optimization",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:get_orbit_details",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "function:src/api/routes_http.py:get_orbit_details",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "class:src/api/routes_http.py:OptimizeRequest",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/api/routes_http.py",
+      "target": "class:src/api/routes_http.py:MultiLegOptimizeRequest",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/api/routes_ws.py",
+      "target": "function:src/api/routes_ws.py:ws_trajectory_stream",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/api/routes_ws.py",
+      "target": "function:src/api/routes_ws.py:ws_trajectory_stream",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/api/routes_ws.py",
+      "target": "function:src/api/routes_ws.py:ws_ephemeris_stream",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/api/routes_ws.py",
+      "target": "function:src/api/routes_ws.py:ws_ephemeris_stream",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/ephemeris/horizons_client.py",
+      "target": "function:src/ephemeris/horizons_client.py:fetch_state_vectors",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/ephemeris/horizons_client.py",
+      "target": "function:src/ephemeris/horizons_client.py:fetch_state_vectors",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/ephemeris/horizons_client.py",
+      "target": "function:src/ephemeris/horizons_client.py:_parse_horizons_response",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/ephemeris/horizons_client.py",
+      "target": "function:src/ephemeris/horizons_client.py:_parse_horizons_response",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/ephemeris/spline_cache.py",
+      "target": "class:src/ephemeris/spline_cache.py:EphemerisCache",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/main.py",
+      "target": "function:src/main.py:lifespan",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/main.py",
+      "target": "function:src/main.py:lifespan",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/mechanics/kepler.py",
+      "target": "function:src/mechanics/kepler.py:state_to_elements",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/mechanics/kepler.py",
+      "target": "function:src/mechanics/kepler.py:state_to_elements",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/mechanics/kepler.py",
+      "target": "function:src/mechanics/kepler.py:elements_to_state",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/mechanics/kepler.py",
+      "target": "function:src/mechanics/kepler.py:elements_to_state",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/mechanics/kepler.py",
+      "target": "function:src/mechanics/kepler.py:_solve_kepler_elliptic",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/mechanics/kepler.py",
+      "target": "function:src/mechanics/kepler.py:_solve_kepler_elliptic",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/mechanics/kepler.py",
+      "target": "function:src/mechanics/kepler.py:_solve_kepler_hyperbolic",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/mechanics/kepler.py",
+      "target": "function:src/mechanics/kepler.py:_solve_kepler_hyperbolic",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/mechanics/kepler.py",
+      "target": "function:src/mechanics/kepler.py:propagate_kepler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/mechanics/kepler.py",
+      "target": "function:src/mechanics/kepler.py:propagate_kepler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/mechanics/kepler.py",
+      "target": "function:src/mechanics/kepler.py:compute_apsis_points",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/mechanics/kepler.py",
+      "target": "function:src/mechanics/kepler.py:compute_apsis_points",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/mechanics/kepler.py",
+      "target": "function:src/mechanics/kepler.py:generate_full_orbit_points",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/mechanics/kepler.py",
+      "target": "function:src/mechanics/kepler.py:generate_full_orbit_points",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/mechanics/lambert.py",
+      "target": "function:src/mechanics/lambert.py:_stumpff_c2",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/mechanics/lambert.py",
+      "target": "function:src/mechanics/lambert.py:_stumpff_c2",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/mechanics/lambert.py",
+      "target": "function:src/mechanics/lambert.py:_stumpff_c3",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/mechanics/lambert.py",
+      "target": "function:src/mechanics/lambert.py:_stumpff_c3",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/mechanics/lambert.py",
+      "target": "function:src/mechanics/lambert.py:_stumpff_dc2",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/mechanics/lambert.py",
+      "target": "function:src/mechanics/lambert.py:_stumpff_dc2",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/mechanics/lambert.py",
+      "target": "function:src/mechanics/lambert.py:_stumpff_dc3",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/mechanics/lambert.py",
+      "target": "function:src/mechanics/lambert.py:_stumpff_dc3",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/mechanics/lambert.py",
+      "target": "function:src/mechanics/lambert.py:_solve_lambert_uv",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/mechanics/lambert.py",
+      "target": "function:src/mechanics/lambert.py:_solve_lambert_uv",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/mechanics/lambert.py",
+      "target": "function:src/mechanics/lambert.py:solve_lambert",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/mechanics/lambert.py",
+      "target": "function:src/mechanics/lambert.py:solve_lambert",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/mechanics/lambert.py",
+      "target": "function:src/mechanics/lambert.py:compute_transfer_dv",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/mechanics/lambert.py",
+      "target": "function:src/mechanics/lambert.py:compute_transfer_dv",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/mechanics/multileg.py",
+      "target": "function:src/mechanics/multileg.py:compute_multileg_trajectory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/mechanics/multileg.py",
+      "target": "function:src/mechanics/multileg.py:compute_multileg_trajectory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/mechanics/multileg.py",
+      "target": "function:src/mechanics/multileg.py:_compute_flyby",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/mechanics/multileg.py",
+      "target": "function:src/mechanics/multileg.py:_compute_flyby",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/mechanics/multileg.py",
+      "target": "function:src/mechanics/multileg.py:_generate_leg_trajectory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/mechanics/multileg.py",
+      "target": "function:src/mechanics/multileg.py:_generate_leg_trajectory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/mechanics/multileg.py",
+      "target": "function:src/mechanics/multileg.py:multileg_result_to_dict",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/mechanics/multileg.py",
+      "target": "function:src/mechanics/multileg.py:multileg_result_to_dict",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/mechanics/multileg.py",
+      "target": "class:src/mechanics/multileg.py:FlybyInfo",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/mechanics/multileg.py",
+      "target": "class:src/mechanics/multileg.py:LegResult",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/mechanics/transforms.py",
+      "target": "function:src/mechanics/transforms.py:km_to_scene",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/mechanics/transforms.py",
+      "target": "function:src/mechanics/transforms.py:km_to_scene",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/mechanics/transforms.py",
+      "target": "function:src/mechanics/transforms.py:km_to_au",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/mechanics/transforms.py",
+      "target": "function:src/mechanics/transforms.py:km_to_au",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/mechanics/transforms.py",
+      "target": "function:src/mechanics/transforms.py:jd_to_datetime",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/mechanics/transforms.py",
+      "target": "function:src/mechanics/transforms.py:jd_to_datetime",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/mechanics/transforms.py",
+      "target": "function:src/mechanics/transforms.py:datetime_to_jd",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/mechanics/transforms.py",
+      "target": "function:src/mechanics/transforms.py:datetime_to_jd",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/mechanics/transforms.py",
+      "target": "function:src/mechanics/transforms.py:iso_to_jd",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/mechanics/transforms.py",
+      "target": "function:src/mechanics/transforms.py:iso_to_jd",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/mechanics/transforms.py",
+      "target": "function:src/mechanics/transforms.py:jd_to_iso",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/mechanics/transforms.py",
+      "target": "function:src/mechanics/transforms.py:jd_to_iso",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/mechanics/transforms.py",
+      "target": "function:src/mechanics/transforms.py:sample_trajectory_adaptive",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/mechanics/transforms.py",
+      "target": "function:src/mechanics/transforms.py:sample_trajectory_adaptive",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/mechanics/transforms.py",
+      "target": "function:src/mechanics/transforms.py:positions_to_scene",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/mechanics/transforms.py",
+      "target": "function:src/mechanics/transforms.py:positions_to_scene",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/optimizer/dispatcher.py",
+      "target": "function:src/optimizer/dispatcher.py:_redis_settings",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/optimizer/dispatcher.py",
+      "target": "function:src/optimizer/dispatcher.py:_redis_settings",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/optimizer/dispatcher.py",
+      "target": "function:src/optimizer/dispatcher.py:get_arq_pool",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/optimizer/dispatcher.py",
+      "target": "function:src/optimizer/dispatcher.py:get_arq_pool",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/optimizer/dispatcher.py",
+      "target": "function:src/optimizer/dispatcher.py:get_redis",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/optimizer/dispatcher.py",
+      "target": "function:src/optimizer/dispatcher.py:get_redis",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/optimizer/dispatcher.py",
+      "target": "function:src/optimizer/dispatcher.py:submit_optimization",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/optimizer/dispatcher.py",
+      "target": "function:src/optimizer/dispatcher.py:submit_optimization",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/optimizer/dispatcher.py",
+      "target": "function:src/optimizer/dispatcher.py:get_job_status",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/optimizer/dispatcher.py",
+      "target": "function:src/optimizer/dispatcher.py:get_job_status",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/optimizer/dispatcher.py",
+      "target": "function:src/optimizer/dispatcher.py:stream_progress",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/optimizer/dispatcher.py",
+      "target": "function:src/optimizer/dispatcher.py:stream_progress",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/optimizer/dispatcher.py",
+      "target": "function:src/optimizer/dispatcher.py:publish_progress",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/optimizer/dispatcher.py",
+      "target": "function:src/optimizer/dispatcher.py:publish_progress",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/optimizer/dispatcher.py",
+      "target": "function:src/optimizer/dispatcher.py:_progress_to_dict",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/optimizer/dispatcher.py",
+      "target": "function:src/optimizer/dispatcher.py:_progress_to_dict",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/optimizer/dispatcher.py",
+      "target": "function:src/optimizer/dispatcher.py:submit_multileg_optimization",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/optimizer/dispatcher.py",
+      "target": "function:src/optimizer/dispatcher.py:submit_multileg_optimization",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/optimizer/dispatcher.py",
+      "target": "function:src/optimizer/dispatcher.py:publish_multileg_progress",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/optimizer/dispatcher.py",
+      "target": "function:src/optimizer/dispatcher.py:publish_multileg_progress",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/optimizer/dispatcher.py",
+      "target": "function:src/optimizer/dispatcher.py:_multileg_progress_to_dict",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/optimizer/dispatcher.py",
+      "target": "function:src/optimizer/dispatcher.py:_multileg_progress_to_dict",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/optimizer/gmpa.py",
+      "target": "class:src/optimizer/gmpa.py:ParetoArchive",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/optimizer/gmpa.py",
+      "target": "class:src/optimizer/gmpa.py:GreyWolfOptimizer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/optimizer/gmpa.py",
+      "target": "class:src/optimizer/gmpa.py:MultiLegGreyWolfOptimizer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/optimizer/multileg_objective.py",
+      "target": "function:src/optimizer/multileg_objective.py:multileg_objective",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/optimizer/multileg_objective.py",
+      "target": "function:src/optimizer/multileg_objective.py:multileg_objective",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/optimizer/multileg_objective.py",
+      "target": "function:src/optimizer/multileg_objective.py:multileg_objective_full",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/optimizer/multileg_objective.py",
+      "target": "function:src/optimizer/multileg_objective.py:multileg_objective_full",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/optimizer/nsga2.py",
+      "target": "function:src/optimizer/nsga2.py:fast_non_dominated_sort",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/optimizer/nsga2.py",
+      "target": "function:src/optimizer/nsga2.py:fast_non_dominated_sort",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/optimizer/nsga2.py",
+      "target": "function:src/optimizer/nsga2.py:calculate_crowding_distance",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/optimizer/nsga2.py",
+      "target": "function:src/optimizer/nsga2.py:calculate_crowding_distance",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/optimizer/nsga2.py",
+      "target": "function:src/optimizer/nsga2.py:sbx_crossover",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/optimizer/nsga2.py",
+      "target": "function:src/optimizer/nsga2.py:sbx_crossover",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/optimizer/nsga2.py",
+      "target": "function:src/optimizer/nsga2.py:polynomial_mutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/optimizer/nsga2.py",
+      "target": "function:src/optimizer/nsga2.py:polynomial_mutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/optimizer/nsga2.py",
+      "target": "class:src/optimizer/nsga2.py:NSGA2Optimizer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/optimizer/nsga2.py",
+      "target": "class:src/optimizer/nsga2.py:MultiLegNSGA2Optimizer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/optimizer/objective.py",
+      "target": "function:src/optimizer/objective.py:delta_v_objective",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/optimizer/objective.py",
+      "target": "function:src/optimizer/objective.py:delta_v_objective",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/optimizer/objective.py",
+      "target": "function:src/optimizer/objective.py:_inf_result",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/optimizer/objective.py",
+      "target": "function:src/optimizer/objective.py:_inf_result",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/optimizer/objective.py",
+      "target": "function:src/optimizer/objective.py:porkchop_grid",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/optimizer/objective.py",
+      "target": "function:src/optimizer/objective.py:porkchop_grid",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/planner/engine.py",
+      "target": "function:src/planner/engine.py:plan_routes",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/planner/engine.py",
+      "target": "function:src/planner/engine.py:plan_routes",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/planner/engine.py",
+      "target": "function:src/planner/engine.py:_scan_for_windows",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/planner/engine.py",
+      "target": "function:src/planner/engine.py:_scan_for_windows",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/planner/engine.py",
+      "target": "function:src/planner/engine.py:_estimate_tof",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/planner/engine.py",
+      "target": "function:src/planner/engine.py:_estimate_tof",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/planner/engine.py",
+      "target": "function:src/planner/engine.py:_eval_direct",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/planner/engine.py",
+      "target": "function:src/planner/engine.py:_eval_direct",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/planner/engine.py",
+      "target": "function:src/planner/engine.py:_eval_multileg",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/planner/engine.py",
+      "target": "function:src/planner/engine.py:_eval_multileg",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/planner/engine.py",
+      "target": "function:src/planner/engine.py:_rate_dv",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/planner/engine.py",
+      "target": "function:src/planner/engine.py:_rate_dv",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/serialization/encoder.py",
+      "target": "function:src/serialization/encoder.py:encode_planetary_snapshot",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/serialization/encoder.py",
+      "target": "function:src/serialization/encoder.py:encode_planetary_snapshot",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/serialization/encoder.py",
+      "target": "function:src/serialization/encoder.py:encode_trajectory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/serialization/encoder.py",
+      "target": "function:src/serialization/encoder.py:encode_trajectory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/serialization/encoder.py",
+      "target": "function:src/serialization/encoder.py:encode_porkchop",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/serialization/encoder.py",
+      "target": "function:src/serialization/encoder.py:encode_porkchop",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/serialization/encoder.py",
+      "target": "function:src/serialization/encoder.py:_encode_snapshot_binary",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/serialization/encoder.py",
+      "target": "function:src/serialization/encoder.py:_encode_snapshot_binary",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/serialization/encoder.py",
+      "target": "function:src/serialization/encoder.py:_encode_trajectory_binary",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/serialization/encoder.py",
+      "target": "function:src/serialization/encoder.py:_encode_trajectory_binary",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/serialization/encoder.py",
+      "target": "function:src/serialization/encoder.py:_encode_porkchop_binary",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/serialization/encoder.py",
+      "target": "function:src/serialization/encoder.py:_encode_porkchop_binary",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/workers/worker.py",
+      "target": "function:src/workers/worker.py:startup",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/workers/worker.py",
+      "target": "function:src/workers/worker.py:startup",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/workers/worker.py",
+      "target": "function:src/workers/worker.py:shutdown",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/workers/worker.py",
+      "target": "function:src/workers/worker.py:shutdown",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/workers/worker.py",
+      "target": "function:src/workers/worker.py:run_optimization",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/workers/worker.py",
+      "target": "function:src/workers/worker.py:run_optimization",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/workers/worker.py",
+      "target": "function:src/workers/worker.py:run_multileg_optimization",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/workers/worker.py",
+      "target": "function:src/workers/worker.py:run_multileg_optimization",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:log",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:log",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:request",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:request",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_health",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_health",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_bodies",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_bodies",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_epoch_range",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_epoch_range",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_ephemeris",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_ephemeris",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_lambert",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_lambert",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_lambert_validation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_lambert_validation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_assess",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_assess",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_assess_good_date",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_assess_good_date",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_optimize_modes",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_optimize_modes",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_optimize_validation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_optimize_validation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_porkchop",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_porkchop",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_multileg",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_multileg",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_multileg_optimize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_multileg_optimize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_job_status",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_job_status",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_websocket",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_websocket",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_errors",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:test_errors",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:tests/test_api.py",
+      "target": "function:tests/test_api.py:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ],
+  "layers": [
+    {
+      "id": "layer:documentation-and-config",
+      "name": "Documentation and Configuration",
+      "description": "Project overview, runtime settings, Python dependencies, and schema contracts that explain or configure the application.",
+      "nodeIds": [
+        "document:README.md",
+        "config:.env.example",
+        "config:requirements.txt",
+        "schema:proto/trajectory.proto"
+      ]
+    },
+    {
+      "id": "layer:deployment",
+      "name": "Deployment",
+      "description": "Container and Compose definitions that run Redis, the API, the background worker, and the static frontend.",
+      "nodeIds": [
+        "service:Dockerfile",
+        "service:docker-compose.yml"
+      ]
+    },
+    {
+      "id": "layer:frontend-experience",
+      "name": "Frontend Experience",
+      "description": "The browser-based Three.js interface, visual metadata, date utilities, layout, and styling.",
+      "nodeIds": [
+        "file:frontend/index.html",
+        "file:frontend/css/style.css",
+        "file:frontend/js/app.js",
+        "file:frontend/js/planetData.js",
+        "file:frontend/js/utils/dateUtils.js"
+      ]
+    },
+    {
+      "id": "layer:api-and-runtime",
+      "name": "API and Runtime",
+      "description": "FastAPI entry point, HTTP and WebSocket routes, runtime settings, binary serialization, and background worker wiring.",
+      "nodeIds": [
+        "file:src/main.py",
+        "file:src/config.py",
+        "file:src/api/__init__.py",
+        "file:src/api/routes_http.py",
+        "file:src/api/routes_ws.py",
+        "file:src/serialization/__init__.py",
+        "file:src/serialization/encoder.py",
+        "file:src/workers/__init__.py",
+        "file:src/workers/worker.py",
+        "file:src/__init__.py"
+      ]
+    },
+    {
+      "id": "layer:ephemeris-and-mechanics",
+      "name": "Ephemeris and Mechanics",
+      "description": "Celestial-body definitions, Horizons fetching, spline caching, Lambert solving, Kepler propagation, transforms, and multi-leg orbital mechanics.",
+      "nodeIds": [
+        "file:src/ephemeris/__init__.py",
+        "file:src/ephemeris/bodies.py",
+        "file:src/ephemeris/horizons_client.py",
+        "file:src/ephemeris/spline_cache.py",
+        "file:src/mechanics/__init__.py",
+        "file:src/mechanics/kepler.py",
+        "file:src/mechanics/lambert.py",
+        "file:src/mechanics/multileg.py",
+        "file:src/mechanics/transforms.py"
+      ]
+    },
+    {
+      "id": "layer:optimization-and-planning",
+      "name": "Optimization and Planning",
+      "description": "Route catalog, planning heuristics, NSGA-II, objective functions, ARQ dispatch helpers, and mission optimization algorithms.",
+      "nodeIds": [
+        "file:src/optimizer/__init__.py",
+        "file:src/optimizer/dispatcher.py",
+        "file:src/optimizer/gmpa.py",
+        "file:src/optimizer/multileg_objective.py",
+        "file:src/optimizer/nsga2.py",
+        "file:src/optimizer/objective.py",
+        "file:src/planner/__init__.py",
+        "file:src/planner/catalog.py",
+        "file:src/planner/engine.py"
+      ]
+    },
+    {
+      "id": "layer:tests-and-maintenance",
+      "name": "Tests and Maintenance",
+      "description": "API smoke tests plus local patching and ephemeris maintenance scripts.",
+      "nodeIds": [
+        "file:tests/test_api.py",
+        "file:scripts/fetch_ephemeris.py",
+        "file:patch_engine.py",
+        "file:patch_routes.py"
+      ]
+    }
+  ],
+  "tour": [
+    {
+      "order": 1,
+      "title": "Project Overview",
+      "description": "Start with the README to understand the trajectory optimizer's purpose, Docker startup, architecture, and API surface.",
+      "nodeIds": [
+        "document:README.md"
+      ]
+    },
+    {
+      "order": 2,
+      "title": "Runtime Topology",
+      "description": "Inspect how Docker Compose runs Redis, the FastAPI API, the ARQ worker, and the nginx frontend from the container build.",
+      "nodeIds": [
+        "service:docker-compose.yml",
+        "service:Dockerfile",
+        "config:.env.example"
+      ]
+    },
+    {
+      "order": 3,
+      "title": "Application Entry Point",
+      "description": "Follow the FastAPI bootstrap, lifespan cache warmup, CORS setup, and router mounting that bring the backend online.",
+      "nodeIds": [
+        "file:src/main.py",
+        "file:src/config.py"
+      ],
+      "languageLesson": "FastAPI applications often compose routers in the entry point while lifespan hooks handle expensive startup resources."
+    },
+    {
+      "order": 4,
+      "title": "HTTP and WebSocket API",
+      "description": "Read the request models, validation, REST endpoints, and WebSocket streams that expose ephemeris, transfers, planning, and optimization progress.",
+      "nodeIds": [
+        "file:src/api/routes_http.py",
+        "file:src/api/routes_ws.py"
+      ]
+    },
+    {
+      "order": 5,
+      "title": "Ephemeris Cache",
+      "description": "Understand how body metadata, Horizons fetching, and spline interpolation provide fast planetary state lookups to the API and optimizers.",
+      "nodeIds": [
+        "file:src/ephemeris/bodies.py",
+        "file:src/ephemeris/horizons_client.py",
+        "file:src/ephemeris/spline_cache.py"
+      ]
+    },
+    {
+      "order": 6,
+      "title": "Orbital Mechanics Core",
+      "description": "Walk through the coordinate transforms, Kepler helpers, Lambert solver, and multi-leg trajectory composition used by transfer calculations.",
+      "nodeIds": [
+        "file:src/mechanics/transforms.py",
+        "file:src/mechanics/kepler.py",
+        "file:src/mechanics/lambert.py",
+        "file:src/mechanics/multileg.py"
+      ]
+    },
+    {
+      "order": 7,
+      "title": "Optimization and Planning",
+      "description": "Trace how objective functions, NSGA-II, gravity-assist search, route catalog heuristics, and dispatch code turn user requests into candidate missions.",
+      "nodeIds": [
+        "file:src/optimizer/objective.py",
+        "file:src/optimizer/nsga2.py",
+        "file:src/optimizer/gmpa.py",
+        "file:src/planner/engine.py",
+        "file:src/optimizer/dispatcher.py"
+      ]
+    },
+    {
+      "order": 8,
+      "title": "Frontend Interaction Loop",
+      "description": "Inspect the HTML shell, styling, Three.js scene code, planet metadata, and date utilities that render API and WebSocket data for the user.",
+      "nodeIds": [
+        "file:frontend/index.html",
+        "file:frontend/css/style.css",
+        "file:frontend/js/app.js",
+        "file:frontend/js/planetData.js",
+        "file:frontend/js/utils/dateUtils.js"
+      ],
+      "languageLesson": "The browser frontend uses ES modules and async fetch/WebSocket calls to coordinate rendering with backend state."
+    },
+    {
+      "order": 9,
+      "title": "Serialization and Tests",
+      "description": "Finish with the protobuf contract, binary encoder, ephemeris maintenance script, and API tests that protect the main workflows.",
+      "nodeIds": [
+        "schema:proto/trajectory.proto",
+        "file:src/serialization/encoder.py",
+        "file:scripts/fetch_ephemeris.py",
+        "file:tests/test_api.py"
+      ]
+    }
+  ]
+}

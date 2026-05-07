@@ -23,6 +23,20 @@ Requirements: Docker + Docker Compose. Nothing else.
 
 ---
 
+## Kubernetes + Azure
+
+This repo includes a minimal Kubernetes layer for learning and interview prep:
+
+```bash
+docker build -t tars-api:local .
+docker build -t tars-frontend:local ./frontend
+kubectl apply -k k8s/
+```
+
+See [`docs/kubernetes-azure.md`](docs/kubernetes-azure.md) for the local Kubernetes runbook, AKS deployment commands, and interview Q&A.
+
+---
+
 ## Architecture
 
 ```

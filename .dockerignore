@@ -1,0 +1,10 @@
+.git
+.understand-anything
+.venv
+__pycache__/
+*.pyc
+.DS_Store
+.env
+data/cache/
+src/server.log
+src/serialization/proto/

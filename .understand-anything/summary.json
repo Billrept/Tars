@@ -1,0 +1,72 @@
+{
+  "project": {
+    "name": "Tars",
+    "languages": [
+      "config",
+      "css",
+      "dockerfile",
+      "html",
+      "javascript",
+      "markdown",
+      "protobuf",
+      "python",
+      "yaml"
+    ],
+    "frameworks": [
+      "ARQ",
+      "Docker",
+      "Docker Compose",
+      "FastAPI",
+      "NumPy",
+      "Numba",
+      "Pydantic",
+      "Redis",
+      "SciPy",
+      "Three.js",
+      "Uvicorn"
+    ],
+    "description": "Interactive 3D multi-leg gravity-assist trajectory optimizer for a space science course.",
+    "analyzedAt": "2026-05-07T12:39:15.386Z",
+    "gitCommitHash": "8ade6c9d6c8a062ca6b83f4793db3f348bc9afef"
+  },
+  "filesByCategory": {
+    "config": 2,
+    "infra": 2,
+    "markup": 2,
+    "code": 35,
+    "data": 1,
+    "docs": 1
+  },
+  "nodesByType": {
+    "config": 2,
+    "service": 2,
+    "file": 37,
+    "schema": 1,
+    "document": 1,
+    "function": 153,
+    "class": 10
+  },
+  "edgesByType": {
+    "imports": 60,
+    "documents": 5,
+    "deploys": 3,
+    "defines_schema": 2,
+    "depends_on": 5,
+    "serves": 1,
+    "related": 1,
+    "configures": 2,
+    "tested_by": 1,
+    "contains": 163,
+    "exports": 110
+  },
+  "layers": [
+    "Documentation and Configuration",
+    "Deployment",
+    "Frontend Experience",
+    "API and Runtime",
+    "Ephemeris and Mechanics",
+    "Optimization and Planning",
+    "Tests and Maintenance"
+  ],
+  "tourSteps": 9
+}
